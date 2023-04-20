@@ -1,6 +1,7 @@
 package resources
 
 import (
+  "context"
   "github.com/google/uuid"
   "github.com/steadybit/action-kit/go/action_kit_api/v2"
   extension_kit "github.com/steadybit/extension-kit"
@@ -55,7 +56,7 @@ func TestAction_Prepare(t *testing.T) {
       state := StressCPUActionState{}
       request := tt.requestBody
       //When
-      result, err := action.Prepare(nil, &state, request)
+      result, err := action.Prepare(context.Background(), &state, request)
 
       //Then
       if tt.wantedError != nil && err != nil {

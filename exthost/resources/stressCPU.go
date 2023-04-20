@@ -120,7 +120,7 @@ func (l *stressCPUAction) Prepare(_ context.Context, state *StressCPUActionState
   if durationConfig < 1000 {
     return &action_kit_api.PrepareResult{
       Error: extutil.Ptr(action_kit_api.ActionKitError{
-        Title:  fmt.Sprintf("Duration must be greater / equal than 1s"),
+        Title:  "Duration must be greater / equal than 1s",
         Status: extutil.Ptr(action_kit_api.Errored),
       }),
     }, nil
