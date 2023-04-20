@@ -21,9 +21,8 @@ type stressCPUAction struct{}
 
 // Make sure action implements all required interfaces
 var (
-  _ action_kit_sdk.Action[StressCPUActionState]           = (*stressCPUAction)(nil)
-  _ action_kit_sdk.ActionWithStatus[StressCPUActionState] = (*stressCPUAction)(nil) // Optional, needed when the action needs a status method
-  _ action_kit_sdk.ActionWithStop[StressCPUActionState]   = (*stressCPUAction)(nil) // Optional, needed when the action needs a stop method
+  _ action_kit_sdk.Action[StressCPUActionState]         = (*stressCPUAction)(nil)
+  _ action_kit_sdk.ActionWithStop[StressCPUActionState] = (*stressCPUAction)(nil) // Optional, needed when the action needs a stop method
 )
 
 type StressCPUActionState struct {
@@ -117,7 +116,16 @@ func (l *stressCPUAction) Describe() action_kit_api.ActionDescription {
 // The passed in state is included in the subsequent calls to start/status/stop.
 // So the state should contain all information needed to execute the action and even more important: to be able to stop it.
 func (l *stressCPUAction) Prepare(_ context.Context, state *StressCPUActionState, request action_kit_api.PrepareActionRequestBody) (*action_kit_api.PrepareResult, error) {
-  duration := exthost.ToUInt64(request.Config["duration"]) / 1000
+  durationConfig := exthost.ToUInt64(request.Config["duration"])
+  if durationConfig < 1000 {
+    return &action_kit_api.PrepareResult{
+      Error: extutil.Ptr(action_kit_api.ActionKitError{
+        Title:  fmt.Sprintf("Duration must be greater / equal than 1s"),
+        Status: extutil.Ptr(action_kit_api.Errored),
+      }),
+    }, nil
+  }
+  duration := durationConfig / 1000
   cpuLoad := exthost.ToUInt(request.Config["cpuLoad"])
   workers := exthost.ToUInt(request.Config["workers"])
   if duration == 0 {
@@ -126,7 +134,6 @@ func (l *stressCPUAction) Prepare(_ context.Context, state *StressCPUActionState
   if cpuLoad == 0 {
     return nil, errors.New("cpuLoad must be greater than 0")
   }
-  state.Pid = 5
   state.StressNGArgs = []string{
     "--cpu", strconv.Itoa(int(workers)),
     "--cpu-load", strconv.Itoa(int(cpuLoad)),
@@ -156,11 +163,6 @@ func (l *stressCPUAction) Start(_ context.Context, state *StressCPUActionState) 
   }
   log.Info().Int("Pid", pid).Msg("Started stress-ng")
   state.Pid = pid
-  return nil, nil
-}
-
-func (l *stressCPUAction) Status(ctx context.Context, state *StressCPUActionState) (*action_kit_api.StatusResult, error) {
-  //TODO implement me
   return nil, nil
 }
 
