@@ -1,20 +1,21 @@
 manifest should match snapshot with TLS:
   1: |
     apiVersion: apps/v1
-    kind: Deployment
+    kind: DaemonSet
     metadata:
+      annotations:
+        steadybit.com/extension-auto-discovery: "{\n  \"extensions\": [\n    {\n      \"port\": \"8085\",\n      \"types\": [\"ACTION\",\"DISCOVERY\"],\n      \"tls\": {\n        \"server\": {\n          \"extraCertsFile\": \"/opt/steadybit/agent/etc/extension-mtls/server-cert/tls.crt\"\n          }\n          \n      }\n    }\n  ]\n}\n"
       labels: null
-      name: RELEASE-NAME
+      name: RELEASE-NAME-steadybit-extension-host
       namespace: NAMESPACE
     spec:
-      replicas: 1
       selector:
         matchLabels:
-          app.kubernetes.io/name: RELEASE-NAME
+          app.kubernetes.io/name: steadybit-extension-host
       template:
         metadata:
           labels:
-            app.kubernetes.io/name: RELEASE-NAME
+            app.kubernetes.io/name: steadybit-extension-host
         spec:
           containers:
             - env:
@@ -26,13 +27,13 @@ manifest should match snapshot with TLS:
                   value: /etc/extension/certificates/server-cert/tls.crt
                 - name: STEADYBIT_EXTENSION_TLS_SERVER_KEY
                   value: /etc/extension/certificates/server-cert/tls.key
-              image: ghcr.io/steadybit/extension-scaffold:latest
+              image: ghcr.io/steadybit/extension-host:latest
               imagePullPolicy: Always
               livenessProbe:
                 httpGet:
                   path: /health/liveness
                   port: 8081
-              name: RELEASE-NAME
+              name: extension
               readinessProbe:
                 httpGet:
                   path: /health/readiness
@@ -44,10 +45,22 @@ manifest should match snapshot with TLS:
                 requests:
                   cpu: 50m
                   memory: 64Mi
+              securityContext:
+                capabilities:
+                  add:
+                    - SYS_BOOT
+                    - NET_ADMIN
+                    - NET_RAW
+                    - KILL
+                    - SYS_TIME
+                    - AUDIT_WRITE
               volumeMounts:
                 - mountPath: /etc/extension/certificates/server-cert
                   name: certificate-server-cert
                   readOnly: true
+          dnsPolicy: ClusterFirstWithHostNet
+          hostNetwork: true
+          hostPID: true
           volumes:
             - name: certificate-server-cert
               secret:
@@ -56,20 +69,38 @@ manifest should match snapshot with TLS:
 manifest should match snapshot with mutual TLS:
   1: |
     apiVersion: apps/v1
-    kind: Deployment
+    kind: DaemonSet
     metadata:
+      annotations:
+        steadybit.com/extension-auto-discovery: |
+          {
+            "extensions": [
+              {
+                "port": "8085",
+                "types": ["ACTION","DISCOVERY"],
+                "tls": {
+                  "server": {
+                    "extraCertsFile": "/opt/steadybit/agent/etc/extension-mtls/server-cert/tls.crt"
+                    },
+                    "client": {
+                    "certChainFile": "/opt/steadybit/agent/etc/extension-mtls/client-cert-a/tls.crt",
+                    "certKeyFile": "/opt/steadybit/agent/etc/extension-mtls/client-cert-a/tls.key"
+                  }
+                }
+              }
+            ]
+          }
       labels: null
-      name: RELEASE-NAME
+      name: RELEASE-NAME-steadybit-extension-host
       namespace: NAMESPACE
     spec:
-      replicas: 1
       selector:
         matchLabels:
-          app.kubernetes.io/name: RELEASE-NAME
+          app.kubernetes.io/name: steadybit-extension-host
       template:
         metadata:
           labels:
-            app.kubernetes.io/name: RELEASE-NAME
+            app.kubernetes.io/name: steadybit-extension-host
         spec:
           containers:
             - env:
@@ -83,13 +114,13 @@ manifest should match snapshot with mutual TLS:
                   value: /etc/extension/certificates/server-cert/tls.key
                 - name: STEADYBIT_EXTENSION_TLS_CLIENT_CAS
                   value: /etc/extension/certificates/client-cert-a/tls.crt,/etc/extension/certificates/client-cert-a/tls.crt
-              image: ghcr.io/steadybit/extension-scaffold:latest
+              image: ghcr.io/steadybit/extension-host:latest
               imagePullPolicy: Always
               livenessProbe:
                 httpGet:
                   path: /health/liveness
                   port: 8081
-              name: RELEASE-NAME
+              name: extension
               readinessProbe:
                 httpGet:
                   path: /health/readiness
@@ -101,6 +132,15 @@ manifest should match snapshot with mutual TLS:
                 requests:
                   cpu: 50m
                   memory: 64Mi
+              securityContext:
+                capabilities:
+                  add:
+                    - SYS_BOOT
+                    - NET_ADMIN
+                    - NET_RAW
+                    - KILL
+                    - SYS_TIME
+                    - AUDIT_WRITE
               volumeMounts:
                 - mountPath: /etc/extension/certificates/client-cert-a
                   name: certificate-client-cert-a
@@ -108,6 +148,9 @@ manifest should match snapshot with mutual TLS:
                 - mountPath: /etc/extension/certificates/server-cert
                   name: certificate-server-cert
                   readOnly: true
+          dnsPolicy: ClusterFirstWithHostNet
+          hostNetwork: true
+          hostPID: true
           volumes:
             - name: certificate-client-cert-a
               secret:
@@ -120,20 +163,21 @@ manifest should match snapshot with mutual TLS:
 manifest should match snapshot without TLS:
   1: |
     apiVersion: apps/v1
-    kind: Deployment
+    kind: DaemonSet
     metadata:
+      annotations:
+        steadybit.com/extension-auto-discovery: "{\n  \"extensions\": [\n    {\n      \"port\": \"8085\",\n      \"types\": [\"ACTION\",\"DISCOVERY\"],\n      \"tls\": {\n          \n      }\n    }\n  ]\n}\n"
       labels: null
-      name: RELEASE-NAME
+      name: RELEASE-NAME-steadybit-extension-host
       namespace: NAMESPACE
     spec:
-      replicas: 1
       selector:
         matchLabels:
-          app.kubernetes.io/name: RELEASE-NAME
+          app.kubernetes.io/name: steadybit-extension-host
       template:
         metadata:
           labels:
-            app.kubernetes.io/name: RELEASE-NAME
+            app.kubernetes.io/name: steadybit-extension-host
         spec:
           containers:
             - env:
@@ -141,13 +185,13 @@ manifest should match snapshot without TLS:
                   value: INFO
                 - name: STEADYBIT_LOG_FORMAT
                   value: text
-              image: ghcr.io/steadybit/extension-scaffold:latest
+              image: ghcr.io/steadybit/extension-host:latest
               imagePullPolicy: Always
               livenessProbe:
                 httpGet:
                   path: /health/liveness
                   port: 8081
-              name: RELEASE-NAME
+              name: extension
               readinessProbe:
                 httpGet:
                   path: /health/readiness
@@ -159,5 +203,17 @@ manifest should match snapshot without TLS:
                 requests:
                   cpu: 50m
                   memory: 64Mi
+              securityContext:
+                capabilities:
+                  add:
+                    - SYS_BOOT
+                    - NET_ADMIN
+                    - NET_RAW
+                    - KILL
+                    - SYS_TIME
+                    - AUDIT_WRITE
               volumeMounts: null
+          dnsPolicy: ClusterFirstWithHostNet
+          hostNetwork: true
+          hostPID: true
           volumes: null
