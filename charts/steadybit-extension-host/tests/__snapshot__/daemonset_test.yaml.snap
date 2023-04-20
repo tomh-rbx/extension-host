@@ -3,8 +3,6 @@ manifest should match snapshot with TLS:
     apiVersion: apps/v1
     kind: DaemonSet
     metadata:
-      annotations:
-        steadybit.com/extension-auto-discovery: "{\n  \"extensions\": [\n    {\n      \"port\": \"8085\",\n      \"types\": [\"ACTION\",\"DISCOVERY\"],\n      \"tls\": {\n        \"server\": {\n          \"extraCertsFile\": \"/opt/steadybit/agent/etc/extension-mtls/server-cert/tls.crt\"\n          }\n          \n      }\n    }\n  ]\n}\n"
       labels: null
       name: RELEASE-NAME-steadybit-extension-host
       namespace: NAMESPACE
@@ -14,8 +12,11 @@ manifest should match snapshot with TLS:
           app.kubernetes.io/name: steadybit-extension-host
       template:
         metadata:
+          annotations:
+            steadybit.com/extension-auto-discovery: "{\n  \"extensions\": [\n    {\n      \"port\": \"8085\",\n      \"types\": [\"ACTION\",\"DISCOVERY\"],\n      \"tls\": {\n        \"server\": {\n          \"extraCertsFile\": \"/opt/steadybit/agent/etc/extension-mtls/server-cert/tls.crt\"\n          }\n          \n    }\n    }\n  ]\n}\n"
           labels:
             app.kubernetes.io/name: steadybit-extension-host
+            steadybit.com/extension: "true"
         spec:
           containers:
             - env:
@@ -71,25 +72,6 @@ manifest should match snapshot with mutual TLS:
     apiVersion: apps/v1
     kind: DaemonSet
     metadata:
-      annotations:
-        steadybit.com/extension-auto-discovery: |
-          {
-            "extensions": [
-              {
-                "port": "8085",
-                "types": ["ACTION","DISCOVERY"],
-                "tls": {
-                  "server": {
-                    "extraCertsFile": "/opt/steadybit/agent/etc/extension-mtls/server-cert/tls.crt"
-                    },
-                    "client": {
-                    "certChainFile": "/opt/steadybit/agent/etc/extension-mtls/client-cert-a/tls.crt",
-                    "certKeyFile": "/opt/steadybit/agent/etc/extension-mtls/client-cert-a/tls.key"
-                  }
-                }
-              }
-            ]
-          }
       labels: null
       name: RELEASE-NAME-steadybit-extension-host
       namespace: NAMESPACE
@@ -99,8 +81,28 @@ manifest should match snapshot with mutual TLS:
           app.kubernetes.io/name: steadybit-extension-host
       template:
         metadata:
+          annotations:
+            steadybit.com/extension-auto-discovery: |
+              {
+                "extensions": [
+                  {
+                    "port": "8085",
+                    "types": ["ACTION","DISCOVERY"],
+                    "tls": {
+                      "server": {
+                        "extraCertsFile": "/opt/steadybit/agent/etc/extension-mtls/server-cert/tls.crt"
+                        },
+                        "client": {
+                        "certChainFile": "/opt/steadybit/agent/etc/extension-mtls/client-cert-a/tls.crt",
+                        "certKeyFile": "/opt/steadybit/agent/etc/extension-mtls/client-cert-a/tls.key"
+                      }
+                  }
+                  }
+                ]
+              }
           labels:
             app.kubernetes.io/name: steadybit-extension-host
+            steadybit.com/extension: "true"
         spec:
           containers:
             - env:
@@ -165,8 +167,6 @@ manifest should match snapshot without TLS:
     apiVersion: apps/v1
     kind: DaemonSet
     metadata:
-      annotations:
-        steadybit.com/extension-auto-discovery: "{\n  \"extensions\": [\n    {\n      \"port\": \"8085\",\n      \"types\": [\"ACTION\",\"DISCOVERY\"],\n      \"tls\": {\n          \n      }\n    }\n  ]\n}\n"
       labels: null
       name: RELEASE-NAME-steadybit-extension-host
       namespace: NAMESPACE
@@ -176,8 +176,11 @@ manifest should match snapshot without TLS:
           app.kubernetes.io/name: steadybit-extension-host
       template:
         metadata:
+          annotations:
+            steadybit.com/extension-auto-discovery: "{\n  \"extensions\": [\n    {\n      \"port\": \"8085\",\n      \"types\": [\"ACTION\",\"DISCOVERY\"],\n      \"tls\": {\n          \n    }\n    }\n  ]\n}\n"
           labels:
             app.kubernetes.io/name: steadybit-extension-host
+            steadybit.com/extension: "true"
         spec:
           containers:
             - env:
