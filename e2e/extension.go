@@ -35,30 +35,30 @@ type Extension struct {
   podName string
 }
 
-func (e *Extension) DiscoverTargets(targetID string) ([]discovery_kit_api.Target, error) {
+func (e *Extension) DiscoverTargets(targetId string) ([]discovery_kit_api.Target, error) {
   discoveries, err := e.describeDiscoveries()
   if err != nil {
     return nil, fmt.Errorf("failed to get discovery descriptions: %w", err)
   }
   for _, discovery := range discoveries {
-    if discovery.Id == targetID {
+    if discovery.Id == targetId {
       return e.discoverTargets(discovery)
     }
   }
-  return nil, fmt.Errorf("discovery not found: %s", targetID)
+  return nil, fmt.Errorf("discovery not found: %s", targetId)
 }
 
-func (e *Extension) RunAction(actionID string, target action_kit_api.Target, config interface{}) *ActionExecution {
+func (e *Extension) RunAction(actionId string, target action_kit_api.Target, config interface{}) *ActionExecution {
   actions, err := e.describeActions()
   if err != nil {
     return errorExecution(fmt.Errorf("failed to get action descriptions: %w", err))
   }
   for _, action := range actions {
-    if action.Id == actionID {
+    if action.Id == actionId {
       return e.execAction(action, target, config)
     }
   }
-  return errorExecution(fmt.Errorf("action not found: %s", actionID))
+  return errorExecution(fmt.Errorf("action not found: %s", actionId))
 }
 
 func (e *Extension) listDiscoveries() (discovery_kit_api.DiscoveryList, error) {
@@ -183,7 +183,7 @@ func (e *Extension) execAction(action action_kit_api.ActionDescription, target a
   if err != nil {
     return errorExecution(err)
   }
-  log.Info().Str("actionID", action.Id).
+  log.Info().Str("actionId", action.Id).
     Interface("config", config).
     Interface("state", state).
     Msg("Action prepared")
@@ -195,7 +195,7 @@ func (e *Extension) execAction(action action_kit_api.ActionDescription, target a
     }
     return errorExecution(err)
   }
-  log.Info().Str("actionID", action.Id).
+  log.Info().Str("actionId", action.Id).
     Interface("state", state).
     Msg("Action started")
 
@@ -223,13 +223,13 @@ func (e *Extension) execAction(action action_kit_api.ActionDescription, target a
       if stopErr != nil {
         errors.Join(err, stopErr)
       } else {
-        log.Info().Str("actionID", action.Id).Msg("Action stopped")
+        log.Info().Str("actionId", action.Id).Msg("Action stopped")
       }
     } else {
       ch <- err
     }
 
-    log.Info().Str("actionID", action.Id).Msg("Action ended")
+    log.Info().Str("actionId", action.Id).Msg("Action ended")
     close(ch)
   }()
 
@@ -317,7 +317,7 @@ func (e *Extension) actionStatus(ctx context.Context, action action_kit_api.Acti
         return nil, fmt.Errorf("action failed: %v", *statusResult.Error)
       }
 
-      log.Info().Str("actionID", action.Id).Bool("completed", statusResult.Completed).Msg("Action status")
+      log.Info().Str("actionId", action.Id).Bool("completed", statusResult.Completed).Msg("Action status")
       if statusResult.Completed {
         return state, nil
       }
