@@ -35,7 +35,7 @@ jobs:
           driver: docker
           container-runtime: docker
           start-args: '--ports=8085'
-          cpus: 4
+          cpus: 2
           memory: 15939m
 
       - name: Audit
