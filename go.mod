@@ -3,6 +3,7 @@ module github.com/steadybit/extension-host
 go 1.20
 
 require (
+	github.com/coreos/go-iptables v0.6.0
 	github.com/elastic/go-sysinfo v1.10.1
 	github.com/go-resty/resty/v2 v2.7.0
 	github.com/google/uuid v1.3.0

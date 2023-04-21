@@ -12,6 +12,7 @@ import (
   "github.com/steadybit/extension-host/config"
   "github.com/steadybit/extension-host/exthost"
   "github.com/steadybit/extension-host/exthost/resources"
+  "github.com/steadybit/extension-host/exthost/timetravel"
   "github.com/steadybit/extension-kit/extbuild"
   "github.com/steadybit/extension-kit/exthealth"
   "github.com/steadybit/extension-kit/exthttp"
@@ -53,7 +54,7 @@ func main() {
   action_kit_sdk.RegisterAction(resources.NewStressCPUAction())
   action_kit_sdk.RegisterAction(resources.NewStressMemoryAction())
   action_kit_sdk.RegisterAction(resources.NewStressIOAction())
-  //action_kit_sdk.RegisterAction(timetravel.NewTimetravelAction())
+  action_kit_sdk.RegisterAction(timetravel.NewTimetravelAction())
 
   //This will install a signal handlder, that will stop active actions when receiving a SIGURS1, SIGTERM or SIGINT
   action_kit_sdk.InstallSignalHandler()

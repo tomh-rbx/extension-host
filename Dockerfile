@@ -36,8 +36,8 @@ ARG USER_UID=1000
 
 RUN apk update && \
 # install needed tools
-#    apk add iproute2 stress-ng iptables bind9-dnsutils runc skopeo cgroup-tools gnupg umoci procps && \
-    apk add stress-ng && \
+#    apk add iproute2 bind9-dnsutils runc skopeo cgroup-tools gnupg umoci procps && \
+    apk add stress-ng iptables && \
 # cleanup
     rm -rf /var/cache/apk/*
 

@@ -6,7 +6,8 @@ package exthost
 
 import (
 	"github.com/rs/zerolog/log"
-	"os"
+  "golang.org/x/exp/slices"
+  "os"
 	"regexp"
 	"strings"
 )
@@ -33,7 +34,7 @@ func getEnvironmentVariables() map[string]string {
 	for _, e := range env {
 		pair := strings.Split(e, "=")
 		key := strings.ToLower(pair[0])
-		if contains(whitelistedEnvVars, key) {
+		if slices.Contains(whitelistedEnvVars, key) {
 			envVars[key] = pair[1]
 		}
 	}
