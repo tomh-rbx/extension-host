@@ -5,11 +5,13 @@ package e2e
 
 import (
   "context"
+  "encoding/json"
   "errors"
   "fmt"
   "github.com/rs/zerolog"
   "github.com/rs/zerolog/log"
   "github.com/stretchr/testify/require"
+  "golang.org/x/exp/slices"
   "io"
   metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
   "k8s.io/client-go/kubernetes"
@@ -39,17 +41,42 @@ type Minikube struct {
   config     *rest.Config
 }
 
-func checkMinikubeIsRunning() string {
-  stdout := prefixWriter{prefix: "🧊", w: os.Stdout}
-  stderr := prefixWriter{prefix: "🧊", w: os.Stderr}
+type Config struct {
+  Name         string
+  ExposedPorts []string
+}
 
-  cmd := exec.Command("minikube", "status")
-  cmd.Stdout = &stdout
-  cmd.Stderr = &stderr
-  if err := cmd.Run(); err != nil {
+type Profile struct {
+  Name   string
+  Status string
+  Config Config
+}
+
+type Profiles struct {
+  Valid   []Profile `json:"valid"`
+  Invalid []Profile `json:"invalid"`
+}
+
+func checkMinikubeIsRunning() string {
+
+  cmd := exec.Command("minikube", "profile", "list", "--output", "json")
+  stdout, err := cmd.Output()
+  if err != nil {
+    log.Error().Err(err).Msg("failed to get the profile list")
     return ""
   }
-  return "minikube"
+
+  profiles := Profiles{}
+  if err := json.Unmarshal(stdout, &profiles); err != nil {
+    log.Error().Err(err).Msg("failed to unmarshal the profile list")
+    return ""
+  }
+  for _, profile := range profiles.Valid {
+    if profile.Status == "Running" && slices.Contains(profile.Config.ExposedPorts, "8085") {
+      return profile.Name
+    }
+  }
+  return ""
 }
 func startMinikube() (*Minikube, error) {
   stdout := prefixWriter{prefix: "🧊", w: os.Stdout}
@@ -164,15 +191,20 @@ func WithMinikube(t *testing.T, testCases []WithMinikubeTestCase) {
   t.Run("docker", func(t *testing.T) {
     minikubeProfileName := checkMinikubeIsRunning()
     var minikube *Minikube
+    var err error
     if minikubeProfileName == "" {
-      minikube, err := startMinikube()
+      minikube, err = startMinikube()
       if err != nil {
         t.Fatalf("failed to start minikube: %v", err)
       }
-      defer func() { _ = minikube.delete() }()
     } else {
       minikube = &Minikube{profile: minikubeProfileName}
     }
+    defer func() {
+      if minikubeProfileName == "" {
+        _ = minikube.delete()
+      }
+    }()
 
     t.Parallel()
 
