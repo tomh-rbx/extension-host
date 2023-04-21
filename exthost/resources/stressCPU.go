@@ -143,7 +143,7 @@ func (l *stressCPUAction) Prepare(_ context.Context, state *StressCPUActionState
   if !exthost.IsStressNgInstalled() {
     return &action_kit_api.PrepareResult{
       Error: extutil.Ptr(action_kit_api.ActionKitError{
-        Title:  fmt.Sprintf("Stress-ng is not installed on %s", request.Target.Name),
+        Title:  "Stress-ng is not installed!",
         Status: extutil.Ptr(action_kit_api.Errored),
       }),
     }, nil
