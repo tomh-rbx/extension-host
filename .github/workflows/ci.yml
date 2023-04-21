@@ -36,7 +36,7 @@ jobs:
           container-runtime: docker
           start-args: '--ports=8085'
           cpus: 2
-          memory: 15939m
+          memory: 6500m
 
       - name: Audit
         run: |
