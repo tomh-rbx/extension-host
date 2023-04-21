@@ -6,9 +6,8 @@ package resources
 
 import (
   "context"
-  "errors"
   "fmt"
-  "github.com/steadybit/action-kit/go/action_kit_api/v2"
+  action_kit_api "github.com/steadybit/action-kit/go/action_kit_api/v2"
   "github.com/steadybit/action-kit/go/action_kit_sdk"
   "github.com/steadybit/extension-host/exthost"
   "github.com/steadybit/extension-kit/extbuild"
@@ -16,30 +15,30 @@ import (
   "strconv"
 )
 
-type stressCPUAction struct{}
+type stressIOAction struct{}
 
 // Make sure action implements all required interfaces
 var (
-  _ action_kit_sdk.Action[StressActionState]         = (*stressCPUAction)(nil)
-  _ action_kit_sdk.ActionWithStop[StressActionState] = (*stressCPUAction)(nil) // Optional, needed when the action needs a stop method
+  _ action_kit_sdk.Action[StressActionState]         = (*stressIOAction)(nil)
+  _ action_kit_sdk.ActionWithStop[StressActionState] = (*stressIOAction)(nil) // Optional, needed when the action needs a stop method
 )
 
-func NewStressCPUAction() action_kit_sdk.Action[StressActionState] {
-  return &stressCPUAction{}
+func NewStressIOAction() action_kit_sdk.Action[StressActionState] {
+  return &stressIOAction{}
 }
 
-func (l *stressCPUAction) NewEmptyState() StressActionState {
+func (l *stressIOAction) NewEmptyState() StressActionState {
   return StressActionState{}
 }
 
 // Describe returns the action description for the platform with all required information.
-func (l *stressCPUAction) Describe() action_kit_api.ActionDescription {
+func (l *stressIOAction) Describe() action_kit_api.ActionDescription {
   return action_kit_api.ActionDescription{
-    Id:          fmt.Sprintf("%s.stress-cpu", actionIDs),
-    Label:       "Stress CPU",
-    Description: "Generates CPU load for one or more cores.",
+    Id:          fmt.Sprintf("%s.stress-io", actionIDs),
+    Label:       "Stress IO",
+    Description: "Generate read/write operation on hard disks.",
     Version:     extbuild.GetSemverVersionStringOrUnknown(),
-    Icon:        extutil.Ptr(stressCPUIcon),
+    Icon:        extutil.Ptr(stressIOIcon),
     TargetSelection: extutil.Ptr(action_kit_api.TargetSelection{
       // The target type this action is for
       TargetType: exthost.TargetID,
@@ -71,33 +70,22 @@ func (l *stressCPUAction) Describe() action_kit_api.ActionDescription {
     // The parameters for the action
     Parameters: []action_kit_api.ActionParameter{
       {
-        Name:         "cpuLoad",
-        Label:        "Host CPU Load",
-        Description:  extutil.Ptr("How much CPU should be consumed?"),
-        Type:         action_kit_api.Percentage,
-        DefaultValue: extutil.Ptr("100"),
-        Required:     extutil.Ptr(true),
-        Order:        extutil.Ptr(1),
-        MinValue:     extutil.Ptr(0),
-        MaxValue:     extutil.Ptr(100),
-      },
-      {
         Name:         "workers",
-        Label:        "Host CPUs",
-        Description:  extutil.Ptr("How many workers should be used to stress the CPU?"),
+        Label:        "Workers",
+        Description:  extutil.Ptr("How many workers should continually write, read and remove temporary files?"),
         Type:         "stressng-workers",
         DefaultValue: extutil.Ptr("0"),
         Required:     extutil.Ptr(true),
-        Order:        extutil.Ptr(2),
+        Order:        extutil.Ptr(1),
       },
       {
         Name:         "duration",
         Label:        "Duration",
-        Description:  extutil.Ptr("How long should CPU be stressed?"),
+        Description:  extutil.Ptr("How long should IO be stressed?"),
         Type:         action_kit_api.Duration,
         DefaultValue: extutil.Ptr("30s"),
         Required:     extutil.Ptr(true),
-        Order:        extutil.Ptr(3),
+        Order:        extutil.Ptr(2),
       },
     },
     Stop: extutil.Ptr(action_kit_api.MutatingEndpointReference{}),
@@ -109,7 +97,7 @@ func (l *stressCPUAction) Describe() action_kit_api.ActionDescription {
 // It must not cause any harmful effects.
 // The passed in state is included in the subsequent calls to start/status/stop.
 // So the state should contain all information needed to execute the action and even more important: to be able to stop it.
-func (l *stressCPUAction) Prepare(_ context.Context, state *StressActionState, request action_kit_api.PrepareActionRequestBody) (*action_kit_api.PrepareResult, error) {
+func (l *stressIOAction) Prepare(_ context.Context, state *StressActionState, request action_kit_api.PrepareActionRequestBody) (*action_kit_api.PrepareResult, error) {
   durationConfig := exthost.ToUInt64(request.Config["duration"])
   if durationConfig < 1000 {
     return &action_kit_api.PrepareResult{
@@ -120,16 +108,12 @@ func (l *stressCPUAction) Prepare(_ context.Context, state *StressActionState, r
     }, nil
   }
   duration := durationConfig / 1000
-  cpuLoad := exthost.ToUInt(request.Config["cpuLoad"])
   workers := exthost.ToUInt(request.Config["workers"])
 
-  if cpuLoad == 0 {
-    return nil, errors.New("cpuLoad must be greater than 0")
-  }
   state.StressNGArgs = []string{
-    "--cpu", strconv.Itoa(int(workers)),
-    "--cpu-load", strconv.Itoa(int(cpuLoad)),
+    "--io", strconv.Itoa(int(workers)),
     "--timeout", strconv.Itoa(int(duration)),
+    "--aggressive",
   }
 
   if !exthost.IsStressNgInstalled() {
@@ -147,7 +131,7 @@ func (l *stressCPUAction) Prepare(_ context.Context, state *StressActionState, r
 // Start is called to start the action
 // You can mutate the state here.
 // You can use the result to return messages/errors/metrics or artifacts
-func (l *stressCPUAction) Start(_ context.Context, state *StressActionState) (*action_kit_api.StartResult, error) {
+func (l *stressMemoryAction) Start(_ context.Context, state *StressActionState) (*action_kit_api.StartResult, error) {
   return start(state)
 }
 
@@ -155,6 +139,6 @@ func (l *stressCPUAction) Start(_ context.Context, state *StressActionState) (*a
 // It will be called even if the start method did not complete successfully.
 // It should be implemented in a immutable way, as the agent might to retries if the stop method timeouts.
 // You can use the result to return messages/errors/metrics or artifacts
-func (l *stressCPUAction) Stop(_ context.Context, state *StressActionState) (*action_kit_api.StopResult, error) {
+func (l *stressMemoryAction) Stop(_ context.Context, state *StressActionState) (*action_kit_api.StopResult, error) {
   return stop(state)
 }

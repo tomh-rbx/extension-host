@@ -10,7 +10,7 @@ import (
   "testing"
 )
 
-func TestActionCPU_Prepare(t *testing.T) {
+func TestActionIO_Prepare(t *testing.T) {
 
   tests := []struct {
     name        string
@@ -25,13 +25,12 @@ func TestActionCPU_Prepare(t *testing.T) {
           "action":   "prepare",
           "duration": "1000",
           "workers":  "1",
-          "cpuLoad":  "50",
         },
         ExecutionId: uuid.New(),
       },
 
       wantedState: &StressActionState{
-        StressNGArgs: []string{"--cpu", "1", "--cpu-load", "50", "--timeout", "1"},
+        StressNGArgs: []string{"--io", "1", "--timeout", "1", "--aggressive"},
         Pid:          0,
       },
     }, {
@@ -41,7 +40,6 @@ func TestActionCPU_Prepare(t *testing.T) {
           "action":   "prepare",
           "duration": "500",
           "workers":  "1",
-          "cpuLoad":  "50",
         },
         ExecutionId: uuid.New(),
       },
@@ -49,7 +47,7 @@ func TestActionCPU_Prepare(t *testing.T) {
       wantedError: extutil.Ptr(extension_kit.ToError("Duration must be greater / equal than 1s", nil)),
     },
   }
-  action := NewStressCPUAction()
+  action := NewStressIOAction()
   for _, tt := range tests {
     t.Run(tt.name, func(t *testing.T) {
       //Given

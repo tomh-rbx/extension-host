@@ -51,6 +51,8 @@ func main() {
 	// you do not have a need for all of them.
 	exthost.RegisterDiscoveryHandlers()
 	action_kit_sdk.RegisterAction(resources.NewStressCPUAction())
+	action_kit_sdk.RegisterAction(resources.NewStressMemoryAction())
+	action_kit_sdk.RegisterAction(resources.NewStressIOAction())
 
 	//This will install a signal handlder, that will stop active actions when receiving a SIGURS1, SIGTERM or SIGINT
 	action_kit_sdk.InstallSignalHandler()
