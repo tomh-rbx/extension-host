@@ -24,13 +24,13 @@ func TestWithMinikube(t *testing.T) {
       Name: "stress cpu",
       Test: testStressCpu,
     },
-    //{
-    //  Name: "stress memory",
-    //  Test: testStressMemory,
-    //}, {
-    //  Name: "stress io",
-    //  Test: testStressIo,
-    //},
+    {
+      Name: "stress memory",
+      Test: testStressMemory,
+    }, {
+      Name: "stress io",
+      Test: testStressIo,
+    },
   })
 }
 
@@ -92,29 +92,23 @@ func testStressIo(t *testing.T, m *Minikube, e *Extension) {
     },
   }
   config := struct {
-    Duration   int    `json:"duration"`
-    Path       string `json:"path"`
-    Percentage int    `json:"percentage"`
-    Workers    int    `json:"workers"`
-  }{Duration: 5000, Workers: 1, Percentage: 50, Path: "/tmp"}
+    Duration   int `json:"duration"`
+    Percentage int `json:"percentage"`
+    Workers    int `json:"workers"`
+  }{Duration: 5000, Workers: 1, Percentage: 50}
   exec := e.RunAction("com.github.steadybit.extension_host.host.stress-io", target, config)
   assertProcessRunningInContainer(t, m, e.podName, "extension-host", "stress-ng")
   require.NoError(t, exec.Cancel())
 }
 
 func testDiscovery(t *testing.T, m *Minikube, e *Extension) {
-  hostname, err := os.Hostname()
-  if err != nil {
-    t.Fatal(err)
-    return
-  }
   ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
   defer cancel()
 
   target, err := pollForTarget(ctx, e, func(target discovery_kit_api.Target) bool {
-    return hasAttribute(target, "host.hostname", hostname)
+    return hasAttribute(target, "host.hostname", "e2e-docker")
   })
 
   require.NoError(t, err)
-  assert.Equal(t, target.TargetType, "com.github.steadybit.extension_host.host")
+  assert.Equal(t, target.TargetType, "host")
 }
