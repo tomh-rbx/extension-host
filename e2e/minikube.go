@@ -39,6 +39,18 @@ type Minikube struct {
   config     *rest.Config
 }
 
+func checkMinikubeIsRunning() string {
+  stdout := prefixWriter{prefix: "🧊", w: os.Stdout}
+  stderr := prefixWriter{prefix: "🧊", w: os.Stderr}
+
+  cmd := exec.Command("minikube", "status")
+  cmd.Stdout = &stdout
+  cmd.Stderr = &stderr
+  if err := cmd.Run(); err != nil {
+    return ""
+  }
+  return "minikube"
+}
 func startMinikube() (*Minikube, error) {
   stdout := prefixWriter{prefix: "🧊", w: os.Stdout}
   stderr := prefixWriter{prefix: "🧊", w: os.Stderr}
@@ -150,12 +162,17 @@ func WithMinikube(t *testing.T, testCases []WithMinikubeTestCase) {
   }()
 
   t.Run("docker", func(t *testing.T) {
-
-    minikube, err := startMinikube()
-    if err != nil {
-      t.Fatalf("failed to start minikube: %v", err)
+    minikubeProfileName := checkMinikubeIsRunning()
+    var minikube *Minikube
+    if minikubeProfileName == "" {
+      minikube, err := startMinikube()
+      if err != nil {
+        t.Fatalf("failed to start minikube: %v", err)
+      }
+      defer func() { _ = minikube.delete() }()
+    } else {
+      minikube = &Minikube{profile: minikubeProfileName}
     }
-    defer func() { _ = minikube.delete() }()
 
     t.Parallel()
 
