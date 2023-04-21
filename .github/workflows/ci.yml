@@ -30,7 +30,7 @@ jobs:
 
       - name: start minikube
         uses: medyagh/setup-minikube@latest
-        id: minikube
+        id: e2e-docker
         with:
           driver: docker
           container-runtime: docker
