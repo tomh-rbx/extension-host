@@ -14,7 +14,7 @@ func useIptablesLegacy() bool {
     return false
   }
   //check if output contains "nf_tables"
-  return strings.Contains(string(out), "nf_tables")
+  return strings.Contains(string(out), "nf_tables") || strings.Contains(string(out), "legacy")
 }
 
 func executeIpTablesCommand(useIptablesLegacy bool, iptablesCmd string, args ...string) error {
