@@ -182,7 +182,7 @@ func (e *Extension) execAction(action action_kit_api.ActionDescription, target a
     return errorExecution(err)
   }
   log.Info().Str("actionId", action.Id).
-    Interface("clientConfig", config).
+    Interface("config", config).
     Interface("state", state).
     Msg("Action prepared")
 
