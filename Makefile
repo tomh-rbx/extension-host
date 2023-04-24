@@ -35,19 +35,10 @@ charttesting:
     helm unittest $$dir; \
   done
 
-## charttesting: Run Helm chart unit tests
-.PHONY: charttestingupdate
-charttestingupdate:
-	for dir in charts/steadybit-extension-*; do \
-    echo "Unit Testing $$dir"; \
-    helm unittest $$dir -u; \
-  done
-
 ## chartlint: Lint charts
 .PHONY: chartlint
 chartlint:
 	ct lint --config chartTesting.yaml
-
 
 # ==================================================================================== #
 # BUILD
@@ -68,19 +59,3 @@ run: tidy build
 .PHONY: container
 container:
 	docker build -t extension-host:latest .
-
-# ==================================================================================== #
-# EJECT
-# ==================================================================================== #
-
-## eject: remove / clear up files associated with the scaffold repository
-.PHONY: eject
-eject:
-	rm CHANGELOG.md
-	mv CHANGELOG.SCAFFOLD.md CHANGELOG.md
-	rm CONTRIBUTING.md
-	mv CONTRIBUTING.SCAFFOLD.md CONTRIBUTING.md
-	rm README.md
-	mv README.SCAFFOLD.md README.md
-	rm LICENSE
-	mv LICENSE.SCAFFOLD LICENSE
