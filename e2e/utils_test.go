@@ -4,15 +4,19 @@
 package e2e
 
 import (
+  "bufio"
   "bytes"
   "context"
   "fmt"
+  "github.com/rs/zerolog/log"
   "github.com/steadybit/discovery-kit/go/discovery_kit_api"
   "github.com/steadybit/extension-kit/extutil"
   "github.com/stretchr/testify/assert"
   "github.com/stretchr/testify/require"
+  appv1 "k8s.io/api/apps/v1"
   corev1 "k8s.io/api/core/v1"
   metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+  "k8s.io/apimachinery/pkg/labels"
   acorev1 "k8s.io/client-go/applyconfigurations/core/v1"
   ametav1 "k8s.io/client-go/applyconfigurations/meta/v1"
   "k8s.io/client-go/kubernetes/scheme"
@@ -124,6 +128,90 @@ func createBusyBoxPod(m *Minikube, podName string) (metav1.Object, error) {
     Status: nil,
   }
 
+  return createPod(m, pod)
+}
+
+func createNginxPod(m *Minikube, podName string) (metav1.Object, error) {
+  pod := &acorev1.PodApplyConfiguration{
+    TypeMetaApplyConfiguration: ametav1.TypeMetaApplyConfiguration{
+      Kind:       extutil.Ptr("Pod"),
+      APIVersion: extutil.Ptr("v1"),
+    },
+    ObjectMetaApplyConfiguration: &ametav1.ObjectMetaApplyConfiguration{
+      Name:   &podName,
+      Labels: map[string]string{"app": podName},
+    },
+    Spec: &acorev1.PodSpecApplyConfiguration{
+      RestartPolicy: extutil.Ptr(corev1.RestartPolicyNever),
+      Containers: []acorev1.ContainerApplyConfiguration{
+        {
+          Name:  extutil.Ptr("nginx"),
+          Image: extutil.Ptr("nginx:stable-alpine"),
+          Ports: []acorev1.ContainerPortApplyConfiguration{
+            {
+              ContainerPort: extutil.Ptr(int32(80)),
+            },
+          },
+        },
+      },
+    },
+    Status: nil,
+  }
+
+  return createPod(m, pod)
+}
+
+func createNginxService(m *Minikube, pod metav1.Object, serviceName string) (metav1.Object, error) {
+  service := &acorev1.ServiceApplyConfiguration{
+    TypeMetaApplyConfiguration: ametav1.TypeMetaApplyConfiguration{
+      Kind:       extutil.Ptr("Service"),
+      APIVersion: extutil.Ptr("v1"),
+    },
+    ObjectMetaApplyConfiguration: &ametav1.ObjectMetaApplyConfiguration{
+      Name:   &serviceName,
+      Labels: map[string]string{"app": serviceName},
+    },
+    Spec: &acorev1.ServiceSpecApplyConfiguration{
+      Selector: pod.GetLabels(),
+      Ports: []acorev1.ServicePortApplyConfiguration{
+        {
+          Port:     extutil.Ptr(int32(80)),
+          Protocol: extutil.Ptr(corev1.ProtocolTCP),
+        },
+      },
+    },
+  }
+
+  applied, err := m.Client().CoreV1().Services("default").Apply(context.Background(), service, metav1.ApplyOptions{FieldManager: "application/apply-patch"})
+  if err != nil {
+    return nil, err
+  }
+  return applied.GetObjectMeta(), nil
+}
+
+func deleteService(m *Minikube, service metav1.Object) error {
+  if service == nil {
+    return nil
+  }
+  return m.Client().CoreV1().Services(service.GetNamespace()).Delete(context.Background(), service.GetName(), metav1.DeleteOptions{GracePeriodSeconds: extutil.Ptr(int64(0))})
+}
+
+func serviceIsReachable(m *Minikube, service metav1.Object) error {
+  client, err := m.NewServiceClient(service)
+  if err != nil {
+    return err
+  }
+  defer client.Close()
+
+  _, err = client.R().Get("/")
+  if err != nil {
+    return err
+  }
+
+  return nil
+}
+
+func createPod(m *Minikube, pod *acorev1.PodApplyConfiguration) (metav1.Object, error) {
   applied, err := m.Client().CoreV1().Pods("default").Apply(context.Background(), pod, metav1.ApplyOptions{FieldManager: "application/apply-patch"})
   if err != nil {
     return nil, err
@@ -211,4 +299,53 @@ func hasAttribute(target discovery_kit_api.Target, key, value string) bool {
     }
   }
   return false
+}
+
+func waitForPods(minikube *Minikube, daemonSet *appv1.DaemonSet) string {
+  ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+  defer cancel()
+  var podName string
+
+  for {
+    select {
+    case <-ctx.Done():
+      return podName
+    case <-time.After(200 * time.Millisecond):
+    }
+
+    pods, err := minikube.Client().CoreV1().Pods(daemonSet.GetNamespace()).List(ctx, metav1.ListOptions{
+      LabelSelector: labels.Set(daemonSet.Spec.Selector.MatchLabels).String(),
+    })
+    if err != nil {
+      log.Warn().Err(err).Msg("failed to list pods for extension")
+    }
+
+    for _, pod := range pods.Items {
+      if err := waitForPodPhase(minikube, pod.GetObjectMeta(), corev1.PodRunning, 10*time.Second); err != nil {
+        log.Warn().Err(err).Msg("pod is not running")
+      }
+      podName = pod.GetName()
+      go tailLog(minikube, pod.GetObjectMeta())
+    }
+    if len(pods.Items) > 0 {
+      break
+    }
+  }
+  return podName
+}
+
+func tailLog(minikube *Minikube, pod metav1.Object) {
+  reader, err := minikube.Client().CoreV1().
+    Pods(pod.GetNamespace()).
+    GetLogs(pod.GetName(), &corev1.PodLogOptions{
+      Follow: true,
+    }).Stream(context.Background())
+  if err != nil {
+    log.Fatal().Err(err).Msg("failed to tail logs")
+  }
+  defer func() { _ = reader.Close() }()
+  scanner := bufio.NewScanner(reader)
+  for scanner.Scan() {
+    fmt.Printf("📦%s\n", scanner.Text())
+  }
 }

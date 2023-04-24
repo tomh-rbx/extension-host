@@ -4,10 +4,12 @@
 package e2e
 
 import (
+  "bufio"
   "context"
   "encoding/json"
   "errors"
   "fmt"
+  "github.com/go-resty/resty/v2"
   "github.com/rs/zerolog"
   "github.com/rs/zerolog/log"
   "github.com/stretchr/testify/require"
@@ -28,7 +30,7 @@ import (
 )
 
 var (
-  configMutex sync.Mutex
+  globalMinikubeMutex sync.Mutex
 )
 
 type Minikube struct {
@@ -37,8 +39,8 @@ type Minikube struct {
   stderr  io.Writer
 
   clientOnce sync.Once
-  client     *kubernetes.Clientset
-  config     *rest.Config
+  client       *kubernetes.Clientset
+  clientConfig *rest.Config
 }
 
 type Config struct {
@@ -78,26 +80,31 @@ func checkMinikubeIsRunning() string {
   }
   return ""
 }
-func startMinikube() (*Minikube, error) {
+
+func newMinikube() *Minikube {
+  runtime := "docker"
+  profile := "e2e-" + runtime
   stdout := prefixWriter{prefix: "🧊", w: os.Stdout}
   stderr := prefixWriter{prefix: "🧊", w: os.Stderr}
 
-  configMutex.Lock()
-  defer configMutex.Unlock()
-  runtime := "docker"
-  profile := "e2e-" + runtime
+  return &Minikube{
+    profile: profile,
+    stdout:  &stdout,
+    stderr:  &stderr,
+  }
+}
+func (m *Minikube) start() error {
+  globalMinikubeMutex.Lock()
+  defer globalMinikubeMutex.Unlock()
 
-  _ = exec.Command("minikube", "-p", profile, "delete").Run()
 
-  args := []string{"-p", profile, "start", "--keep-context", fmt.Sprintf("--container-runtime=%s", runtime), "--ports=8085"}
-  cmd := exec.Command("minikube", args...)
-  cmd.Stdout = &stdout
-  cmd.Stderr = &stderr
-  if err := cmd.Run(); err != nil {
-    return nil, err
+  args := []string{"start", "--keep-context", "--container-runtime=docker", "--ports=8085"}
+
+  if err := m.command(args...).Run(); err != nil {
+    return err
   }
 
-  return &Minikube{profile: profile}, nil
+  return nil
 }
 
 func (m *Minikube) Client() *kubernetes.Clientset {
@@ -108,17 +115,17 @@ func (m *Minikube) Client() *kubernetes.Clientset {
         log.Fatal().Err(err).Msg("failed to create kubernetes client")
       }
       m.client = client
-      m.config = config
+      m.clientConfig = config
     })
   }
   return m.client
 }
 
 func (m *Minikube) Config() *rest.Config {
-  if m.config == nil {
+  if m.clientConfig == nil {
     m.Client()
   }
-  return m.config
+  return m.clientConfig
 }
 
 func (m *Minikube) waitForDefaultServiceaccount() error {
@@ -138,33 +145,32 @@ func (m *Minikube) waitForDefaultServiceaccount() error {
 }
 
 func (m *Minikube) delete() error {
-  configMutex.Lock()
-  defer configMutex.Unlock()
-  cmd := exec.Command("minikube", "-p", m.profile, "delete")
-  cmd.Stdout = m.stdout
-  cmd.Stderr = m.stderr
-  return cmd.Run()
+  globalMinikubeMutex.Lock()
+  defer globalMinikubeMutex.Unlock()
+  return m.command("delete").Run()
 }
 
 func (m *Minikube) cp(src, dst string) error {
-  cmd := exec.Command("minikube", "-p", m.profile, "cp", src, dst)
-  cmd.Stdout = m.stdout
-  cmd.Stderr = m.stderr
-  return cmd.Run()
+  return m.command(m.profile, "cp", src, dst).Run()
 }
 
 func (m *Minikube) exec(arg ...string) *exec.Cmd {
-  cmd := exec.Command("minikube", append([]string{"-p", m.profile, "ssh", "--"}, arg...)...)
-  cmd.Stdout = m.stdout
-  cmd.Stderr = m.stderr
-  return cmd
+  return m.command(append([]string{"ssh", "--"}, arg...)...)
 }
 
 func (m *Minikube) LoadImage(image string) error {
-  cmd := exec.Command("minikube", "-p", m.profile, "image", "load", image)
+  return m.command("image", "load", image).Run()
+}
+
+func (m *Minikube) command(arg ...string) *exec.Cmd {
+  return m.commandContext(context.Background(), arg...)
+}
+
+func (m *Minikube) commandContext(ctx context.Context, arg ...string) *exec.Cmd {
+  cmd := exec.CommandContext(ctx, "minikube", append([]string{"-p", m.profile}, arg...)...)
   cmd.Stdout = m.stdout
   cmd.Stderr = m.stderr
-  return cmd.Run()
+  return cmd
 }
 
 type WithMinikubeTestCase struct {
@@ -193,7 +199,9 @@ func WithMinikube(t *testing.T, testCases []WithMinikubeTestCase) {
     var minikube *Minikube
     var err error
     if minikubeProfileName == "" {
-      minikube, err = startMinikube()
+      minikube := newMinikube()
+      _ = minikube.delete()
+      err := minikube.start()
       if err != nil {
         t.Fatalf("failed to start minikube: %v", err)
       }
@@ -255,4 +263,77 @@ func (w *prefixWriter) Write(p []byte) (n int, err error) {
     }
   }
   return len(p), nil
+}
+
+type ServiceClient struct {
+  resty.Client
+  close func()
+}
+
+
+func (c *ServiceClient) Close() {
+  c.close()
+}
+
+func (m *Minikube) NewServiceClient(service metav1.Object) (*ServiceClient, error) {
+  url, cancel, err := m.tunnelService(service)
+  if err != nil {
+    return nil, err
+  }
+
+  client := resty.New()
+  client.SetBaseURL(url)
+  client.SetTimeout(3 * time.Second)
+
+  return &ServiceClient{
+    Client: *client,
+    close:  cancel,
+  }, nil
+}
+
+func (m *Minikube) tunnelService(service metav1.Object) (string, func(), error) {
+  ctx, cancel := context.WithCancel(context.Background())
+  cmd := m.commandContext(ctx, "service", "--namespace", service.GetNamespace(), service.GetName(), "--url")
+  cmd.Stdout = nil
+  stdout, err := cmd.StdoutPipe()
+  if err != nil {
+    cancel()
+    return "", nil, err
+  }
+
+  chUrl := make(chan string)
+  go func(r io.Reader) {
+    scanner := bufio.NewScanner(r)
+    for {
+      if !scanner.Scan() {
+        return
+      }
+      line := scanner.Text()
+      _, _ = m.stdout.Write([]byte(line))
+      if strings.HasPrefix(line, "http") {
+        chUrl <- line
+        return
+      }
+    }
+  }(stdout)
+
+  err = cmd.Start()
+  if err != nil {
+    cancel()
+    return "", nil, err
+  }
+
+  chErr := make(chan error)
+  go func() { chErr <- cmd.Wait() }()
+
+  select {
+  case url := <-chUrl:
+    return url, cancel, nil
+  case <-time.After(10 * time.Second):
+    cancel()
+    return "", nil, fmt.Errorf("timed out to tunnel service")
+  case err = <-chErr:
+    cancel()
+    return "", nil, fmt.Errorf("failed to tunnel service: %w", err)
+  }
 }
