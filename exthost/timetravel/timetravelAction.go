@@ -137,7 +137,6 @@ func (l *timetravelAction) Prepare(_ context.Context, state *StressActionState, 
   }
   disableNtp := exthost.ToBool(request.Config["disableNtp"])
   state.DisableNtp = disableNtp
-
   if !isUnixLike() {
     return &action_kit_api.PrepareResult{
       Error: extutil.Ptr(action_kit_api.ActionKitError{

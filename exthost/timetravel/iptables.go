@@ -19,6 +19,8 @@ func useIptablesLegacy() bool {
 }
 
 func executeIpTablesCommand(useIptablesLegacy bool, iptablesCmd string, args ...string) error {
+  log.Debug().Msg("Executing iptables command")
+  log.Debug().Msg(strings.Join(args, " "))
   cmd := exec.Command(iptablesCmd, args...)
   cmd.SysProcAttr = &syscall.SysProcAttr{
     Credential: &syscall.Credential{
@@ -35,6 +37,7 @@ func executeIpTablesCommand(useIptablesLegacy bool, iptablesCmd string, args ...
     log.Error().Err(err).Str("output", string(out)).Msg("Failed to execute iptables command")
     return err
   }
+
   return nil
 }
 func adjustNtpTrafficRules(allowNtpTraffic bool) error {
@@ -55,12 +58,12 @@ func adjustNtpTrafficRules(allowNtpTraffic bool) error {
       return err
     }
   } else {
-    err := executeIpTablesCommand(useIptablesLegacy, iptablesCmd, "-D", "OUTPUT", "-p", "udp", "--dport", "123", "-j", "DROP")
+    err := executeIpTablesCommand(useIptablesLegacy, iptablesCmd, "-A", "OUTPUT", "-p", "udp", "--dport", "123", "-j", "DROP")
     if err != nil {
       log.Error().Err(err).Msg("Failed to execute iptables command")
       return err
     }
-    err = executeIpTablesCommand(useIptablesLegacy, iptablesCmd, "-D", "OUTPUT", "-p", "udp", "--sport", "123", "-j", "DROP")
+    err = executeIpTablesCommand(useIptablesLegacy, iptablesCmd, "-A", "OUTPUT", "-p", "udp", "--sport", "123", "-j", "DROP")
     if err != nil {
       log.Error().Err(err).Msg("Failed to execute iptables command")
       return err

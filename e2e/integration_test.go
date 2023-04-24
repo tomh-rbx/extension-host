@@ -5,11 +5,14 @@ package e2e
 
 import (
   "context"
+  "github.com/rs/zerolog/log"
   "github.com/steadybit/action-kit/go/action_kit_api/v2"
   "github.com/steadybit/discovery-kit/go/discovery_kit_api"
+  "github.com/steadybit/extension-host/exthost"
   "github.com/stretchr/testify/assert"
   "github.com/stretchr/testify/require"
   "os"
+  "strings"
   "testing"
   "time"
 )
@@ -127,10 +130,38 @@ func testTimeTravel(t *testing.T, m *Minikube, e *Extension) {
     Duration   int  `json:"duration"`
     Offset     int  `json:"offset"`
     DisableNtp bool `json:"disableNtp"`
-  }{Duration: 5000, Offset: 1000, DisableNtp: true}
+  }{Duration: 3000, Offset: 360000, DisableNtp: true}
+  tolerance := time.Duration(1) * time.Second
+  now := time.Now()
   exec := e.RunAction("com.github.steadybit.extension_host.timetravel", target, config)
-  assertProcessRunningInContainer(t, m, e.podName, "extension-host", "iptables-legacy")
+  diff := getTimeDiffBetweenNowAndContainerTime(t, m, e, now)
+  log.Debug().Msgf("diff: %s", diff)
+  // check if is greater than offset
+
+  assert.True(t, diff+tolerance > time.Duration(config.Offset)*time.Millisecond, "time travel failed")
+
+  time.Sleep(3 * time.Second) // wait for rollback
+  now = time.Now()
+  diff = getTimeDiffBetweenNowAndContainerTime(t, m, e, now)
+  log.Debug().Msgf("diff: %s", diff)
+  assert.True(t, diff+tolerance <= 1*time.Second, "time travel failed to rollback properly")
+
   require.NoError(t, exec.Cancel())
+}
+
+func getTimeDiffBetweenNowAndContainerTime(t *testing.T, m *Minikube, e *Extension, now time.Time) time.Duration {
+  out, err := getOutputOfCommand(m, e.podName, "extension-host", []string{"date", "+%s"})
+  if err != nil {
+    t.Fatal(err)
+    return 0
+  }
+  containerSecondsSinceEpoch := exthost.ToInt64(strings.TrimSpace(out))
+  if containerSecondsSinceEpoch == 0 {
+    t.Fatal("could not parse container time")
+    return 0
+  }
+  containerTime := time.Unix(containerSecondsSinceEpoch, 0)
+  return containerTime.Sub(now)
 }
 
 func testDiscovery(t *testing.T, m *Minikube, e *Extension) {

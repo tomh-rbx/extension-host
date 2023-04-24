@@ -26,6 +26,37 @@ import (
   "time"
 )
 
+func getOutputOfCommand(m *Minikube, podname, containername string, command []string) (string, error) {
+  req := m.Client().CoreV1().RESTClient().Post().
+    Namespace("default").
+    Resource("pods").
+    Name(podname).
+    SubResource("exec").
+    VersionedParams(&corev1.PodExecOptions{
+      Container: containername,
+      Command:   command,
+      Stdout:    true,
+      Stderr:    true,
+      TTY:       true,
+    }, scheme.ParameterCodec)
+
+  exec, err := remotecommand.NewSPDYExecutor(m.Config(), "POST", req.URL())
+  if err != nil {
+    return "", err
+  }
+
+  var outb bytes.Buffer
+  err = exec.StreamWithContext(context.Background(), remotecommand.StreamOptions{
+    Stdout: &outb,
+    Stderr: &outb,
+    Tty:    true,
+  })
+  if err != nil {
+    return "", err
+  }
+
+  return outb.String(), nil
+}
 func assertProcessRunningInContainer(t *testing.T, m *Minikube, podname, containername string, comm string) {
   ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
   defer cancel()
