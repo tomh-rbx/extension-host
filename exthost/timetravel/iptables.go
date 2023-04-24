@@ -4,6 +4,7 @@ import (
   "github.com/rs/zerolog/log"
   "os/exec"
   "strings"
+  "syscall"
 )
 
 func useIptablesLegacy() bool {
@@ -19,6 +20,13 @@ func useIptablesLegacy() bool {
 
 func executeIpTablesCommand(useIptablesLegacy bool, iptablesCmd string, args ...string) error {
   cmd := exec.Command(iptablesCmd, args...)
+  cmd.SysProcAttr = &syscall.SysProcAttr{
+    Credential: &syscall.Credential{
+      Uid: 0,
+      Gid: 0,
+    },
+  }
+
   if useIptablesLegacy {
     cmd.Env = append(cmd.Env, "XTABLES_LOCKFILE=/tmp/xtables.lock")
   }

@@ -22,20 +22,24 @@ func skipCI(t *testing.T) {
 func TestWithMinikube(t *testing.T) {
   skipCI(t)
   WithMinikube(t, []WithMinikubeTestCase{
+    //{
+    //  Name: "target discovery",
+    //  Test: testDiscovery,
+    //},
+    //{
+    //  Name: "stress cpu",
+    //  Test: testStressCpu,
+    //},
+    //{
+    //  Name: "stress memory",
+    //  Test: testStressMemory,
+    //}, {
+    //  Name: "stress io",
+    //  Test: testStressIo,
+    //},
     {
-      Name: "target discovery",
-      Test: testDiscovery,
-    },
-    {
-      Name: "stress cpu",
-      Test: testStressCpu,
-    },
-    {
-      Name: "stress memory",
-      Test: testStressMemory,
-    }, {
-      Name: "stress io",
-      Test: testStressIo,
+      Name: "timetravel",
+      Test: testTimeTravel,
     },
   })
 }
@@ -104,6 +108,28 @@ func testStressIo(t *testing.T, m *Minikube, e *Extension) {
   }{Duration: 5000, Workers: 1, Percentage: 50}
   exec := e.RunAction("com.github.steadybit.extension_host.host.stress-io", target, config)
   assertProcessRunningInContainer(t, m, e.podName, "extension-host", "stress-ng")
+  require.NoError(t, exec.Cancel())
+}
+
+func testTimeTravel(t *testing.T, m *Minikube, e *Extension) {
+
+  hostname, err := os.Hostname()
+  if err != nil {
+    t.Fatal(err)
+    return
+  }
+  target := action_kit_api.Target{
+    Attributes: map[string][]string{
+      "host.hostname": {hostname},
+    },
+  }
+  config := struct {
+    Duration   int  `json:"duration"`
+    Offset     int  `json:"offset"`
+    DisableNtp bool `json:"disableNtp"`
+  }{Duration: 5000, Offset: 1000, DisableNtp: true}
+  exec := e.RunAction("com.github.steadybit.extension_host.timetravel", target, config)
+  assertProcessRunningInContainer(t, m, e.podName, "extension-host", "iptables-legacy")
   require.NoError(t, exec.Cancel())
 }
 

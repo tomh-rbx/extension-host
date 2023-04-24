@@ -382,11 +382,12 @@ func startExtension(minikube *Minikube, image string) (*Extension, error) {
               Image:           &image,
               ImagePullPolicy: extutil.Ptr(corev1.PullNever),
               SecurityContext: &acorev1.SecurityContextApplyConfiguration{
+                //Privileged: extutil.Ptr(true),
                 SeccompProfile: &acorev1.SeccompProfileApplyConfiguration{
                   Type: extutil.Ptr(corev1.SeccompProfileTypeUnconfined),
                 },
                 Capabilities: &acorev1.CapabilitiesApplyConfiguration{
-                  Add: []corev1.Capability{"SYS_BOOT", "NET_ADMIN", "NET_RAW", "KILL", "SYS_TIME", "AUDIT_WRITE"},
+                  Add: []corev1.Capability{"SYS_BOOT", "NET_ADMIN", "NET_RAW", "KILL", "SYS_TIME", "AUDIT_WRITE", "SETUID", "SETGID"},
                 },
                 ReadOnlyRootFilesystem: extutil.Ptr(true),
               },

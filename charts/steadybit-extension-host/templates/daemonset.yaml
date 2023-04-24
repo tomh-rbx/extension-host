@@ -65,7 +65,7 @@ spec:
               port: 8081
           securityContext:
             capabilities:
-              add: [ "SYS_BOOT", "NET_ADMIN", "NET_RAW", "KILL", "SYS_TIME", "AUDIT_WRITE" ]
+              add: [ "SYS_BOOT", "NET_ADMIN", "NET_RAW", "KILL", "SYS_TIME", "AUDIT_WRITE", "SETUID", "SETGID" ]
       volumes:
             {{- include "extensionlib.deployment.volumes" (list .) | nindent 8 }}
           {{- with .Values.nodeSelector }}

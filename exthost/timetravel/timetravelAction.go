@@ -114,7 +114,16 @@ func (l *timetravelAction) Describe() action_kit_api.ActionDescription {
 // The passed in state is included in the subsequent calls to start/status/stop.
 // So the state should contain all information needed to execute the action and even more important: to be able to stop it.
 func (l *timetravelAction) Prepare(_ context.Context, state *StressActionState, request action_kit_api.PrepareActionRequestBody) (*action_kit_api.PrepareResult, error) {
-  offsetInSec := exthost.ToUInt64(request.Config["offset"]) / 1000
+  parsedOffset := exthost.ToUInt64(request.Config["offset"])
+  if parsedOffset == 0 {
+    return &action_kit_api.PrepareResult{
+      Error: extutil.Ptr(action_kit_api.ActionKitError{
+        Title:  "Offset is required",
+        Status: extutil.Ptr(action_kit_api.Errored),
+      }),
+    }, nil
+  }
+  offsetInSec := parsedOffset / 1000
   if offsetInSec != 0 {
     offset := time.Duration(offsetInSec * 1000 * 1000 * 1000)
     state.Offset = offset
