@@ -6,7 +6,6 @@ package e2e
 import (
   "bytes"
   "context"
-  "encoding/json"
   "errors"
   "fmt"
   "github.com/go-resty/resty/v2"
@@ -267,11 +266,7 @@ func (e *Extension) startAction(action action_kit_api.ActionDescription, executi
     State:       state,
   }
   var startResult action_kit_api.StartResult
-  res, err := e.client.R().SetBody(startBody).Execute(string(action.Start.Method), action.Start.Path)
-  if err != nil {
-    return state, fmt.Errorf("failed to start action: %w", err)
-  }
-  err = json.Unmarshal(res.Body(), &startResult)
+  res, err := e.client.R().SetBody(startBody).SetResult(&startResult).Execute(string(action.Start.Method), action.Start.Path)
   if err != nil {
     return state, fmt.Errorf("failed to start action: %w", err)
   }

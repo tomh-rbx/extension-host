@@ -81,7 +81,7 @@ func (l *timetravelAction) Describe() action_kit_api.ActionDescription {
         Label:        "Offset",
         Description:  extutil.Ptr("The offset to the current time."),
         Type:         action_kit_api.Duration,
-        DefaultValue: extutil.Ptr("1h"),
+        DefaultValue: extutil.Ptr("60m"),
         Required:     extutil.Ptr(true),
         Order:        extutil.Ptr(1),
       },
@@ -190,6 +190,8 @@ func (l *timetravelAction) Start(_ context.Context, state *StressActionState) (*
 // It should be implemented in a immutable way, as the agent might to retries if the stop method timeouts.
 // You can use the result to return messages/errors/metrics or artifacts
 func (l *timetravelAction) Stop(_ context.Context, state *StressActionState) (*action_kit_api.StopResult, error) {
+  log.Info().Msg("Stopping action")
+  log.Debug().Msgf("Offset was applied: %v", state.OffsetApplied)
   if state.OffsetApplied {
     log.Info().Msg("Adjusting time back")
     err := AdjustTime(state.Offset, true)
