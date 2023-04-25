@@ -1,4 +1,4 @@
-package exthost
+package resources
 
 import (
 	"bytes"

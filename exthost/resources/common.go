@@ -3,7 +3,6 @@ package resources
 import (
   "github.com/rs/zerolog/log"
   "github.com/steadybit/action-kit/go/action_kit_api/v2"
-  "github.com/steadybit/extension-host/exthost"
 )
 
 const (
@@ -19,7 +18,7 @@ type StressActionState struct {
 }
 
 func start(state *StressActionState) (*action_kit_api.StartResult, error) {
-  pid, err := exthost.StartStressNG(state.StressNGArgs)
+  pid, err := StartStressNG(state.StressNGArgs)
   if err != nil {
     log.Error().Err(err).Msg("Failed to start stress-ng")
     return nil, err
@@ -32,7 +31,7 @@ func start(state *StressActionState) (*action_kit_api.StartResult, error) {
 func stop(state *StressActionState) (*action_kit_api.StopResult, error) {
   if state.Pid != 0 {
     log.Info().Int("Pid", state.Pid).Msg("Stopping stress-ng")
-    err := exthost.StopStressNG(state.Pid)
+    err := StopStressNG(state.Pid)
     if err != nil {
       log.Error().Err(err).Int("Pid", state.Pid).Msg("Failed to stop stress-ng")
       return nil, err

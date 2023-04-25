@@ -76,7 +76,7 @@ func assertProcessRunningInContainer(t *testing.T, m *Minikube, podname, contain
         SubResource("exec").
         VersionedParams(&corev1.PodExecOptions{
           Container: containername,
-          Command:   []string{"ps", "-opid,comm"},
+          Command:   []string{"ps", "-opid,comm", "-A"},
           Stdout:    true,
           Stderr:    true,
           TTY:       true,

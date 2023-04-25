@@ -129,7 +129,7 @@ func (l *stressMemoryAction) Prepare(_ context.Context, state *StressActionState
     "--vm-bytes", memory,
   }
 
-  if !exthost.IsStressNgInstalled() {
+  if !IsStressNgInstalled() {
     return &action_kit_api.PrepareResult{
       Error: extutil.Ptr(action_kit_api.ActionKitError{
         Title:  "Stress-ng is not installed!",

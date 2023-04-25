@@ -6,6 +6,7 @@ package e2e
 import (
   "bytes"
   "context"
+  "encoding/json"
   "errors"
   "fmt"
   "github.com/go-resty/resty/v2"
@@ -46,17 +47,17 @@ func (e *Extension) DiscoverTargets(targetId string) ([]discovery_kit_api.Target
   return nil, fmt.Errorf("discovery not found: %s", targetId)
 }
 
-func (e *Extension) RunAction(actionId string, target action_kit_api.Target, config interface{}) *ActionExecution {
+func (e *Extension) RunAction(actionId string, target action_kit_api.Target, config interface{}) (*ActionExecution, error) {
   actions, err := e.describeActions()
   if err != nil {
-    return errorExecution(fmt.Errorf("failed to get action descriptions: %w", err))
+    return nil, fmt.Errorf("failed to get action descriptions: %w", err)
   }
   for _, action := range actions {
     if action.Id == actionId {
       return e.execAction(action, target, config)
     }
   }
-  return errorExecution(fmt.Errorf("action not found: %s", actionId))
+  return nil, fmt.Errorf("action not found: %s", actionId)
 }
 
 func (e *Extension) listDiscoveries() (discovery_kit_api.DiscoveryList, error) {
@@ -167,19 +168,12 @@ func (a *ActionExecution) Cancel() error {
   return nil
 }
 
-func errorExecution(err error) *ActionExecution {
-  ch := make(chan error)
-  ch <- err
-  close(ch)
-  return &ActionExecution{ch: ch}
-}
-
-func (e *Extension) execAction(action action_kit_api.ActionDescription, target action_kit_api.Target, config interface{}) *ActionExecution {
+func (e *Extension) execAction(action action_kit_api.ActionDescription, target action_kit_api.Target, config interface{}) (*ActionExecution, error) {
   executionId := uuid.New()
 
   state, duration, err := e.prepareAction(action, target, config, executionId)
   if err != nil {
-    return errorExecution(err)
+    return nil, err
   }
   log.Info().Str("actionId", action.Id).
     Interface("config", config).
@@ -191,7 +185,7 @@ func (e *Extension) execAction(action action_kit_api.ActionDescription, target a
     if action.Stop != nil {
       _ = e.stopAction(action, executionId, state)
     }
-    return errorExecution(err)
+    return nil, err
   }
   log.Info().Str("actionId", action.Id).
     Interface("state", state).
@@ -234,7 +228,7 @@ func (e *Extension) execAction(action action_kit_api.ActionDescription, target a
   return &ActionExecution{
     ch:     ch,
     cancel: cancel,
-  }
+  }, nil
 }
 
 func (e *Extension) prepareAction(action action_kit_api.ActionDescription, target action_kit_api.Target, config interface{}, executionId uuid.UUID) (action_kit_api.ActionState, time.Duration, error) {
@@ -274,6 +268,10 @@ func (e *Extension) startAction(action action_kit_api.ActionDescription, executi
   }
   var startResult action_kit_api.StartResult
   res, err := e.client.R().SetBody(startBody).Execute(string(action.Start.Method), action.Start.Path)
+  err = json.Unmarshal(res.Body(), &startResult)
+  if err != nil {
+    return state, fmt.Errorf("failed to start action: %w", err)
+  }
   if err != nil {
     return state, fmt.Errorf("failed to start action: %w", err)
   }

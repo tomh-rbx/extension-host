@@ -38,7 +38,7 @@ type Minikube struct {
   stdout  io.Writer
   stderr  io.Writer
 
-  clientOnce sync.Once
+  clientOnce   sync.Once
   client       *kubernetes.Clientset
   clientConfig *rest.Config
 }
@@ -96,7 +96,6 @@ func newMinikube() *Minikube {
 func (m *Minikube) start() error {
   globalMinikubeMutex.Lock()
   defer globalMinikubeMutex.Unlock()
-
 
   args := []string{"start", "--keep-context", "--container-runtime=docker", "--ports=8085"}
 
@@ -269,7 +268,6 @@ type ServiceClient struct {
   resty.Client
   close func()
 }
-
 
 func (c *ServiceClient) Close() {
   c.close()
