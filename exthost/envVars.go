@@ -6,8 +6,8 @@ package exthost
 
 import (
 	"github.com/rs/zerolog/log"
-  "golang.org/x/exp/slices"
-  "os"
+	"golang.org/x/exp/slices"
+	"os"
 	"regexp"
 	"strings"
 )

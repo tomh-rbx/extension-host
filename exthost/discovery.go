@@ -5,8 +5,8 @@
 package exthost
 
 import (
-  "github.com/elastic/go-sysinfo"
-  "github.com/rs/zerolog/log"
+	"github.com/elastic/go-sysinfo"
+	"github.com/rs/zerolog/log"
 	"github.com/steadybit/discovery-kit/go/discovery_kit_api"
 	"github.com/steadybit/extension-kit/extbuild"
 	"github.com/steadybit/extension-kit/exthttp"

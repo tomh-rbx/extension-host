@@ -13,7 +13,7 @@ import (
 // through environment variables. Learn more through the documentation of the envconfig package.
 // https://github.com/kelseyhightower/envconfig
 type Specification struct {
-  // no config at the moment
+	// no config at the moment
 }
 
 var (
