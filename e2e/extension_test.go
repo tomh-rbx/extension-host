@@ -268,13 +268,14 @@ func (e *Extension) startAction(action action_kit_api.ActionDescription, executi
   }
   var startResult action_kit_api.StartResult
   res, err := e.client.R().SetBody(startBody).Execute(string(action.Start.Method), action.Start.Path)
+  if err != nil {
+    return state, fmt.Errorf("failed to start action: %w", err)
+  }
   err = json.Unmarshal(res.Body(), &startResult)
   if err != nil {
     return state, fmt.Errorf("failed to start action: %w", err)
   }
-  if err != nil {
-    return state, fmt.Errorf("failed to start action: %w", err)
-  }
+
   logMessages(startResult.Messages)
   if !res.IsSuccess() {
     return state, fmt.Errorf("failed to start action: %d", res.StatusCode())
