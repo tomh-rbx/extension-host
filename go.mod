@@ -8,7 +8,7 @@ require (
 	github.com/google/uuid v1.3.0
 	github.com/kelseyhightower/envconfig v1.4.0
 	github.com/rs/zerolog v1.29.0
-	github.com/steadybit/action-kit/go/action_kit_api/v2 v2.5.1
+	github.com/steadybit/action-kit/go/action_kit_api/v2 v2.5.2-0.20230425125005-ea5c8046260c
 	github.com/steadybit/action-kit/go/action_kit_sdk v1.1.0
 	github.com/steadybit/discovery-kit/go/discovery_kit_api v1.3.0
 	github.com/steadybit/event-kit/go/event_kit_api v1.1.0

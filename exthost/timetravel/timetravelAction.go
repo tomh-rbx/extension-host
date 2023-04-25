@@ -105,6 +105,7 @@ func (l *timeTravelAction) Describe() action_kit_api.ActionDescription {
 			},
 		},
 		Stop: extutil.Ptr(action_kit_api.MutatingEndpointReference{}),
+    AdditionalFlags: extutil.Ptr([]action_kit_api.ActionDescriptionAdditionalFlags{action_kit_api.DISABLEHEARTBEAT}),
 	}
 }
 
