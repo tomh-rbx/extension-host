@@ -175,6 +175,8 @@ github.com/mattn/go-isatty v0.0.14/go.mod h1:7GGIvUiUoEMVVmxf/4nioHXj79iQHKdU27k
 github.com/mattn/go-isatty v0.0.16/go.mod h1:kYGgaQfpe5nmfYZH+SKPsOc2e4SrIfOl2e/yFXSvRLM=
 github.com/mattn/go-isatty v0.0.18 h1:DOKFKCQ7FNG2L1rbrmstDN4QVRdS89Nkh85u68Uwp98=
 github.com/mattn/go-isatty v0.0.18/go.mod h1:W+V8PltTTMOvKvAeJH7IuucS94S2C6jfK/D7dTCTo3Y=
+github.com/mitchellh/go-ps v1.0.0 h1:i6ampVEEF4wQFF+bkYfwYgY+F/uYJDktmvLPf7qIgjc=
+github.com/mitchellh/go-ps v1.0.0/go.mod h1:J4lOc8z8yJs6vUwklHw2XEIiT4z4C40KtWVN3nvg8Pg=
 github.com/moby/spdystream v0.2.0 h1:cjW1zVyyoiM0T7b6UoySUFqzXMoqRckQtXwGPiBhOM8=
 github.com/moby/spdystream v0.2.0/go.mod h1:f7i0iNDQJ059oMTcWxx8MA/zKFIuD/lY+0GqbN2Wy8c=
 github.com/modern-go/concurrent v0.0.0-20180228061459-e0a39a4cb421/go.mod h1:6dJC0mAP4ikYIbvyc7fijjWJddQyLn8Ig3JB5CqoB9Q=
@@ -213,8 +215,8 @@ github.com/steadybit/discovery-kit/go/discovery_kit_api v1.3.0 h1:HwvovoYbAYpJ5P
 github.com/steadybit/discovery-kit/go/discovery_kit_api v1.3.0/go.mod h1:OnIfjrBhmMQCYxriHmr8mT1wCpvqIZxwBHWnanFhgNA=
 github.com/steadybit/event-kit/go/event_kit_api v1.1.0 h1:fz7gBUqEz67dhelYmWzyWIf/2Q+39y6bET2Gq7Hkeh4=
 github.com/steadybit/event-kit/go/event_kit_api v1.1.0/go.mod h1:YAliz224K5oWE48iOz73kLdLR/YuqjI7UraOTHJmlAA=
-github.com/steadybit/extension-kit v1.7.10 h1:9u/709e9dYkiZgEsTyEwfFhZUMGq/OsP1Zxdm8BNprQ=
-github.com/steadybit/extension-kit v1.7.10/go.mod h1:zC5Tw+wrJTx4xvOlsIY+MfMoRYoglj83vR15Xr3aP5c=
+github.com/steadybit/extension-kit v1.7.12-0.20230425143346-365dcc22beb5 h1:zgBdSflEY3EQbiA55zj8l2s5XLyHutQiWs72VxYlKyQ=
+github.com/steadybit/extension-kit v1.7.12-0.20230425143346-365dcc22beb5/go.mod h1:zC5Tw+wrJTx4xvOlsIY+MfMoRYoglj83vR15Xr3aP5c=
 github.com/stoewer/go-strcase v1.2.0/go.mod h1:IBiWB2sKIp3wVVQ3Y035++gc+knqhUQag1KpM8ahLw8=
 github.com/stretchr/objx v0.1.0/go.mod h1:HFkY916IF+rwdDfMAkV7OtwuqBVzrE8GR6GFx+wExME=
 github.com/stretchr/objx v0.4.0/go.mod h1:YvHI0jy2hoMjB+UWwv71VJQ9isScKT/TqJzVSSt89Yw=

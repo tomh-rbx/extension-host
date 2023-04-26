@@ -103,7 +103,7 @@ func (l *stressMemoryAction) Describe() action_kit_api.ActionDescription {
 // The passed in state is included in the subsequent calls to start/status/stop.
 // So the state should contain all information needed to execute the action and even more important: to be able to stop it.
 func (l *stressMemoryAction) Prepare(_ context.Context, state *StressActionState, request action_kit_api.PrepareActionRequestBody) (*action_kit_api.PrepareResult, error) {
-	durationConfig := exthost.ToUInt64(request.Config["duration"])
+	durationConfig := extutil.ToUInt64(request.Config["duration"])
 	if durationConfig < 1000 {
 		return &action_kit_api.PrepareResult{
 			Error: extutil.Ptr(action_kit_api.ActionKitError{
@@ -113,7 +113,7 @@ func (l *stressMemoryAction) Prepare(_ context.Context, state *StressActionState
 		}, nil
 	}
 	duration := durationConfig / 1000
-	percentage := exthost.ToUInt(request.Config["percentage"])
+	percentage := extutil.ToUInt(request.Config["percentage"])
 
 	if percentage == 0 {
 		return nil, errors.New("percentage must be greater than 0")

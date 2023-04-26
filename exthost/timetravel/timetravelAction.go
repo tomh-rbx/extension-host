@@ -104,8 +104,8 @@ func (l *timeTravelAction) Describe() action_kit_api.ActionDescription {
 				Order:        extutil.Ptr(1),
 			},
 		},
-		Stop: extutil.Ptr(action_kit_api.MutatingEndpointReference{}),
-    AdditionalFlags: extutil.Ptr([]action_kit_api.ActionDescriptionAdditionalFlags{action_kit_api.DISABLEHEARTBEAT}),
+		Stop:            extutil.Ptr(action_kit_api.MutatingEndpointReference{}),
+		AdditionalFlags: extutil.Ptr([]action_kit_api.ActionDescriptionAdditionalFlags{action_kit_api.DISABLEHEARTBEAT}),
 	}
 }
 
@@ -115,7 +115,7 @@ func (l *timeTravelAction) Describe() action_kit_api.ActionDescription {
 // The passed in state is included in the subsequent calls to start/status/stop.
 // So the state should contain all information needed to execute the action and even more important: to be able to stop it.
 func (l *timeTravelAction) Prepare(_ context.Context, state *ActionState, request action_kit_api.PrepareActionRequestBody) (*action_kit_api.PrepareResult, error) {
-	parsedOffset := exthost.ToUInt64(request.Config["offset"])
+	parsedOffset := extutil.ToUInt64(request.Config["offset"])
 	if parsedOffset == 0 {
 		return &action_kit_api.PrepareResult{
 			Error: extutil.Ptr(action_kit_api.ActionKitError{
@@ -136,7 +136,7 @@ func (l *timeTravelAction) Prepare(_ context.Context, state *ActionState, reques
 			}),
 		}, nil
 	}
-	disableNtp := exthost.ToBool(request.Config["disableNtp"])
+	disableNtp := extutil.ToBool(request.Config["disableNtp"])
 	state.DisableNtp = disableNtp
 	if !isUnixLike() {
 		return &action_kit_api.PrepareResult{
