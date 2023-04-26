@@ -4,23 +4,23 @@
 package e2e
 
 import (
-  "bufio"
-  "bytes"
-  "context"
-  "errors"
-  "fmt"
-  "github.com/rs/zerolog/log"
-  "github.com/steadybit/action-kit/go/action_kit_api/v2"
-  "github.com/steadybit/discovery-kit/go/discovery_kit_api"
-  "github.com/stretchr/testify/assert"
-  "github.com/stretchr/testify/require"
-  appv1 "k8s.io/api/apps/v1"
-  corev1 "k8s.io/api/core/v1"
-  metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-  "k8s.io/apimachinery/pkg/labels"
-  "strings"
-  "testing"
-  "time"
+	"bufio"
+	"bytes"
+	"context"
+	"errors"
+	"fmt"
+	"github.com/rs/zerolog/log"
+	"github.com/steadybit/action-kit/go/action_kit_api/v2"
+	"github.com/steadybit/discovery-kit/go/discovery_kit_api"
+	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
+	appv1 "k8s.io/api/apps/v1"
+	corev1 "k8s.io/api/core/v1"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/apimachinery/pkg/labels"
+	"strings"
+	"testing"
+	"time"
 )
 
 func assertProcessRunningInContainer(t *testing.T, m *Minikube, pod metav1.Object, containername string, comm string) {
@@ -66,7 +66,7 @@ func assertProcessNOTRunningInContainer(t *testing.T, m *Minikube, pod metav1.Ob
 			for _, line := range strings.Split(out, "\n") {
 				fields := strings.Fields(line)
 				if len(fields) >= 2 && fields[1] == comm {
-          assert.Fail(t, "process found", "process %s found in container %s/%s.\n%s", comm, pod.GetName(), containername, lastOutput)
+					assert.Fail(t, "process found", "process %s found in container %s/%s.\n%s", comm, pod.GetName(), containername, lastOutput)
 					return
 				}
 			}
