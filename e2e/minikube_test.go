@@ -5,6 +5,7 @@ package e2e
 
 import (
 	"bufio"
+	"bytes"
 	"context"
 	"encoding/json"
 	"errors"
@@ -12,13 +13,18 @@ import (
 	"github.com/go-resty/resty/v2"
 	"github.com/rs/zerolog"
 	"github.com/rs/zerolog/log"
+	"github.com/steadybit/extension-kit/extutil"
 	"github.com/stretchr/testify/require"
 	"golang.org/x/exp/slices"
 	"io"
+	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	acorev1 "k8s.io/client-go/applyconfigurations/core/v1"
 	"k8s.io/client-go/kubernetes"
+	"k8s.io/client-go/kubernetes/scheme"
 	"k8s.io/client-go/rest"
 	"k8s.io/client-go/tools/clientcmd"
+	"k8s.io/client-go/tools/remotecommand"
 	"k8s.io/client-go/util/homedir"
 	"os"
 	"os/exec"
@@ -273,8 +279,8 @@ func (c *ServiceClient) Close() {
 	c.close()
 }
 
-func (m *Minikube) NewServiceClient(service metav1.Object) (*ServiceClient, error) {
-	url, cancel, err := m.tunnelService(service)
+func (m *Minikube) NewRestClientForService(service metav1.Object) (*ServiceClient, error) {
+	url, cancel, err := m.TunnelService(service)
 	if err != nil {
 		return nil, err
 	}
@@ -289,7 +295,7 @@ func (m *Minikube) NewServiceClient(service metav1.Object) (*ServiceClient, erro
 	}, nil
 }
 
-func (m *Minikube) tunnelService(service metav1.Object) (string, func(), error) {
+func (m *Minikube) TunnelService(service metav1.Object) (string, func(), error) {
 	ctx, cancel := context.WithCancel(context.Background())
 	cmd := m.commandContext(ctx, "service", "--namespace", service.GetNamespace(), service.GetName(), "--url")
 	cmd.Stdout = nil
@@ -334,4 +340,88 @@ func (m *Minikube) tunnelService(service metav1.Object) (string, func(), error) 
 		cancel()
 		return "", nil, fmt.Errorf("failed to tunnel service: %w", err)
 	}
+}
+
+func (m *Minikube) CreatePod(pod *acorev1.PodApplyConfiguration) (metav1.Object, error) {
+	applied, err := m.Client().CoreV1().Pods("default").Apply(context.Background(), pod, metav1.ApplyOptions{FieldManager: "application/apply-patch"})
+	if err != nil {
+		return nil, err
+	}
+	if err = m.WaitForPodPhase(applied.GetObjectMeta(), corev1.PodRunning, 30*time.Second); err != nil {
+		return nil, err
+	}
+	return applied.GetObjectMeta(), nil
+}
+
+func (m *Minikube) GetPod(pod metav1.Object) (*corev1.Pod, error) {
+	return m.Client().CoreV1().Pods(pod.GetNamespace()).Get(context.Background(), pod.GetName(), metav1.GetOptions{})
+}
+
+func (m *Minikube) DeletePod(pod metav1.Object) error {
+	if pod == nil {
+		return nil
+	}
+	return m.Client().CoreV1().Pods(pod.GetNamespace()).Delete(context.Background(), pod.GetName(), metav1.DeleteOptions{GracePeriodSeconds: extutil.Ptr(int64(0))})
+}
+
+func (m *Minikube) WaitForPodPhase(pod metav1.Object, phase corev1.PodPhase, duration time.Duration) error {
+	ctx, cancel := context.WithTimeout(context.Background(), duration)
+	defer cancel()
+
+	var lastStatus corev1.PodPhase
+	for {
+		select {
+		case <-ctx.Done():
+			return fmt.Errorf("pod %s/%s did not reach phase %s. last status %s", pod.GetNamespace(), pod.GetName(), phase, lastStatus)
+		case <-time.After(200 * time.Millisecond):
+			p, err := m.Client().CoreV1().Pods(pod.GetNamespace()).Get(context.Background(), pod.GetName(), metav1.GetOptions{})
+			if err == nil && p.Status.Phase == phase {
+				return nil
+			}
+			lastStatus = p.Status.Phase
+		}
+	}
+}
+
+func (m *Minikube) CreateService(service *acorev1.ServiceApplyConfiguration) (metav1.Object, error) {
+	applied, err := m.Client().CoreV1().Services("default").Apply(context.Background(), service, metav1.ApplyOptions{FieldManager: "application/apply-patch"})
+	if err != nil {
+		return nil, err
+	}
+	return applied.GetObjectMeta(), nil
+}
+
+func (m *Minikube) DeleteService(service metav1.Object) error {
+	if service == nil {
+		return nil
+	}
+	return m.Client().CoreV1().Services(service.GetNamespace()).Delete(context.Background(), service.GetName(), metav1.DeleteOptions{GracePeriodSeconds: extutil.Ptr(int64(0))})
+}
+
+func (m *Minikube) Exec(pod metav1.Object, containername string, cmd ...string) (string, error) {
+	req := m.Client().CoreV1().RESTClient().Post().
+		Namespace(pod.GetNamespace()).
+		Resource("pods").
+		Name(pod.GetName()).
+		SubResource("exec").
+		VersionedParams(&corev1.PodExecOptions{
+			Container: containername,
+			Command:   cmd,
+			Stdout:    true,
+			Stderr:    true,
+			TTY:       true,
+		}, scheme.ParameterCodec)
+
+	executor, err := remotecommand.NewSPDYExecutor(m.Config(), "POST", req.URL())
+	if err != nil {
+		return "", err
+	}
+
+	var outb bytes.Buffer
+	err = executor.StreamWithContext(context.Background(), remotecommand.StreamOptions{
+		Stdout: &outb,
+		Stderr: &outb,
+		Tty:    true,
+	})
+	return outb.String(), err
 }

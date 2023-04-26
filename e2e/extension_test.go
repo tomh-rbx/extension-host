@@ -28,9 +28,9 @@ import (
 )
 
 type Extension struct {
-	client  *resty.Client
-	stop    func() error
-	podName string
+	client *resty.Client
+	stop   func() error
+	pod    metav1.Object
 }
 
 func (e *Extension) DiscoverTargets(targetId string) ([]discovery_kit_api.Target, error) {
@@ -478,7 +478,7 @@ func startExtension(minikube *Minikube, image string) (*Extension, error) {
 		return minikube.Client().AppsV1().DaemonSets("default").Delete(ctx, "extension-host", metav1.DeleteOptions{})
 	}
 
-	podName := waitForPods(minikube, daemonSet)
+	pod := waitForPods(minikube, daemonSet)
 
 	var outb bytes.Buffer
 	cmd := exec.Command("docker", "port", minikube.profile, "8085")
@@ -491,7 +491,7 @@ func startExtension(minikube *Minikube, image string) (*Extension, error) {
 
 	client := resty.New().SetBaseURL(fmt.Sprintf("http://%s", address))
 	log.Info().Msgf("extension is available at %s", address)
-	return &Extension{client: client, stop: stop, podName: podName}, nil
+	return &Extension{client: client, stop: stop, pod: pod}, nil
 }
 
 func createExtensionContainer() (string, error) {

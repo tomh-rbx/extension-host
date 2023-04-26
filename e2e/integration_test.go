@@ -67,7 +67,7 @@ func testStressCpu(t *testing.T, m *Minikube, e *Extension) {
 	exec, err := e.RunAction("com.github.steadybit.extension_host.host.stress-cpu", target, config)
 	require.NoError(t, err)
 
-	assertProcessRunningInContainer(t, m, e.podName, "extension-host", "stress-ng")
+	assertProcessRunningInContainer(t, m, e.pod, "extension-host", "stress-ng")
 	require.NoError(t, exec.Cancel())
 }
 
@@ -90,7 +90,7 @@ func testStressMemory(t *testing.T, m *Minikube, e *Extension) {
 
 	exec, err := e.RunAction("com.github.steadybit.extension_host.host.stress-mem", target, config)
 	require.NoError(t, err)
-	assertProcessRunningInContainer(t, m, e.podName, "extension-host", "stress-ng")
+	assertProcessRunningInContainer(t, m, e.pod, "extension-host", "stress-ng")
 	require.NoError(t, exec.Cancel())
 }
 
@@ -113,7 +113,7 @@ func testStressIo(t *testing.T, m *Minikube, e *Extension) {
 	}{Duration: 50000, Workers: 1, Percentage: 50}
 	exec, err := e.RunAction("com.github.steadybit.extension_host.host.stress-io", target, config)
 	require.NoError(t, err)
-	assertProcessRunningInContainer(t, m, e.podName, "extension-host", "stress-ng")
+	assertProcessRunningInContainer(t, m, e.pod, "extension-host", "stress-ng")
 	require.NoError(t, exec.Cancel())
 }
 
@@ -154,7 +154,7 @@ func testTimeTravel(t *testing.T, m *Minikube, e *Extension) {
 }
 
 func getTimeDiffBetweenNowAndContainerTime(t *testing.T, m *Minikube, e *Extension, now time.Time) time.Duration {
-	out, err := getOutputOfCommand(m, e.podName, "extension-host", []string{"date", "+%s"})
+	out, err := m.Exec(e.pod, "extension-host", "date", "+%s")
 	if err != nil {
 		t.Fatal(err)
 		return 0
