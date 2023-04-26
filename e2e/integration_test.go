@@ -8,7 +8,7 @@ import (
 	"github.com/rs/zerolog/log"
 	"github.com/steadybit/action-kit/go/action_kit_api/v2"
 	"github.com/steadybit/discovery-kit/go/discovery_kit_api"
-	"github.com/steadybit/extension-host/exthost"
+	"github.com/steadybit/extension-kit/extutil"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	"os"
@@ -159,7 +159,7 @@ func getTimeDiffBetweenNowAndContainerTime(t *testing.T, m *Minikube, e *Extensi
 		t.Fatal(err)
 		return 0
 	}
-	containerSecondsSinceEpoch := exthost.ToInt64(strings.TrimSpace(out))
+	containerSecondsSinceEpoch := extutil.ToInt64(strings.TrimSpace(out))
 	if containerSecondsSinceEpoch == 0 {
 		t.Fatal("could not parse container time")
 		return 0

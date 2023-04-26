@@ -221,7 +221,7 @@ func (l *stopProcessAction) Start(_ context.Context, state *ActionState) (*actio
 
 func stopProcess(state *ActionState) {
 	pids := findProcessIds(state.ProcessOrPid)
-	if pids == nil || len(pids) == 0 {
+	if len(pids) == 0 {
 		return
 	}
 	err := stopprocess.StopProcesses(pids, state.Graceful)
