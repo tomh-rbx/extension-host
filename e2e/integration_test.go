@@ -68,7 +68,7 @@ func testStressCpu(t *testing.T, m *Minikube, e *Extension) {
 		CpuLoad  int `json:"cpuLoad"`
 		Workers  int `json:"workers"`
 	}{Duration: 50000, Workers: 0, CpuLoad: 50}
-	exec, err := e.RunAction("com.github.steadybit.extension_host.host.stress-cpu", target, config)
+	exec, err := e.RunAction("com.github.steadybit.extension_host.stress-cpu", target, config)
 	require.NoError(t, err)
 
 	assertProcessRunningInContainer(t, m, e.pod, "extension-host", "stress-ng")
@@ -92,7 +92,7 @@ func testStressMemory(t *testing.T, m *Minikube, e *Extension) {
 		Percentage int `json:"percentage"`
 	}{Duration: 50000, Percentage: 50}
 
-	exec, err := e.RunAction("com.github.steadybit.extension_host.host.stress-mem", target, config)
+	exec, err := e.RunAction("com.github.steadybit.extension_host.stress-mem", target, config)
 	require.NoError(t, err)
 	assertProcessRunningInContainer(t, m, e.pod, "extension-host", "stress-ng")
 	require.NoError(t, exec.Cancel())
@@ -115,7 +115,7 @@ func testStressIo(t *testing.T, m *Minikube, e *Extension) {
 		Percentage int `json:"percentage"`
 		Workers    int `json:"workers"`
 	}{Duration: 50000, Workers: 1, Percentage: 50}
-	exec, err := e.RunAction("com.github.steadybit.extension_host.host.stress-io", target, config)
+	exec, err := e.RunAction("com.github.steadybit.extension_host.stress-io", target, config)
 	require.NoError(t, err)
 	assertProcessRunningInContainer(t, m, e.pod, "extension-host", "stress-ng")
 	require.NoError(t, exec.Cancel())

@@ -35,7 +35,7 @@ func (l *stressCPUAction) NewEmptyState() StressActionState {
 // Describe returns the action description for the platform with all required information.
 func (l *stressCPUAction) Describe() action_kit_api.ActionDescription {
 	return action_kit_api.ActionDescription{
-		Id:          fmt.Sprintf("%s.stress-cpu", actionIDs),
+		Id:          fmt.Sprintf("%s.stress-cpu", baseActionID),
 		Label:       "Stress CPU",
 		Description: "Generates CPU load for one or more cores.",
 		Version:     extbuild.GetSemverVersionStringOrUnknown(),

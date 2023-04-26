@@ -34,7 +34,7 @@ func (l *stressIOAction) NewEmptyState() StressActionState {
 // Describe returns the action description for the platform with all required information.
 func (l *stressIOAction) Describe() action_kit_api.ActionDescription {
 	return action_kit_api.ActionDescription{
-		Id:          fmt.Sprintf("%s.stress-io", actionIDs),
+		Id:          fmt.Sprintf("%s.stress-io", baseActionID),
 		Label:       "Stress IO",
 		Description: "Generate read/write operation on hard disks.",
 		Version:     extbuild.GetSemverVersionStringOrUnknown(),

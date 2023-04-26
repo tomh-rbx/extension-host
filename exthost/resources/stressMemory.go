@@ -37,7 +37,7 @@ func (l *stressMemoryAction) NewEmptyState() StressActionState {
 // Describe returns the action description for the platform with all required information.
 func (l *stressMemoryAction) Describe() action_kit_api.ActionDescription {
 	return action_kit_api.ActionDescription{
-		Id:          fmt.Sprintf("%s.stress-mem", actionIDs),
+		Id:          fmt.Sprintf("%s.stress-mem", baseActionID),
 		Label:       "Stress Memory",
 		Description: "Allocate a specific amount of memory. Note that this can cause systems to trip the kernel OOM killer on Linux if not enough physical memory and swap is available.",
 		Version:     extbuild.GetSemverVersionStringOrUnknown(),
