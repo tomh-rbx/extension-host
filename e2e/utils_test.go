@@ -49,6 +49,32 @@ func assertProcessRunningInContainer(t *testing.T, m *Minikube, pod metav1.Objec
 	}
 }
 
+func assertProcessNOTRunningInContainer(t *testing.T, m *Minikube, pod metav1.Object, containername string, comm string) {
+	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	defer cancel()
+
+	lastOutput := ""
+	for {
+		select {
+		case <-ctx.Done():
+			return
+
+		case <-time.After(200 * time.Millisecond):
+			out, err := m.Exec(pod, containername, "ps", "-opid,comm", "-A")
+			require.NoError(t, err, "failed to exec ps -o=pid,comm: %s", out)
+
+			for _, line := range strings.Split(out, "\n") {
+				fields := strings.Fields(line)
+				if len(fields) >= 2 && fields[1] == comm {
+          assert.Fail(t, "process found", "process %s found in container %s/%s.\n%s", comm, pod.GetName(), containername, lastOutput)
+					return
+				}
+			}
+			lastOutput = out
+		}
+	}
+}
+
 func NewContainerTarget(m *Minikube, pod metav1.Object, containername string) (*action_kit_api.Target, error) {
 	status, err := GetContainerStatus(m, pod, containername)
 	if err != nil {

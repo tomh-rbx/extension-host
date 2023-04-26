@@ -2,8 +2,10 @@ package stopprocess
 
 import (
 	"fmt"
-	"github.com/rs/zerolog/log"
-	"os/exec"
+  "github.com/mitchellh/go-ps"
+  "github.com/rs/zerolog/log"
+  "github.com/steadybit/extension-kit/extutil"
+  "os/exec"
 	"runtime"
 	"strings"
 	"syscall"
@@ -64,4 +66,25 @@ func StopProcessUnix(pid int, force bool) error {
 		}
 	}
 	return nil
+}
+
+
+func FindProcessIds(processOrPid string) []int {
+  pid := extutil.ToInt(processOrPid)
+  if pid > 0 {
+    return []int{pid}
+  }
+
+  pids := []int{}
+  processes, err := ps.Processes()
+  if err != nil {
+    log.Error().Err(err).Msg("Failed to list processes")
+    return nil
+  }
+  for _, process := range processes {
+    if strings.Contains(strings.TrimSpace(process.Executable()), processOrPid) {
+      pids = append(pids, process.Pid())
+    }
+  }
+  return pids
 }

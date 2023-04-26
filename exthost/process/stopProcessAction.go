@@ -8,15 +8,12 @@ import (
 	"context"
 	"fmt"
 	"github.com/google/uuid"
-	"github.com/mitchellh/go-ps"
 	"github.com/rs/zerolog/log"
 	"github.com/steadybit/action-kit/go/action_kit_api/v2"
 	"github.com/steadybit/action-kit/go/action_kit_sdk"
 	"github.com/steadybit/extension-host/exthost"
-	"github.com/steadybit/extension-host/exthost/process/stopprocess"
 	"github.com/steadybit/extension-kit/extbuild"
 	"github.com/steadybit/extension-kit/extutil"
-	"strings"
 	"sync"
 	"time"
 )
@@ -145,6 +142,7 @@ func (l *stopProcessAction) Prepare(_ context.Context, state *ActionState, reque
 			}),
 		}, nil
 	}
+	state.ProcessOrPid = processOrPid
 
 	parsedDuration := extutil.ToUInt64(request.Config["duration"])
 	if parsedDuration == 0 {
@@ -220,35 +218,15 @@ func (l *stopProcessAction) Start(_ context.Context, state *ActionState) (*actio
 }
 
 func stopProcess(state *ActionState) {
-	pids := findProcessIds(state.ProcessOrPid)
+	pids := FindProcessIds(state.ProcessOrPid)
 	if len(pids) == 0 {
 		return
 	}
-	err := stopprocess.StopProcesses(pids, state.Graceful)
+	err := StopProcesses(pids, state.Graceful)
 	if err != nil {
 		log.Error().Err(err).Msg("Failed to stop processes")
 		return
 	}
-}
-
-func findProcessIds(processOrPid string) []int {
-	pid := extutil.ToInt(processOrPid)
-	if pid > 0 {
-		return []int{pid}
-	}
-
-	pids := []int{}
-	processes, err := ps.Processes()
-	if err != nil {
-		log.Error().Err(err).Msg("Failed to list processes")
-		return nil
-	}
-	for _, process := range processes {
-		if strings.Contains(strings.TrimSpace(process.Executable()), processOrPid) {
-			pids = append(pids, process.Pid())
-		}
-	}
-	return pids
 }
 
 // Stop is called to stop the action
