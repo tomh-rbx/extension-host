@@ -23,7 +23,7 @@ func skipCI(t *testing.T) {
 	}
 }
 func TestWithMinikube(t *testing.T) {
-	skipCI(t)
+	//skipCI(t)
 	WithMinikube(t, []WithMinikubeTestCase{
 		{
 			Name: "target discovery",

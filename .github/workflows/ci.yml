@@ -34,7 +34,7 @@ jobs:
         with:
           driver: docker
           container-runtime: docker
-          start-args: '--ports=8085'
+          start-args: '--ports=8085 --profile=e2e-docker'
           cpus: 2
           memory: 6500m
 
