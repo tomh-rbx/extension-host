@@ -13,7 +13,7 @@ require (
 	github.com/steadybit/action-kit/go/action_kit_sdk v1.1.0
 	github.com/steadybit/discovery-kit/go/discovery_kit_api v1.3.0
 	github.com/steadybit/event-kit/go/event_kit_api v1.1.0
-	github.com/steadybit/extension-kit v1.7.12-0.20230425143346-365dcc22beb5
+	github.com/steadybit/extension-kit v1.7.12
 	github.com/stretchr/testify v1.8.2
 	golang.org/x/exp v0.0.0-20230420155640-133eef4313cb
 	k8s.io/api v0.27.1
