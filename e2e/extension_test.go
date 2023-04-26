@@ -488,6 +488,7 @@ func startExtension(minikube *Minikube, image string) (*Extension, error) {
 		return nil, fmt.Errorf("failed to get the adress for the extension: %w", err)
 	}
 	address := strings.TrimSpace(outb.String())
+	address, _, _ = strings.Cut(address, "\n")
 
 	client := resty.New().SetBaseURL(fmt.Sprintf("http://%s", address))
 	log.Info().Msgf("extension is available at %s", address)
