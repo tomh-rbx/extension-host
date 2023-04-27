@@ -35,7 +35,7 @@ func (l *stressCPUAction) NewEmptyState() resources.StressActionState {
 // Describe returns the action description for the platform with all required information.
 func (l *stressCPUAction) Describe() action_kit_api.ActionDescription {
 	return action_kit_api.ActionDescription{
-		Id:          fmt.Sprintf("%s.stress-cpu", baseActionID),
+		Id:          fmt.Sprintf("%s.stress-cpu", BaseActionID),
 		Label:       "Stress CPU",
 		Description: "Generates CPU load for one or more cores.",
 		Version:     extbuild.GetSemverVersionStringOrUnknown(),
@@ -45,12 +45,7 @@ func (l *stressCPUAction) Describe() action_kit_api.ActionDescription {
 			TargetType: TargetID,
 			// You can provide a list of target templates to help the user select targets.
 			// A template can be used to pre-fill a selection
-			SelectionTemplates: extutil.Ptr([]action_kit_api.TargetSelectionTemplate{
-				{
-					Label: "by host name",
-					Query: "host.hostname=\"\"",
-				},
-			}),
+			SelectionTemplates: &targetSelectionTemplates,
 		}),
 		// Category for the targets to appear in
 		Category: extutil.Ptr("Resource"),

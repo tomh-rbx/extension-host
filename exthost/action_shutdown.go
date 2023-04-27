@@ -55,12 +55,7 @@ func (l *shutdownAction) Describe() action_kit_api.ActionDescription {
 			TargetType: TargetID,
 			// You can provide a list of target templates to help the user select targets.
 			// A template can be used to pre-fill a selection
-			SelectionTemplates: extutil.Ptr([]action_kit_api.TargetSelectionTemplate{
-				{
-					Label: "by host name",
-					Query: "host.hostname=\"\"",
-				},
-			}),
+			SelectionTemplates: &targetSelectionTemplates,
 		}),
 		// Category for the targets to appear in
 		Category: extutil.Ptr("State"),

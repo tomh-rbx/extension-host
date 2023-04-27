@@ -4,15 +4,15 @@ import (
 	"context"
 	"github.com/google/uuid"
 	"github.com/steadybit/action-kit/go/action_kit_api/v2"
-  "github.com/steadybit/extension-kit/extutil"
-  "github.com/stretchr/testify/assert"
+	"github.com/steadybit/extension-kit/extutil"
+	"github.com/stretchr/testify/assert"
 	"testing"
 )
 
 func TestActionShutdown_Prepare(t *testing.T) {
-  osHostname = func() (string, error) {
-    return "myhostname", nil
-  }
+	osHostname = func() (string, error) {
+		return "myhostname", nil
+	}
 	tests := []struct {
 		name        string
 		requestBody action_kit_api.PrepareActionRequestBody
@@ -27,11 +27,11 @@ func TestActionShutdown_Prepare(t *testing.T) {
 					"reboot": "true",
 				},
 				ExecutionId: uuid.New(),
-        Target: extutil.Ptr(action_kit_api.Target{
-          Attributes: map[string][]string{
-            "host.hostname":    {"myhostname"},
-          },
-        }),
+				Target: extutil.Ptr(action_kit_api.Target{
+					Attributes: map[string][]string{
+						"host.hostname": {"myhostname"},
+					},
+				}),
 			},
 
 			wantedState: &ActionState{

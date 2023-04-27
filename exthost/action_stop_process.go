@@ -62,12 +62,7 @@ func (l *stopProcessAction) Describe() action_kit_api.ActionDescription {
 			TargetType: TargetID,
 			// You can provide a list of target templates to help the user select targets.
 			// A template can be used to pre-fill a selection
-			SelectionTemplates: extutil.Ptr([]action_kit_api.TargetSelectionTemplate{
-				{
-					Label: "by host name",
-					Query: "host.hostname=\"\"",
-				},
-			}),
+			SelectionTemplates: extutil.Ptr(targetSelectionTemplates),
 		}),
 		// Category for the targets to appear in
 		Category: extutil.Ptr("State"),
@@ -133,10 +128,10 @@ func (l *stopProcessAction) Describe() action_kit_api.ActionDescription {
 // The passed in state is included in the subsequent calls to start/status/stop.
 // So the state should contain all information needed to execute the action and even more important: to be able to stop it.
 func (l *stopProcessAction) Prepare(_ context.Context, state *StopProcessActionState, request action_kit_api.PrepareActionRequestBody) (*action_kit_api.PrepareResult, error) {
-  err := CheckTargetHostname(request.Target.Attributes)
-  if err != nil {
-    return nil, err
-  }
+	err := CheckTargetHostname(request.Target.Attributes)
+	if err != nil {
+		return nil, err
+	}
 	processOrPid := extutil.ToString(request.Config["process"])
 	if processOrPid == "" {
 		return &action_kit_api.PrepareResult{

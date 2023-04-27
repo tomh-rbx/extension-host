@@ -55,6 +55,7 @@ func main() {
 	action_kit_sdk.RegisterAction(exthost.NewTimetravelAction())
 	action_kit_sdk.RegisterAction(exthost.NewStopProcessAction())
 	action_kit_sdk.RegisterAction(exthost.NewShutdownAction())
+	action_kit_sdk.RegisterAction(exthost.NewNetworkBlackholeContainerAction())
 
 	//This will install a signal handlder, that will stop active actions when receiving a SIGURS1, SIGTERM or SIGINT
 	action_kit_sdk.InstallSignalHandler()

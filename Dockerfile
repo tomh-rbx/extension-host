@@ -41,10 +41,10 @@ ARG USER_GID=$USER_UID
 RUN groupadd --gid $USER_GID $USERNAME \
     && useradd --uid $USER_UID --gid $USER_GID -m $USERNAME
 # install needed tools
-#    apk add iproute2 bind9-dnsutils runc skopeo cgroup-tools gnupg umoci procps && \
+#    apk add iproute2 bind9-dnsutils skopeo cgroup-tools gnupg umoci procps && \
 
 RUN apt-get -qq update \
-    && apt-get -qq install -y --no-install-recommends procps stress-ng iptables \
+    && apt-get -qq install -y --no-install-recommends procps stress-ng iptables iproute2 dnsutils \
     && apt-get -y autoremove \
     && rm -rf /var/lib/apt/lists/*
 

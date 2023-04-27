@@ -13,7 +13,8 @@ require (
 	github.com/steadybit/action-kit/go/action_kit_sdk v1.1.0
 	github.com/steadybit/discovery-kit/go/discovery_kit_api v1.3.0
 	github.com/steadybit/event-kit/go/event_kit_api v1.1.0
-	github.com/steadybit/extension-kit v1.7.12
+	github.com/steadybit/extension-container v0.0.0-20230427124809-a41386620adf
+	github.com/steadybit/extension-kit v1.7.13
 	github.com/stretchr/testify v1.8.2
 	golang.org/x/exp v0.0.0-20230420155640-133eef4313cb
 	k8s.io/api v0.27.1
@@ -22,9 +23,7 @@ require (
 )
 
 require (
-	github.com/Microsoft/go-winio v0.6.1 // indirect
 	github.com/davecgh/go-spew v1.1.1 // indirect
-	github.com/docker/docker v23.0.5+incompatible // indirect
 	github.com/elastic/go-windows v1.0.0 // indirect
 	github.com/emicklei/go-restful/v3 v3.10.1 // indirect
 	github.com/go-logr/logr v1.2.4 // indirect
@@ -47,7 +46,6 @@ require (
 	github.com/modern-go/concurrent v0.0.0-20180306012644-bacd9c7ef1dd // indirect
 	github.com/modern-go/reflect2 v1.0.2 // indirect
 	github.com/munnerz/goautoneg v0.0.0-20191010083416-a7dc8b61c822 // indirect
-	github.com/opencontainers/image-spec v1.1.0-rc2.0.20221005185240-3a7f492d3f1b // indirect
 	github.com/pkg/errors v0.9.1 // indirect
 	github.com/pmezard/go-difflib v1.0.0 // indirect
 	github.com/prometheus/procfs v0.8.0 // indirect
@@ -58,7 +56,6 @@ require (
 	golang.org/x/term v0.7.0 // indirect
 	golang.org/x/text v0.9.0 // indirect
 	golang.org/x/time v0.3.0 // indirect
-	golang.org/x/tools v0.8.0 // indirect
 	google.golang.org/appengine v1.6.7 // indirect
 	google.golang.org/protobuf v1.30.0 // indirect
 	gopkg.in/inf.v0 v0.9.1 // indirect

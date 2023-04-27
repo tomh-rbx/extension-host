@@ -8,6 +8,7 @@ import (
 	"github.com/rs/zerolog/log"
 	"github.com/steadybit/action-kit/go/action_kit_api/v2"
 	"github.com/steadybit/discovery-kit/go/discovery_kit_api"
+	"github.com/steadybit/extension-host/exthost"
 	"github.com/steadybit/extension-kit/extutil"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
@@ -15,6 +16,14 @@ import (
 	"strings"
 	"testing"
 	"time"
+)
+
+var (
+	target = action_kit_api.Target{
+		Attributes: map[string][]string{
+			"host.hostname": {"e2e-docker"},
+		},
+	}
 )
 
 func runsInCi() bool {
@@ -49,16 +58,15 @@ func TestWithMinikube(t *testing.T) {
 			Name: "shutdown host",
 			Test: testShutdownHost,
 		},
+		//{
+		//	Name: "network blackhole",
+		//	Test: testNetworkBlackhole,
+		//},
 	})
 }
 
 func testStressCpu(t *testing.T, m *Minikube, e *Extension) {
 
-	target := action_kit_api.Target{
-		Attributes: map[string][]string{
-			"host.hostname": {"e2e-docker"},
-		},
-	}
 	config := struct {
 		Duration int `json:"duration"`
 		CpuLoad  int `json:"cpuLoad"`
@@ -73,11 +81,6 @@ func testStressCpu(t *testing.T, m *Minikube, e *Extension) {
 
 func testStressMemory(t *testing.T, m *Minikube, e *Extension) {
 
-	target := action_kit_api.Target{
-		Attributes: map[string][]string{
-			"host.hostname": {"e2e-docker"},
-		},
-	}
 	config := struct {
 		Duration   int `json:"duration"`
 		Percentage int `json:"percentage"`
@@ -91,11 +94,6 @@ func testStressMemory(t *testing.T, m *Minikube, e *Extension) {
 
 func testStressIo(t *testing.T, m *Minikube, e *Extension) {
 
-	target := action_kit_api.Target{
-		Attributes: map[string][]string{
-			"host.hostname": {"e2e-docker"},
-		},
-	}
 	config := struct {
 		Duration   int `json:"duration"`
 		Percentage int `json:"percentage"`
@@ -109,11 +107,6 @@ func testStressIo(t *testing.T, m *Minikube, e *Extension) {
 
 func testTimeTravel(t *testing.T, m *Minikube, e *Extension) {
 
-	target := action_kit_api.Target{
-		Attributes: map[string][]string{
-			"host.hostname": {"e2e-docker"},
-		},
-	}
 	config := struct {
 		Duration   int  `json:"duration"`
 		Offset     int  `json:"offset"`
@@ -170,11 +163,6 @@ func testDiscovery(t *testing.T, m *Minikube, e *Extension) {
 
 func testStopProcess(t *testing.T, m *Minikube, e *Extension) {
 
-	target := action_kit_api.Target{
-		Attributes: map[string][]string{
-			"host.hostname": {"e2e-docker"},
-		},
-	}
 	config := struct {
 		Duration int    `json:"duration"`
 		Graceful bool   `json:"graceful"`
@@ -196,11 +184,6 @@ func testStopProcess(t *testing.T, m *Minikube, e *Extension) {
 }
 func testShutdownHost(t *testing.T, m *Minikube, e *Extension) {
 
-	target := action_kit_api.Target{
-		Attributes: map[string][]string{
-			"host.hostname": {"e2e-docker"},
-		},
-	}
 	config := struct {
 		Reboot bool `json:"reboot"`
 	}{Reboot: true}
@@ -210,4 +193,80 @@ func testShutdownHost(t *testing.T, m *Minikube, e *Extension) {
 		require.NoError(t, err)
 	}
 	require.NoError(t, exec.Cancel())
+}
+
+func testNetworkBlackhole(t *testing.T, m *Minikube, e *Extension) {
+	nginx := Nginx{minikube: m}
+	err := nginx.Deploy("nginx-network-blackhole")
+	require.NoError(t, err, "failed to create pod")
+	defer func() { _ = nginx.Delete() }()
+
+	tests := []struct {
+		name             string
+		ip               []string
+		hostname         []string
+		port             []string
+		WantedReachable  bool
+		WantedReachesUrl bool
+	}{
+		{
+			name:             "should blackhole all traffic",
+			WantedReachable:  false,
+			WantedReachesUrl: false,
+		},
+		{
+			name:             "should blackhole only port 8080 traffic",
+			port:             []string{"8080"},
+			WantedReachable:  true,
+			WantedReachesUrl: true,
+		},
+		{
+			name:             "should blackhole only port 80, 443 traffic",
+			port:             []string{"80", "443"},
+			WantedReachable:  false,
+			WantedReachesUrl: false,
+		},
+	}
+
+	for _, tt := range tests {
+		config := struct {
+			Duration int      `json:"duration"`
+			Ip       []string `json:"ip"`
+			Hostname []string `json:"hostname"`
+			Port     []string `json:"port"`
+		}{
+			Duration: 10000,
+			Ip:       tt.ip,
+			Hostname: tt.hostname,
+			Port:     tt.port,
+		}
+
+		if m.stdout == nil {
+			m.stdout = os.Stdout
+		}
+
+		t.Run(tt.name, func(t *testing.T) {
+			require.NoError(t, nginx.IsReachable(), "service should be reachable before blackhole")
+			require.NoError(t, nginx.CanReach("https://google.com"), "service should reach url before blackhole")
+
+			action, err := e.RunAction(exthost.BaseActionID+".network_blackhole", target, config)
+			require.NoError(t, err)
+
+			if tt.WantedReachable {
+				require.NoError(t, nginx.IsReachable(), "service should be reachable during blackhole")
+			} else {
+				require.Error(t, nginx.IsReachable(), "service should not be reachable during blackhole")
+			}
+
+			if tt.WantedReachesUrl {
+				require.NoError(t, nginx.CanReach("https://google.com"), "service should be reachable during blackhole")
+			} else {
+				require.Error(t, nginx.CanReach("https://google.com"), "service should not be reachable during blackhole")
+			}
+
+			require.NoError(t, action.Cancel())
+			require.NoError(t, nginx.IsReachable(), "service should be reachable after blackhole")
+			require.NoError(t, nginx.CanReach("https://google.com"), "service should reach url after blackhole")
+		})
+	}
 }

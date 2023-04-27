@@ -13,9 +13,9 @@ import (
 
 func TestActionStopProcess_Prepare(t *testing.T) {
 
-  osHostname = func() (string, error) {
-    return "myhostname", nil
-  }
+	osHostname = func() (string, error) {
+		return "myhostname", nil
+	}
 
 	tests := []struct {
 		name        string
@@ -34,11 +34,11 @@ func TestActionStopProcess_Prepare(t *testing.T) {
 					"process":  "tail",
 				},
 				ExecutionId: uuid.New(),
-        Target: extutil.Ptr(action_kit_api.Target{
-          Attributes: map[string][]string{
-            "host.hostname":    {"myhostname"},
-          },
-        }),
+				Target: extutil.Ptr(action_kit_api.Target{
+					Attributes: map[string][]string{
+						"host.hostname": {"myhostname"},
+					},
+				}),
 			},
 
 			wantedState: &StopProcessActionState{
@@ -58,11 +58,11 @@ func TestActionStopProcess_Prepare(t *testing.T) {
 					"process":  "tail",
 				},
 				ExecutionId: uuid.New(),
-        Target: extutil.Ptr(action_kit_api.Target{
-        Attributes: map[string][]string{
-        "host.hostname":    {"myhostname"},
-      },
-      }),
+				Target: extutil.Ptr(action_kit_api.Target{
+					Attributes: map[string][]string{
+						"host.hostname": {"myhostname"},
+					},
+				}),
 			},
 
 			wantedError: extutil.Ptr(extension_kit.ToError("Duration is required", nil)),

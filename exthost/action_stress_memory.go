@@ -37,7 +37,7 @@ func (l *stressMemoryAction) NewEmptyState() resources.StressActionState {
 // Describe returns the action description for the platform with all required information.
 func (l *stressMemoryAction) Describe() action_kit_api.ActionDescription {
 	return action_kit_api.ActionDescription{
-		Id:          fmt.Sprintf("%s.stress-mem", baseActionID),
+		Id:          fmt.Sprintf("%s.stress-mem", BaseActionID),
 		Label:       "Stress Memory",
 		Description: "Allocate a specific amount of memory. Note that this can cause systems to trip the kernel OOM killer on Linux if not enough physical memory and swap is available.",
 		Version:     extbuild.GetSemverVersionStringOrUnknown(),
@@ -47,12 +47,7 @@ func (l *stressMemoryAction) Describe() action_kit_api.ActionDescription {
 			TargetType: TargetID,
 			// You can provide a list of target templates to help the user select targets.
 			// A template can be used to pre-fill a selection
-			SelectionTemplates: extutil.Ptr([]action_kit_api.TargetSelectionTemplate{
-				{
-					Label: "by host name",
-					Query: "host.hostname=\"\"",
-				},
-			}),
+			SelectionTemplates: &targetSelectionTemplates,
 		}),
 		// Category for the targets to appear in
 		Category: extutil.Ptr("Resource"),
