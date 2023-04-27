@@ -12,12 +12,14 @@ import (
 )
 
 func TestActionTimeTravel_Prepare(t *testing.T) {
-
+  osHostname = func() (string, error) {
+    return "myhostname", nil
+  }
 	tests := []struct {
 		name        string
 		requestBody action_kit_api.PrepareActionRequestBody
 		wantedError error
-		wantedState *ActionState
+		wantedState *TimeTravelActionState
 	}{
 		{
 			name: "Should return config",
@@ -29,9 +31,14 @@ func TestActionTimeTravel_Prepare(t *testing.T) {
 					"disableNtp": "true",
 				},
 				ExecutionId: uuid.New(),
+        Target: extutil.Ptr(action_kit_api.Target{
+          Attributes: map[string][]string{
+            "host.hostname":    {"myhostname"},
+          },
+        }),
 			},
 
-			wantedState: &ActionState{
+			wantedState: &TimeTravelActionState{
 				Offset:        1 * time.Second,
 				DisableNtp:    true,
 				OffsetApplied: false,
@@ -46,6 +53,11 @@ func TestActionTimeTravel_Prepare(t *testing.T) {
 					"disableNtp": "true",
 				},
 				ExecutionId: uuid.New(),
+        Target: extutil.Ptr(action_kit_api.Target{
+          Attributes: map[string][]string{
+            "host.hostname":    {"myhostname"},
+          },
+        }),
 			},
 
 			wantedError: extutil.Ptr(extension_kit.ToError("Duration must be greater / equal than 1s", nil)),
@@ -55,7 +67,7 @@ func TestActionTimeTravel_Prepare(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			//Given
-			state := ActionState{}
+			state := TimeTravelActionState{}
 			request := tt.requestBody
 			//When
 			result, err := action.Prepare(context.Background(), &state, request)

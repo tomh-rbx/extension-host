@@ -11,7 +11,6 @@ import (
 	"github.com/steadybit/event-kit/go/event_kit_api"
 	"github.com/steadybit/extension-host/config"
 	"github.com/steadybit/extension-host/exthost"
-	stopprocess "github.com/steadybit/extension-host/exthost/process"
 	"github.com/steadybit/extension-kit/extbuild"
 	"github.com/steadybit/extension-kit/exthealth"
 	"github.com/steadybit/extension-kit/exthttp"
@@ -54,7 +53,7 @@ func main() {
 	action_kit_sdk.RegisterAction(exthost.NewStressMemoryAction())
 	action_kit_sdk.RegisterAction(exthost.NewStressIOAction())
 	action_kit_sdk.RegisterAction(exthost.NewTimetravelAction())
-	action_kit_sdk.RegisterAction(stopprocess.NewStopProcessAction())
+	action_kit_sdk.RegisterAction(exthost.NewStopProcessAction())
 	action_kit_sdk.RegisterAction(exthost.NewShutdownAction())
 
 	//This will install a signal handlder, that will stop active actions when receiving a SIGURS1, SIGTERM or SIGINT

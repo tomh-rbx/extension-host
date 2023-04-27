@@ -2,7 +2,7 @@
  * Copyright 2023 steadybit GmbH. All rights reserved.
  */
 
-package stopprocess
+package exthost
 
 import (
 	"context"
@@ -11,7 +11,7 @@ import (
 	"github.com/rs/zerolog/log"
 	"github.com/steadybit/action-kit/go/action_kit_api/v2"
 	"github.com/steadybit/action-kit/go/action_kit_sdk"
-	"github.com/steadybit/extension-host/exthost"
+	"github.com/steadybit/extension-host/exthost/process"
 	"github.com/steadybit/extension-kit/extbuild"
 	"github.com/steadybit/extension-kit/extutil"
 	"sync"
@@ -20,7 +20,7 @@ import (
 
 type stopProcessAction struct{}
 
-type ActionState struct {
+type StopProcessActionState struct {
 	ExecutionID  uuid.UUID
 	Delay        time.Duration
 	ProcessOrPid string
@@ -35,18 +35,18 @@ type ExecutionRunData struct {
 
 // Make sure action implements all required interfaces
 var (
-	_ action_kit_sdk.Action[ActionState]         = (*stopProcessAction)(nil)
-	_ action_kit_sdk.ActionWithStop[ActionState] = (*stopProcessAction)(nil) // Optional, needed when the action needs a stop method
+	_ action_kit_sdk.Action[StopProcessActionState]         = (*stopProcessAction)(nil)
+	_ action_kit_sdk.ActionWithStop[StopProcessActionState] = (*stopProcessAction)(nil) // Optional, needed when the action needs a stop method
 
 	ExecutionRunDataMap = sync.Map{} //make(map[uuid.UUID]*ExecutionRunData)
 )
 
-func NewStopProcessAction() action_kit_sdk.Action[ActionState] {
+func NewStopProcessAction() action_kit_sdk.Action[StopProcessActionState] {
 	return &stopProcessAction{}
 }
 
-func (l *stopProcessAction) NewEmptyState() ActionState {
-	return ActionState{}
+func (l *stopProcessAction) NewEmptyState() StopProcessActionState {
+	return StopProcessActionState{}
 }
 
 // Describe returns the action description for the platform with all required information.
@@ -59,7 +59,7 @@ func (l *stopProcessAction) Describe() action_kit_api.ActionDescription {
 		Icon:        extutil.Ptr(stopProcessIcon),
 		TargetSelection: extutil.Ptr(action_kit_api.TargetSelection{
 			// The target type this action is for
-			TargetType: exthost.TargetID,
+			TargetType: TargetID,
 			// You can provide a list of target templates to help the user select targets.
 			// A template can be used to pre-fill a selection
 			SelectionTemplates: extutil.Ptr([]action_kit_api.TargetSelectionTemplate{
@@ -132,7 +132,11 @@ func (l *stopProcessAction) Describe() action_kit_api.ActionDescription {
 // It must not cause any harmful effects.
 // The passed in state is included in the subsequent calls to start/status/stop.
 // So the state should contain all information needed to execute the action and even more important: to be able to stop it.
-func (l *stopProcessAction) Prepare(_ context.Context, state *ActionState, request action_kit_api.PrepareActionRequestBody) (*action_kit_api.PrepareResult, error) {
+func (l *stopProcessAction) Prepare(_ context.Context, state *StopProcessActionState, request action_kit_api.PrepareActionRequestBody) (*action_kit_api.PrepareResult, error) {
+  err := CheckTargetHostname(request.Target.Attributes)
+  if err != nil {
+    return nil, err
+  }
 	processOrPid := extutil.ToString(request.Config["process"])
 	if processOrPid == "" {
 		return &action_kit_api.PrepareResult{
@@ -181,7 +185,7 @@ func loadExecutionRunData(executionID uuid.UUID) (*ExecutionRunData, error) {
 	return executionRunData, nil
 }
 
-func initExecutionRunData(state *ActionState) {
+func initExecutionRunData(state *StopProcessActionState) {
 	ExecutionRunDataMap.Store(state.ExecutionID, &ExecutionRunData{
 		stopAction: make(chan bool),
 	})
@@ -190,7 +194,7 @@ func initExecutionRunData(state *ActionState) {
 // Start is called to start the action
 // You can mutate the state here.
 // You can use the result to return messages/errors/metrics or artifacts
-func (l *stopProcessAction) Start(_ context.Context, state *ActionState) (*action_kit_api.StartResult, error) {
+func (l *stopProcessAction) Start(_ context.Context, state *StopProcessActionState) (*action_kit_api.StartResult, error) {
 	state.Deadline = time.Now().Add(state.Duration)
 
 	executionRunData, err := loadExecutionRunData(state.ExecutionID)
@@ -217,12 +221,12 @@ func (l *stopProcessAction) Start(_ context.Context, state *ActionState) (*actio
 	return nil, nil
 }
 
-func stopProcess(state *ActionState) {
-	pids := FindProcessIds(state.ProcessOrPid)
+func stopProcess(state *StopProcessActionState) {
+	pids := stopprocess.FindProcessIds(state.ProcessOrPid)
 	if len(pids) == 0 {
 		return
 	}
-	err := StopProcesses(pids, state.Graceful)
+	err := stopprocess.StopProcesses(pids, state.Graceful)
 	if err != nil {
 		log.Error().Err(err).Msg("Failed to stop processes")
 		return
@@ -233,7 +237,7 @@ func stopProcess(state *ActionState) {
 // It will be called even if the start method did not complete successfully.
 // It should be implemented in a immutable way, as the agent might to retries if the stop method timeouts.
 // You can use the result to return messages/errors/metrics or artifacts
-func (l *stopProcessAction) Stop(_ context.Context, state *ActionState) (*action_kit_api.StopResult, error) {
+func (l *stopProcessAction) Stop(_ context.Context, state *StopProcessActionState) (*action_kit_api.StopResult, error) {
 	executionRunData, err := loadExecutionRunData(state.ExecutionID)
 	if err != nil {
 		log.Debug().Err(err).Msg("Execution run data not found, stop was already called")

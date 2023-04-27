@@ -12,7 +12,9 @@ import (
 )
 
 func TestActionIO_Prepare(t *testing.T) {
-
+  osHostname = func() (string, error) {
+    return "myhostname", nil
+  }
 	tests := []struct {
 		name        string
 		requestBody action_kit_api.PrepareActionRequestBody
@@ -28,6 +30,11 @@ func TestActionIO_Prepare(t *testing.T) {
 					"workers":  "1",
 				},
 				ExecutionId: uuid.New(),
+        Target: extutil.Ptr(action_kit_api.Target{
+          Attributes: map[string][]string{
+            "host.hostname":    {"myhostname"},
+          },
+        }),
 			},
 
 			wantedState: &resources.StressActionState{
@@ -43,6 +50,11 @@ func TestActionIO_Prepare(t *testing.T) {
 					"workers":  "1",
 				},
 				ExecutionId: uuid.New(),
+        Target: extutil.Ptr(action_kit_api.Target{
+          Attributes: map[string][]string{
+            "host.hostname":    {"myhostname"},
+          },
+        }),
 			},
 
 			wantedError: extutil.Ptr(extension_kit.ToError("Duration must be greater / equal than 1s", nil)),

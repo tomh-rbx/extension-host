@@ -1,4 +1,4 @@
-package stopprocess
+package exthost
 
 import (
 	"context"
@@ -13,11 +13,15 @@ import (
 
 func TestActionStopProcess_Prepare(t *testing.T) {
 
+  osHostname = func() (string, error) {
+    return "myhostname", nil
+  }
+
 	tests := []struct {
 		name        string
 		requestBody action_kit_api.PrepareActionRequestBody
 		wantedError error
-		wantedState *ActionState
+		wantedState *StopProcessActionState
 	}{
 		{
 			name: "Should return config",
@@ -30,9 +34,14 @@ func TestActionStopProcess_Prepare(t *testing.T) {
 					"process":  "tail",
 				},
 				ExecutionId: uuid.New(),
+        Target: extutil.Ptr(action_kit_api.Target{
+          Attributes: map[string][]string{
+            "host.hostname":    {"myhostname"},
+          },
+        }),
 			},
 
-			wantedState: &ActionState{
+			wantedState: &StopProcessActionState{
 				ProcessOrPid: "tail",
 				Graceful:     true,
 				Duration:     10 * time.Second,
@@ -49,6 +58,11 @@ func TestActionStopProcess_Prepare(t *testing.T) {
 					"process":  "tail",
 				},
 				ExecutionId: uuid.New(),
+        Target: extutil.Ptr(action_kit_api.Target{
+        Attributes: map[string][]string{
+        "host.hostname":    {"myhostname"},
+      },
+      }),
 			},
 
 			wantedError: extutil.Ptr(extension_kit.ToError("Duration is required", nil)),
@@ -58,7 +72,7 @@ func TestActionStopProcess_Prepare(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			//Given
-			state := ActionState{}
+			state := StopProcessActionState{}
 			request := tt.requestBody
 			now := time.Now()
 
