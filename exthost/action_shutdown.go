@@ -2,17 +2,17 @@
  * Copyright 2023 steadybit GmbH. All rights reserved.
  */
 
-package shutdown
+package exthost
 
 import (
-  "context"
-  "github.com/rs/zerolog/log"
-  "github.com/steadybit/action-kit/go/action_kit_api/v2"
-  "github.com/steadybit/action-kit/go/action_kit_sdk"
-  "github.com/steadybit/extension-host/exthost"
-  "github.com/steadybit/extension-kit/extbuild"
-  "github.com/steadybit/extension-kit/extutil"
-  "runtime"
+	"context"
+	"github.com/rs/zerolog/log"
+	"github.com/steadybit/action-kit/go/action_kit_api/v2"
+	"github.com/steadybit/action-kit/go/action_kit_sdk"
+	"github.com/steadybit/extension-host/exthost/shutdown"
+	"github.com/steadybit/extension-kit/extbuild"
+	"github.com/steadybit/extension-kit/extutil"
+	"runtime"
 )
 
 type shutdownAction struct{}
@@ -20,12 +20,13 @@ type shutdownAction struct{}
 type ShutdownMethod uint64
 
 const (
-  Command ShutdownMethod = iota
-  SyscallOrSysrq
+	Command ShutdownMethod = iota
+	SyscallOrSysrq
 )
+
 type ActionState struct {
-	Reboot bool
-  ShutdownMethod ShutdownMethod
+	Reboot         bool
+	ShutdownMethod ShutdownMethod
 }
 
 // Make sure action implements all required interfaces
@@ -51,7 +52,7 @@ func (l *shutdownAction) Describe() action_kit_api.ActionDescription {
 		Icon:        extutil.Ptr(shutdownIcon),
 		TargetSelection: extutil.Ptr(action_kit_api.TargetSelection{
 			// The target type this action is for
-			TargetType: exthost.TargetID,
+			TargetType: TargetID,
 			// You can provide a list of target templates to help the user select targets.
 			// A template can be used to pre-fill a selection
 			SelectionTemplates: extutil.Ptr([]action_kit_api.TargetSelectionTemplate{
@@ -98,23 +99,27 @@ func (l *shutdownAction) Describe() action_kit_api.ActionDescription {
 // The passed in state is included in the subsequent calls to start/status/stop.
 // So the state should contain all information needed to execute the action and even more important: to be able to stop it.
 func (l *shutdownAction) Prepare(_ context.Context, state *ActionState, request action_kit_api.PrepareActionRequestBody) (*action_kit_api.PrepareResult, error) {
+	err := CheckTargetHostname(request.Target.Attributes)
+	if err != nil {
+		return nil, err
+	}
 	reboot := extutil.ToBool(request.Config["reboot"])
 	state.Reboot = reboot
 
-  if isShutdownCommandExecutable() {
-    state.ShutdownMethod = Command
-  } else {
-    if runtime.GOOS == "windows" {
-      return &action_kit_api.PrepareResult{
-        Error: &action_kit_api.ActionKitError{
-          Title:  "Shutdown command not found",
-          Status: extutil.Ptr(action_kit_api.Failed),
-        },
-      }, nil
-    } else {
-      state.ShutdownMethod = SyscallOrSysrq
-    }
-  }
+	if shutdown.IsShutdownCommandExecutable() {
+		state.ShutdownMethod = Command
+	} else {
+		if runtime.GOOS == "windows" {
+			return &action_kit_api.PrepareResult{
+				Error: &action_kit_api.ActionKitError{
+					Title:  "Shutdown command not found",
+					Status: extutil.Ptr(action_kit_api.Failed),
+				},
+			}, nil
+		} else {
+			state.ShutdownMethod = SyscallOrSysrq
+		}
+	}
 
 	return nil, nil
 }
@@ -123,62 +128,63 @@ func (l *shutdownAction) Prepare(_ context.Context, state *ActionState, request 
 // You can mutate the state here.
 // You can use the result to return messages/errors/metrics or artifacts
 func (l *shutdownAction) Start(_ context.Context, state *ActionState) (*action_kit_api.StartResult, error) {
-  if state.ShutdownMethod == Command {
-    if state.Reboot {
-      log.Info().Msg("Rebooting host via command")
-      err := Reboot()
-      if err != nil {
-        return &action_kit_api.StartResult{
-          Error: &action_kit_api.ActionKitError{
-            Title:  "Reboot failed",
-            Status: extutil.Ptr(action_kit_api.Failed),
-          },
-        }, nil
-      }
-    } else {
-      log.Info().Msg("Shutting down host via command")
-      err := Shutdown()
-      if err != nil {
-        return &action_kit_api.StartResult{
-          Error: &action_kit_api.ActionKitError{
-            Title:  "Shutdown failed",
-            Status: extutil.Ptr(action_kit_api.Failed),
-          },
-        }, nil
-      }
-    }
-  } else {
-    if state.Reboot {
-      log.Info().Msg("Rebooting host via syscall")
-      err := RebootSyscall()
-      if err != nil {
-        log.Info().Msg("Rebooting host via sysrq")
-        err := RebootSysrq()
-        if err != nil {
-          return &action_kit_api.StartResult{
-            Error: &action_kit_api.ActionKitError{
-              Title:  "Reboot failed",
-              Status: extutil.Ptr(action_kit_api.Failed),
-            },
-          }, nil
-        }
-      }
-    } else {
-      log.Info().Msg("Shutting down host via syscall")
-      err := ShutdownSyscall()
-      if err != nil {
-        log.Info().Msg("Shutting down host via sysrq")
-        err := ShutdownSysrq()
-          if err != nil {
-            return &action_kit_api.StartResult{
-              Error: &action_kit_api.ActionKitError{
-                Title:  "Shutdown failed",
-                Status: extutil.Ptr(action_kit_api.Failed),
-              },
-            }, nil
-        }
-      }
-    }
-  }
+	if state.ShutdownMethod == Command {
+		if state.Reboot {
+			log.Info().Msg("Rebooting host via command")
+			err := shutdown.Reboot()
+			if err != nil {
+				return &action_kit_api.StartResult{
+					Error: &action_kit_api.ActionKitError{
+						Title:  "Reboot failed",
+						Status: extutil.Ptr(action_kit_api.Failed),
+					},
+				}, nil
+			}
+		} else {
+			log.Info().Msg("Shutting down host via command")
+			err := shutdown.Shutdown()
+			if err != nil {
+				return &action_kit_api.StartResult{
+					Error: &action_kit_api.ActionKitError{
+						Title:  "Shutdown failed",
+						Status: extutil.Ptr(action_kit_api.Failed),
+					},
+				}, nil
+			}
+		}
+	} else {
+		if state.Reboot {
+			log.Info().Msg("Rebooting host via syscall")
+			err := shutdown.RebootSyscall()
+			if err != nil {
+				log.Info().Msg("Rebooting host via sysrq")
+				err := shutdown.RebootSysrq()
+				if err != nil {
+					return &action_kit_api.StartResult{
+						Error: &action_kit_api.ActionKitError{
+							Title:  "Reboot failed",
+							Status: extutil.Ptr(action_kit_api.Failed),
+						},
+					}, nil
+				}
+			}
+		} else {
+			log.Info().Msg("Shutting down host via syscall")
+			err := shutdown.ShutdownSyscall()
+			if err != nil {
+				log.Error().Err(err).Msg("Shutting down host via syscall failed")
+				log.Info().Msg("Shutting down host via sysrq")
+				err := shutdown.ShutdownSysrq()
+				if err != nil {
+					return &action_kit_api.StartResult{
+						Error: &action_kit_api.ActionKitError{
+							Title:  "Shutdown failed",
+							Status: extutil.Ptr(action_kit_api.Failed),
+						},
+					}, nil
+				}
+			}
+		}
+	}
 	return nil, nil
 }

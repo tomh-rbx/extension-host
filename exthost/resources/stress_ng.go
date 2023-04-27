@@ -17,7 +17,7 @@ func IsStressNgInstalled() bool {
 	cmd.Stderr = &outputBuffer
 	err := cmd.Start()
 	if err != nil {
-		log.Error().Err(err).Msg("failed to start stress-ng")
+		log.Error().Err(err).Msg("failed to Start stress-ng")
 		return false
 	}
 	timer := time.AfterFunc(1*time.Second, func() {
@@ -41,7 +41,7 @@ func IsStressNgInstalled() bool {
 }
 
 func StartStressNG(args []string) (int, error) {
-	// start stress-ng with args
+	// Start stress-ng with args
 	log.Info().Msgf("Starting stress-ng with args: %v", args)
 	cmd := exec.Command("stress-ng", args...)
 	cmd.Dir = os.TempDir()

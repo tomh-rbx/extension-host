@@ -2,7 +2,7 @@
  * Copyright 2023 steadybit GmbH. All rights reserved.
  */
 
-package resources
+package exthost
 
 import (
 	"context"
@@ -10,7 +10,7 @@ import (
 	"fmt"
 	"github.com/steadybit/action-kit/go/action_kit_api/v2"
 	"github.com/steadybit/action-kit/go/action_kit_sdk"
-	"github.com/steadybit/extension-host/exthost"
+	"github.com/steadybit/extension-host/exthost/resources"
 	"github.com/steadybit/extension-kit/extbuild"
 	"github.com/steadybit/extension-kit/extutil"
 	"strconv"
@@ -20,16 +20,16 @@ type stressCPUAction struct{}
 
 // Make sure action implements all required interfaces
 var (
-	_ action_kit_sdk.Action[StressActionState]         = (*stressCPUAction)(nil)
-	_ action_kit_sdk.ActionWithStop[StressActionState] = (*stressCPUAction)(nil) // Optional, needed when the action needs a stop method
+	_ action_kit_sdk.Action[resources.StressActionState]         = (*stressCPUAction)(nil)
+	_ action_kit_sdk.ActionWithStop[resources.StressActionState] = (*stressCPUAction)(nil) // Optional, needed when the action needs a stop method
 )
 
-func NewStressCPUAction() action_kit_sdk.Action[StressActionState] {
+func NewStressCPUAction() action_kit_sdk.Action[resources.StressActionState] {
 	return &stressCPUAction{}
 }
 
-func (l *stressCPUAction) NewEmptyState() StressActionState {
-	return StressActionState{}
+func (l *stressCPUAction) NewEmptyState() resources.StressActionState {
+	return resources.StressActionState{}
 }
 
 // Describe returns the action description for the platform with all required information.
@@ -42,7 +42,7 @@ func (l *stressCPUAction) Describe() action_kit_api.ActionDescription {
 		Icon:        extutil.Ptr(stressCPUIcon),
 		TargetSelection: extutil.Ptr(action_kit_api.TargetSelection{
 			// The target type this action is for
-			TargetType: exthost.TargetID,
+			TargetType: TargetID,
 			// You can provide a list of target templates to help the user select targets.
 			// A template can be used to pre-fill a selection
 			SelectionTemplates: extutil.Ptr([]action_kit_api.TargetSelectionTemplate{
@@ -109,7 +109,11 @@ func (l *stressCPUAction) Describe() action_kit_api.ActionDescription {
 // It must not cause any harmful effects.
 // The passed in state is included in the subsequent calls to start/status/stop.
 // So the state should contain all information needed to execute the action and even more important: to be able to stop it.
-func (l *stressCPUAction) Prepare(_ context.Context, state *StressActionState, request action_kit_api.PrepareActionRequestBody) (*action_kit_api.PrepareResult, error) {
+func (l *stressCPUAction) Prepare(_ context.Context, state *resources.StressActionState, request action_kit_api.PrepareActionRequestBody) (*action_kit_api.PrepareResult, error) {
+	err := CheckTargetHostname(request.Target.Attributes)
+	if err != nil {
+		return nil, err
+	}
 	durationConfig := extutil.ToUInt64(request.Config["duration"])
 	if durationConfig < 1000 {
 		return &action_kit_api.PrepareResult{
@@ -133,7 +137,7 @@ func (l *stressCPUAction) Prepare(_ context.Context, state *StressActionState, r
 		"--timeout", strconv.Itoa(int(duration)),
 	}
 
-	if !IsStressNgInstalled() {
+	if !resources.IsStressNgInstalled() {
 		return &action_kit_api.PrepareResult{
 			Error: extutil.Ptr(action_kit_api.ActionKitError{
 				Title:  "Stress-ng is not installed!",
@@ -148,14 +152,14 @@ func (l *stressCPUAction) Prepare(_ context.Context, state *StressActionState, r
 // Start is called to start the action
 // You can mutate the state here.
 // You can use the result to return messages/errors/metrics or artifacts
-func (l *stressCPUAction) Start(_ context.Context, state *StressActionState) (*action_kit_api.StartResult, error) {
-	return start(state)
+func (l *stressCPUAction) Start(_ context.Context, state *resources.StressActionState) (*action_kit_api.StartResult, error) {
+	return resources.Start(state)
 }
 
 // Stop is called to stop the action
 // It will be called even if the start method did not complete successfully.
 // It should be implemented in a immutable way, as the agent might to retries if the stop method timeouts.
 // You can use the result to return messages/errors/metrics or artifacts
-func (l *stressCPUAction) Stop(_ context.Context, state *StressActionState) (*action_kit_api.StopResult, error) {
-	return stop(state)
+func (l *stressCPUAction) Stop(_ context.Context, state *resources.StressActionState) (*action_kit_api.StopResult, error) {
+	return resources.Stop(state)
 }

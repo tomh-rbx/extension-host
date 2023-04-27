@@ -1,22 +1,23 @@
-package resources
+package exthost
 
 import (
 	"context"
 	"github.com/google/uuid"
 	"github.com/steadybit/action-kit/go/action_kit_api/v2"
+	"github.com/steadybit/extension-host/exthost/resources"
 	extension_kit "github.com/steadybit/extension-kit"
 	"github.com/steadybit/extension-kit/extutil"
 	"github.com/stretchr/testify/assert"
 	"testing"
 )
 
-func TestActionIO_Prepare(t *testing.T) {
+func TestActionCPU_Prepare(t *testing.T) {
 
 	tests := []struct {
 		name        string
 		requestBody action_kit_api.PrepareActionRequestBody
 		wantedError error
-		wantedState *StressActionState
+		wantedState *resources.StressActionState
 	}{
 		{
 			name: "Should return config",
@@ -25,12 +26,13 @@ func TestActionIO_Prepare(t *testing.T) {
 					"action":   "prepare",
 					"duration": "1000",
 					"workers":  "1",
+					"cpuLoad":  "50",
 				},
 				ExecutionId: uuid.New(),
 			},
 
-			wantedState: &StressActionState{
-				StressNGArgs: []string{"--io", "1", "--timeout", "1", "--aggressive"},
+			wantedState: &resources.StressActionState{
+				StressNGArgs: []string{"--cpu", "1", "--cpu-load", "50", "--timeout", "1"},
 				Pid:          0,
 			},
 		}, {
@@ -40,6 +42,7 @@ func TestActionIO_Prepare(t *testing.T) {
 					"action":   "prepare",
 					"duration": "500",
 					"workers":  "1",
+					"cpuLoad":  "50",
 				},
 				ExecutionId: uuid.New(),
 			},
@@ -47,11 +50,11 @@ func TestActionIO_Prepare(t *testing.T) {
 			wantedError: extutil.Ptr(extension_kit.ToError("Duration must be greater / equal than 1s", nil)),
 		},
 	}
-	action := NewStressIOAction()
+	action := NewStressCPUAction()
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			//Given
-			state := StressActionState{}
+			state := resources.StressActionState{}
 			request := tt.requestBody
 			//When
 			result, err := action.Prepare(context.Background(), &state, request)

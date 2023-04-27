@@ -64,6 +64,8 @@ spec:
               path: /health/readiness
               port: 8081
           securityContext:
+            seccompProfile:
+              type: "Unconfined"
             capabilities:
               add: [ "SYS_BOOT", "NET_ADMIN", "NET_RAW", "KILL", "SYS_TIME", "AUDIT_WRITE", "SETUID", "SETGID" ]
       volumes:

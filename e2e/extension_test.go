@@ -433,7 +433,7 @@ func startExtension(minikube *Minikube, image string) (*Extension, error) {
 						},
 					},
 					HostPID:     extutil.Ptr(true),
-					HostNetwork: extutil.Ptr(true), //FIXME
+					HostNetwork: extutil.Ptr(true),
 					SecurityContext: &acorev1.PodSecurityContextApplyConfiguration{
 						RunAsUser:    extutil.Ptr(int64(10000)),
 						RunAsGroup:   extutil.Ptr(int64(10000)),

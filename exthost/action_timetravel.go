@@ -2,23 +2,23 @@
  * Copyright 2023 steadybit GmbH. All rights reserved.
  */
 
-package timetravel
+package exthost
 
 import (
-  "context"
-  "github.com/rs/zerolog/log"
-  "github.com/steadybit/action-kit/go/action_kit_api/v2"
-  "github.com/steadybit/action-kit/go/action_kit_sdk"
-  "github.com/steadybit/extension-host/exthost"
-  "github.com/steadybit/extension-kit/extbuild"
-  "github.com/steadybit/extension-kit/extutil"
-  "runtime"
-  "time"
+	"context"
+	"github.com/rs/zerolog/log"
+	"github.com/steadybit/action-kit/go/action_kit_api/v2"
+	"github.com/steadybit/action-kit/go/action_kit_sdk"
+	"github.com/steadybit/extension-host/exthost/timetravel"
+	"github.com/steadybit/extension-kit/extbuild"
+	"github.com/steadybit/extension-kit/extutil"
+	"runtime"
+	"time"
 )
 
 type timeTravelAction struct{}
 
-type ActionState struct {
+type TimeTravelActionState struct {
 	DisableNtp    bool
 	Offset        time.Duration
 	OffsetApplied bool
@@ -26,16 +26,16 @@ type ActionState struct {
 
 // Make sure action implements all required interfaces
 var (
-	_ action_kit_sdk.Action[ActionState]         = (*timeTravelAction)(nil)
-	_ action_kit_sdk.ActionWithStop[ActionState] = (*timeTravelAction)(nil) // Optional, needed when the action needs a stop method
+	_ action_kit_sdk.Action[TimeTravelActionState]         = (*timeTravelAction)(nil)
+	_ action_kit_sdk.ActionWithStop[TimeTravelActionState] = (*timeTravelAction)(nil) // Optional, needed when the action needs a stop method
 )
 
-func NewTimetravelAction() action_kit_sdk.Action[ActionState] {
+func NewTimetravelAction() action_kit_sdk.Action[TimeTravelActionState] {
 	return &timeTravelAction{}
 }
 
-func (l *timeTravelAction) NewEmptyState() ActionState {
-	return ActionState{}
+func (l *timeTravelAction) NewEmptyState() TimeTravelActionState {
+	return TimeTravelActionState{}
 }
 
 // Describe returns the action description for the platform with all required information.
@@ -48,7 +48,7 @@ func (l *timeTravelAction) Describe() action_kit_api.ActionDescription {
 		Icon:        extutil.Ptr(timeTravelIcon),
 		TargetSelection: extutil.Ptr(action_kit_api.TargetSelection{
 			// The target type this action is for
-			TargetType: exthost.TargetID,
+			TargetType: TargetID,
 			// You can provide a list of target templates to help the user select targets.
 			// A template can be used to pre-fill a selection
 			SelectionTemplates: extutil.Ptr([]action_kit_api.TargetSelectionTemplate{
@@ -114,7 +114,11 @@ func (l *timeTravelAction) Describe() action_kit_api.ActionDescription {
 // It must not cause any harmful effects.
 // The passed in state is included in the subsequent calls to start/status/stop.
 // So the state should contain all information needed to execute the action and even more important: to be able to stop it.
-func (l *timeTravelAction) Prepare(_ context.Context, state *ActionState, request action_kit_api.PrepareActionRequestBody) (*action_kit_api.PrepareResult, error) {
+func (l *timeTravelAction) Prepare(_ context.Context, state *TimeTravelActionState, request action_kit_api.PrepareActionRequestBody) (*action_kit_api.PrepareResult, error) {
+	err := CheckTargetHostname(request.Target.Attributes)
+	if err != nil {
+		return nil, err
+	}
 	parsedOffset := extutil.ToUInt64(request.Config["offset"])
 	if parsedOffset == 0 {
 		return &action_kit_api.PrepareResult{
@@ -157,10 +161,10 @@ func isUnixLike() bool {
 // Start is called to start the action
 // You can mutate the state here.
 // You can use the result to return messages/errors/metrics or artifacts
-func (l *timeTravelAction) Start(_ context.Context, state *ActionState) (*action_kit_api.StartResult, error) {
+func (l *timeTravelAction) Start(_ context.Context, state *TimeTravelActionState) (*action_kit_api.StartResult, error) {
 	if state.DisableNtp {
 		log.Info().Msg("Disabling NTP")
-		err := adjustNtpTrafficRules(false)
+		err := timetravel.AdjustNtpTrafficRules(false)
 		if err != nil {
 			log.Error().Err(err).Msg("Failed to disable NTP")
 			return extutil.Ptr(action_kit_api.StartResult{
@@ -172,7 +176,7 @@ func (l *timeTravelAction) Start(_ context.Context, state *ActionState) (*action
 		}
 	}
 	log.Info().Msg("Adjusting time")
-	err := AdjustTime(state.Offset, false)
+	err := timetravel.AdjustTime(state.Offset, false)
 	if err != nil {
 		log.Error().Err(err).Msg("Failed to adjust time")
 		return extutil.Ptr(action_kit_api.StartResult{
@@ -190,19 +194,19 @@ func (l *timeTravelAction) Start(_ context.Context, state *ActionState) (*action
 // It will be called even if the start method did not complete successfully.
 // It should be implemented in a immutable way, as the agent might to retries if the stop method timeouts.
 // You can use the result to return messages/errors/metrics or artifacts
-func (l *timeTravelAction) Stop(_ context.Context, state *ActionState) (*action_kit_api.StopResult, error) {
+func (l *timeTravelAction) Stop(_ context.Context, state *TimeTravelActionState) (*action_kit_api.StopResult, error) {
 	log.Info().Msg("Stopping action")
 	log.Debug().Msgf("Offset was applied: %v", state.OffsetApplied)
 	if state.OffsetApplied {
 		log.Info().Msg("Adjusting time back")
-		err := AdjustTime(state.Offset, true)
+		err := timetravel.AdjustTime(state.Offset, true)
 		if err != nil {
 			log.Error().Err(err).Msg("Failed to adjust time")
 			return nil, err
 		}
 		if state.DisableNtp {
 			log.Info().Msg("Enabling NTP")
-			err := adjustNtpTrafficRules(true)
+			err := timetravel.AdjustNtpTrafficRules(true)
 			if err != nil {
 				log.Error().Err(err).Msg("Failed to enable NTP")
 				return nil, err

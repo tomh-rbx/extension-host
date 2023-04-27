@@ -54,14 +54,9 @@ func TestWithMinikube(t *testing.T) {
 
 func testStressCpu(t *testing.T, m *Minikube, e *Extension) {
 
-	hostname, err := os.Hostname()
-	if err != nil {
-		t.Fatal(err)
-		return
-	}
 	target := action_kit_api.Target{
 		Attributes: map[string][]string{
-			"host.hostname": {hostname},
+			"host.hostname": {"e2e-docker"},
 		},
 	}
 	config := struct {
@@ -78,14 +73,9 @@ func testStressCpu(t *testing.T, m *Minikube, e *Extension) {
 
 func testStressMemory(t *testing.T, m *Minikube, e *Extension) {
 
-	hostname, err := os.Hostname()
-	if err != nil {
-		t.Fatal(err)
-		return
-	}
 	target := action_kit_api.Target{
 		Attributes: map[string][]string{
-			"host.hostname": {hostname},
+			"host.hostname": {"e2e-docker"},
 		},
 	}
 	config := struct {
@@ -101,14 +91,9 @@ func testStressMemory(t *testing.T, m *Minikube, e *Extension) {
 
 func testStressIo(t *testing.T, m *Minikube, e *Extension) {
 
-	hostname, err := os.Hostname()
-	if err != nil {
-		t.Fatal(err)
-		return
-	}
 	target := action_kit_api.Target{
 		Attributes: map[string][]string{
-			"host.hostname": {hostname},
+			"host.hostname": {"e2e-docker"},
 		},
 	}
 	config := struct {
@@ -124,14 +109,9 @@ func testStressIo(t *testing.T, m *Minikube, e *Extension) {
 
 func testTimeTravel(t *testing.T, m *Minikube, e *Extension) {
 
-	hostname, err := os.Hostname()
-	if err != nil {
-		t.Fatal(err)
-		return
-	}
 	target := action_kit_api.Target{
 		Attributes: map[string][]string{
-			"host.hostname": {hostname},
+			"host.hostname": {"e2e-docker"},
 		},
 	}
 	config := struct {
@@ -190,14 +170,9 @@ func testDiscovery(t *testing.T, m *Minikube, e *Extension) {
 
 func testStopProcess(t *testing.T, m *Minikube, e *Extension) {
 
-	hostname, err := os.Hostname()
-	if err != nil {
-		t.Fatal(err)
-		return
-	}
 	target := action_kit_api.Target{
 		Attributes: map[string][]string{
-			"host.hostname": {hostname},
+			"host.hostname": {"e2e-docker"},
 		},
 	}
 	config := struct {
@@ -221,14 +196,9 @@ func testStopProcess(t *testing.T, m *Minikube, e *Extension) {
 }
 func testShutdownHost(t *testing.T, m *Minikube, e *Extension) {
 
-	hostname, err := os.Hostname()
-	if err != nil {
-		t.Fatal(err)
-		return
-	}
 	target := action_kit_api.Target{
 		Attributes: map[string][]string{
-			"host.hostname": {hostname},
+			"host.hostname": {"e2e-docker"},
 		},
 	}
 	config := struct {
@@ -236,8 +206,8 @@ func testShutdownHost(t *testing.T, m *Minikube, e *Extension) {
 	}{Reboot: true}
 
 	exec, err := e.RunAction("com.github.steadybit.extension_host.shutdown", target, config)
-  if !runsInCi() {
-    require.NoError(t, err)
-  }
+	if !runsInCi() {
+		require.NoError(t, err)
+	}
 	require.NoError(t, exec.Cancel())
 }

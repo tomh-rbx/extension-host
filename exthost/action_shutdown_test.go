@@ -1,17 +1,14 @@
-package timetravel
+package exthost
 
 import (
 	"context"
 	"github.com/google/uuid"
 	"github.com/steadybit/action-kit/go/action_kit_api/v2"
-	extension_kit "github.com/steadybit/extension-kit"
-	"github.com/steadybit/extension-kit/extutil"
 	"github.com/stretchr/testify/assert"
 	"testing"
-	"time"
 )
 
-func TestActionTimeTravel_Prepare(t *testing.T) {
+func TestActionShutdown_Prepare(t *testing.T) {
 
 	tests := []struct {
 		name        string
@@ -23,40 +20,25 @@ func TestActionTimeTravel_Prepare(t *testing.T) {
 			name: "Should return config",
 			requestBody: action_kit_api.PrepareActionRequestBody{
 				Config: map[string]interface{}{
-					"action":     "prepare",
-					"duration":   "1000",
-					"offset":     "1000",
-					"disableNtp": "true",
+					"action": "prepare",
+					"reboot": "true",
 				},
 				ExecutionId: uuid.New(),
 			},
 
 			wantedState: &ActionState{
-				Offset:        1 * time.Second,
-				DisableNtp:    true,
-				OffsetApplied: false,
+				Reboot:         true,
+				ShutdownMethod: SyscallOrSysrq,
 			},
-		}, {
-			name: "Should return error too low duration",
-			requestBody: action_kit_api.PrepareActionRequestBody{
-				Config: map[string]interface{}{
-					"action":     "prepare",
-					"duration":   "0",
-					"offset":     "1000",
-					"disableNtp": "true",
-				},
-				ExecutionId: uuid.New(),
-			},
-
-			wantedError: extutil.Ptr(extension_kit.ToError("Duration must be greater / equal than 1s", nil)),
 		},
 	}
-	action := NewTimetravelAction()
+	action := NewShutdownAction()
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			//Given
 			state := ActionState{}
 			request := tt.requestBody
+
 			//When
 			result, err := action.Prepare(context.Background(), &state, request)
 
@@ -68,9 +50,7 @@ func TestActionTimeTravel_Prepare(t *testing.T) {
 			}
 			if tt.wantedState != nil {
 				assert.NoError(t, err)
-				assert.Equal(t, tt.wantedState.OffsetApplied, state.OffsetApplied)
-				assert.Equal(t, tt.wantedState.Offset, state.Offset)
-				assert.Equal(t, tt.wantedState.DisableNtp, state.DisableNtp)
+				assert.Equal(t, tt.wantedState.Reboot, state.Reboot)
 			}
 		})
 	}

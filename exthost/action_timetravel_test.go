@@ -1,4 +1,4 @@
-package resources
+package exthost
 
 import (
 	"context"
@@ -8,40 +8,42 @@ import (
 	"github.com/steadybit/extension-kit/extutil"
 	"github.com/stretchr/testify/assert"
 	"testing"
+	"time"
 )
 
-func TestActionCPU_Prepare(t *testing.T) {
+func TestActionTimeTravel_Prepare(t *testing.T) {
 
 	tests := []struct {
 		name        string
 		requestBody action_kit_api.PrepareActionRequestBody
 		wantedError error
-		wantedState *StressActionState
+		wantedState *ActionState
 	}{
 		{
 			name: "Should return config",
 			requestBody: action_kit_api.PrepareActionRequestBody{
 				Config: map[string]interface{}{
-					"action":   "prepare",
-					"duration": "1000",
-					"workers":  "1",
-					"cpuLoad":  "50",
+					"action":     "prepare",
+					"duration":   "1000",
+					"offset":     "1000",
+					"disableNtp": "true",
 				},
 				ExecutionId: uuid.New(),
 			},
 
-			wantedState: &StressActionState{
-				StressNGArgs: []string{"--cpu", "1", "--cpu-load", "50", "--timeout", "1"},
-				Pid:          0,
+			wantedState: &ActionState{
+				Offset:        1 * time.Second,
+				DisableNtp:    true,
+				OffsetApplied: false,
 			},
 		}, {
 			name: "Should return error too low duration",
 			requestBody: action_kit_api.PrepareActionRequestBody{
 				Config: map[string]interface{}{
-					"action":   "prepare",
-					"duration": "500",
-					"workers":  "1",
-					"cpuLoad":  "50",
+					"action":     "prepare",
+					"duration":   "0",
+					"offset":     "1000",
+					"disableNtp": "true",
 				},
 				ExecutionId: uuid.New(),
 			},
@@ -49,11 +51,11 @@ func TestActionCPU_Prepare(t *testing.T) {
 			wantedError: extutil.Ptr(extension_kit.ToError("Duration must be greater / equal than 1s", nil)),
 		},
 	}
-	action := NewStressCPUAction()
+	action := NewTimetravelAction()
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			//Given
-			state := StressActionState{}
+			state := ActionState{}
 			request := tt.requestBody
 			//When
 			result, err := action.Prepare(context.Background(), &state, request)
@@ -61,13 +63,14 @@ func TestActionCPU_Prepare(t *testing.T) {
 			//Then
 			if tt.wantedError != nil && err != nil {
 				assert.EqualError(t, err, tt.wantedError.Error())
-			} else if tt.wantedError != nil {
+			} else if tt.wantedError != nil && result != nil {
 				assert.Equal(t, result.Error.Title, tt.wantedError.Error())
 			}
 			if tt.wantedState != nil {
 				assert.NoError(t, err)
-				assert.Equal(t, tt.wantedState.StressNGArgs, state.StressNGArgs)
-				assert.Equal(t, tt.wantedState.Pid, state.Pid)
+				assert.Equal(t, tt.wantedState.OffsetApplied, state.OffsetApplied)
+				assert.Equal(t, tt.wantedState.Offset, state.Offset)
+				assert.Equal(t, tt.wantedState.DisableNtp, state.DisableNtp)
 			}
 		})
 	}

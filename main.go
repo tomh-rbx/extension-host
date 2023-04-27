@@ -12,9 +12,6 @@ import (
 	"github.com/steadybit/extension-host/config"
 	"github.com/steadybit/extension-host/exthost"
 	stopprocess "github.com/steadybit/extension-host/exthost/process"
-	"github.com/steadybit/extension-host/exthost/resources"
-	"github.com/steadybit/extension-host/exthost/shutdown"
-	"github.com/steadybit/extension-host/exthost/timetravel"
 	"github.com/steadybit/extension-kit/extbuild"
 	"github.com/steadybit/extension-kit/exthealth"
 	"github.com/steadybit/extension-kit/exthttp"
@@ -53,12 +50,12 @@ func main() {
 	// for your extension. You might want to change these because the names do not fit, or because
 	// you do not have a need for all of them.
 	exthost.RegisterDiscoveryHandlers()
-	action_kit_sdk.RegisterAction(resources.NewStressCPUAction())
-	action_kit_sdk.RegisterAction(resources.NewStressMemoryAction())
-	action_kit_sdk.RegisterAction(resources.NewStressIOAction())
-	action_kit_sdk.RegisterAction(timetravel.NewTimetravelAction())
+	action_kit_sdk.RegisterAction(exthost.NewStressCPUAction())
+	action_kit_sdk.RegisterAction(exthost.NewStressMemoryAction())
+	action_kit_sdk.RegisterAction(exthost.NewStressIOAction())
+	action_kit_sdk.RegisterAction(exthost.NewTimetravelAction())
 	action_kit_sdk.RegisterAction(stopprocess.NewStopProcessAction())
-	action_kit_sdk.RegisterAction(shutdown.NewShutdownAction())
+	action_kit_sdk.RegisterAction(exthost.NewShutdownAction())
 
 	//This will install a signal handlder, that will stop active actions when receiving a SIGURS1, SIGTERM or SIGINT
 	action_kit_sdk.InstallSignalHandler()
