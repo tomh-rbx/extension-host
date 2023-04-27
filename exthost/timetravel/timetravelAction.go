@@ -5,15 +5,15 @@
 package timetravel
 
 import (
-	"context"
-	"github.com/rs/zerolog/log"
-	"github.com/steadybit/action-kit/go/action_kit_api/v2"
-	"github.com/steadybit/action-kit/go/action_kit_sdk"
-	"github.com/steadybit/extension-host/exthost"
-	"github.com/steadybit/extension-kit/extbuild"
-	"github.com/steadybit/extension-kit/extutil"
-	"runtime"
-	"time"
+  "context"
+  "github.com/rs/zerolog/log"
+  "github.com/steadybit/action-kit/go/action_kit_api/v2"
+  "github.com/steadybit/action-kit/go/action_kit_sdk"
+  "github.com/steadybit/extension-host/exthost"
+  "github.com/steadybit/extension-kit/extbuild"
+  "github.com/steadybit/extension-kit/extutil"
+  "runtime"
+  "time"
 )
 
 type timeTravelAction struct{}
