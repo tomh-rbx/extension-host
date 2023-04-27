@@ -28,6 +28,7 @@ func TestActionShutdown_Prepare(t *testing.T) {
 
 			wantedState: &ActionState{
 				Reboot: true,
+        ShutdownMethod: SyscallOrSysrq,
 			},
 		},
 	}
