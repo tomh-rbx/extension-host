@@ -17,17 +17,10 @@ import (
 	"time"
 )
 
-func skipCI(t *testing.T) {
-	if runsInCi() {
-		t.Skip("Skipping testing in CI environment")
-	}
-}
-
 func runsInCi() bool {
 	return os.Getenv("CI") != ""
 }
 func TestWithMinikube(t *testing.T) {
-	//skipCI(t)
 	WithMinikube(t, []WithMinikubeTestCase{
 		{
 			Name: "target discovery",
