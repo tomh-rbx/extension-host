@@ -41,17 +41,17 @@ var (
 	osHostname = os.Hostname
 )
 
-func CheckTargetHostname(attributes map[string][]string) error {
+func CheckTargetHostname(attributes map[string][]string) (*string, error) {
 	hostname := attributes["host.hostname"]
 	if len(hostname) == 0 || hostname[0] == "" {
-		return extension_kit.ToError("Target is missing the 'host.hostname' attribute.", nil)
+		return nil, extension_kit.ToError("Target is missing the 'host.hostname' attribute.", nil)
 	}
 	osHostname, err := osHostname()
 	if err != nil {
-		return extension_kit.ToError("Failed to get hostname.", err)
+		return nil, extension_kit.ToError("Failed to get hostname.", err)
 	}
 	if hostname[0] != osHostname {
-		return extension_kit.ToError(fmt.Sprintf("Target (%s) is not the current host (%s).", hostname[0], osHostname), nil)
+		return nil, extension_kit.ToError(fmt.Sprintf("Target (%s) is not the current host (%s).", hostname[0], osHostname), nil)
 	}
-	return nil
+	return nil, nil
 }

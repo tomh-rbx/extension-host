@@ -98,7 +98,7 @@ func (l *stressMemoryAction) Describe() action_kit_api.ActionDescription {
 // The passed in state is included in the subsequent calls to start/status/stop.
 // So the state should contain all information needed to execute the action and even more important: to be able to stop it.
 func (l *stressMemoryAction) Prepare(_ context.Context, state *resources.StressActionState, request action_kit_api.PrepareActionRequestBody) (*action_kit_api.PrepareResult, error) {
-	err := CheckTargetHostname(request.Target.Attributes)
+	_, err := CheckTargetHostname(request.Target.Attributes)
 	if err != nil {
 		return nil, err
 	}

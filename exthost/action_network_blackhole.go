@@ -42,14 +42,17 @@ func getNetworkBlackholeDescription() action_kit_api.ActionDescription {
 
 func blackhole() networkOptsProvider {
 	return func(ctx context.Context, request action_kit_api.PrepareActionRequestBody) (networkutils.Opts, error) {
-		hostname := request.Target.Attributes["host.hostname"][0]
+		hostname, err := CheckTargetHostname(request.Target.Attributes)
+		if err != nil {
+			return nil, err
+		}
 
 		var restrictedUrls []string
 		if request.ExecutionContext != nil && request.ExecutionContext.RestrictedUrls != nil {
 			restrictedUrls = *request.ExecutionContext.RestrictedUrls
 		}
 
-		filter, err := mapToNetworkFilter(ctx, hostname, request.Config, restrictedUrls)
+		filter, err := mapToNetworkFilter(ctx, *hostname, request.Config, restrictedUrls)
 		if err != nil {
 			return nil, err
 		}

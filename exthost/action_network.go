@@ -84,7 +84,7 @@ func (a *networkAction) Describe() action_kit_api.ActionDescription {
 }
 
 func (a *networkAction) Prepare(ctx context.Context, state *NetworkActionState, request action_kit_api.PrepareActionRequestBody) (*action_kit_api.PrepareResult, error) {
-	err := CheckTargetHostname(request.Target.Attributes)
+	_, err := CheckTargetHostname(request.Target.Attributes)
 	if err != nil {
 		return nil, err
 	}
@@ -206,8 +206,8 @@ func mapToNetworkFilter(ctx context.Context, hostname string, config map[string]
 	}, nil
 }
 
-func readNetworkInterfaces(ctx context.Context, hostname string) ([]string, error) {
-	ifcs, err := network.ListInterfaces(ctx, hostname)
+func readNetworkInterfaces(ctx context.Context) ([]string, error) {
+	ifcs, err := network.ListInterfaces(ctx)
 	if err != nil {
 		return nil, err
 	}

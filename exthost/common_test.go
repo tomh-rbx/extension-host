@@ -48,7 +48,8 @@ func TestCheckTargetHostname(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			tt.wantErr(t, CheckTargetHostname(tt.args.attributes), fmt.Sprintf("CheckTargetHostname(%v)", tt.args.attributes))
+      _, err := CheckTargetHostname(tt.args.attributes)
+      tt.wantErr(t, err, fmt.Sprintf("CheckTargetHostname(%v)", tt.args.attributes))
 		})
 	}
 }

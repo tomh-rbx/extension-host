@@ -196,11 +196,11 @@ func testShutdownHost(t *testing.T, m *Minikube, e *Extension) {
 }
 
 func testNetworkBlackhole(t *testing.T, m *Minikube, e *Extension) {
-  executionContext := &action_kit_api.ExecutionContext{
-    AgentAwsAccountId: nil,
-    RestrictedUrls:   extutil.Ptr([]string{"0.0.0.0:8443"}) ,
-  }
-  nginx := Nginx{minikube: m}
+	executionContext := &action_kit_api.ExecutionContext{
+		AgentAwsAccountId: nil,
+		RestrictedUrls:    extutil.Ptr([]string{"http://0.0.0.0:8443", "http://0.0.0.0:8085"}),
+	}
+	nginx := Nginx{minikube: m}
 	err := nginx.Deploy("nginx-network-blackhole")
 	require.NoError(t, err, "failed to create pod")
 	defer func() { _ = nginx.Delete() }()

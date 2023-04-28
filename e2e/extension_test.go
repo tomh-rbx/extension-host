@@ -233,9 +233,9 @@ func (e *Extension) execAction(action action_kit_api.ActionDescription, target a
 func (e *Extension) prepareAction(action action_kit_api.ActionDescription, target action_kit_api.Target, config interface{}, executionId uuid.UUID, executionContext *action_kit_api.ExecutionContext) (action_kit_api.ActionState, time.Duration, error) {
 	var duration time.Duration
 	prepareBody := action_kit_api.PrepareActionRequestBody{
-		ExecutionId: executionId,
-		Target:      &target,
-    ExecutionContext: executionContext,
+		ExecutionId:      executionId,
+		Target:           &target,
+		ExecutionContext: executionContext,
 	}
 	if err := extconversion.Convert(config, &prepareBody.Config); err != nil {
 		return nil, duration, fmt.Errorf("failed to convert config: %w", err)

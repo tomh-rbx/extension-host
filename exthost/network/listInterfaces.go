@@ -28,7 +28,7 @@ func (i *Interface) HasFlag(f string) bool {
 	return false
 }
 
-func ListInterfaces(ctx context.Context, targetId string) ([]Interface, error) {
+func ListInterfaces(ctx context.Context) ([]Interface, error) {
 
 	var outb, errb bytes.Buffer
 

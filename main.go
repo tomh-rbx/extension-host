@@ -56,6 +56,11 @@ func main() {
 	action_kit_sdk.RegisterAction(exthost.NewStopProcessAction())
 	action_kit_sdk.RegisterAction(exthost.NewShutdownAction())
 	action_kit_sdk.RegisterAction(exthost.NewNetworkBlackholeContainerAction())
+	action_kit_sdk.RegisterAction(exthost.NewNetworkLimitBandwidthContainerAction())
+	action_kit_sdk.RegisterAction(exthost.NewNetworkCorruptPackagesContainerAction())
+	action_kit_sdk.RegisterAction(exthost.NewNetworkDelayContainerAction())
+	action_kit_sdk.RegisterAction(exthost.NewNetworkBlockDnsContainerAction())
+	action_kit_sdk.RegisterAction(exthost.NewNetworkPackageLossContainerAction())
 
 	//This will install a signal handlder, that will stop active actions when receiving a SIGURS1, SIGTERM or SIGINT
 	action_kit_sdk.InstallSignalHandler()
