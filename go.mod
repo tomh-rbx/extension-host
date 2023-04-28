@@ -16,6 +16,7 @@ require (
 	github.com/steadybit/extension-container v0.0.0-20230427124809-a41386620adf
 	github.com/steadybit/extension-kit v1.7.13
 	github.com/stretchr/testify v1.8.2
+	github.com/yalp/jsonpath v0.0.0-20180802001716-5cc68e5049a0
 	golang.org/x/exp v0.0.0-20230420155640-133eef4313cb
 	k8s.io/api v0.27.1
 	k8s.io/apimachinery v0.27.1

@@ -5,6 +5,7 @@ package e2e
 
 import (
 	"context"
+	"fmt"
 	"github.com/rs/zerolog/log"
 	"github.com/steadybit/action-kit/go/action_kit_api/v2"
 	"github.com/steadybit/discovery-kit/go/discovery_kit_api"
@@ -23,6 +24,10 @@ var (
 		Attributes: map[string][]string{
 			"host.hostname": {"e2e-docker"},
 		},
+	}
+	executionContext = &action_kit_api.ExecutionContext{
+		AgentAwsAccountId: nil,
+		RestrictedUrls:    extutil.Ptr([]string{"http://0.0.0.0:8443", "http://0.0.0.0:8085"}),
 	}
 )
 
@@ -61,6 +66,23 @@ func TestWithMinikube(t *testing.T) {
 		//{
 		//	Name: "network blackhole",
 		//	Test: testNetworkBlackhole,
+		//},
+		//{
+		//  Name: "network delay",
+		//  Test: testNetworkDelay,
+		//},
+		//{
+		//	Name: "network block dns",
+		//	Test: testNetworkBlockDns,
+		//}, {
+		//	Name: "network limit bandwidth",
+		//	Test: testNetworkLimitBandwidth,
+		//}, {
+		//	Name: "network package loss",
+		//	Test: testNetworkPackageLoss,
+		//}, {
+		//	Name: "network package corruption",
+		//	Test: testNetworkPackageCorruption,
 		//},
 	})
 }
@@ -196,10 +218,6 @@ func testShutdownHost(t *testing.T, m *Minikube, e *Extension) {
 }
 
 func testNetworkBlackhole(t *testing.T, m *Minikube, e *Extension) {
-	executionContext := &action_kit_api.ExecutionContext{
-		AgentAwsAccountId: nil,
-		RestrictedUrls:    extutil.Ptr([]string{"http://0.0.0.0:8443", "http://0.0.0.0:8085"}),
-	}
 	nginx := Nginx{minikube: m}
 	err := nginx.Deploy("nginx-network-blackhole")
 	require.NoError(t, err, "failed to create pod")
@@ -271,6 +289,372 @@ func testNetworkBlackhole(t *testing.T, m *Minikube, e *Extension) {
 			require.NoError(t, action.Cancel())
 			require.NoError(t, nginx.IsReachable(), "service should be reachable after blackhole")
 			require.NoError(t, nginx.CanReach("https://google.com"), "service should reach url after blackhole")
+		})
+	}
+}
+
+func testNetworkDelay(t *testing.T, m *Minikube, e *Extension) {
+	netperf := netperf{minikube: m}
+	err := netperf.Deploy("delay")
+	defer func() { _ = netperf.Delete() }()
+	require.NoError(t, err)
+
+	tests := []struct {
+		name        string
+		ip          []string
+		hostname    []string
+		port        []string
+		interfaces  []string
+		WantedDelay bool
+	}{
+		{
+			name:        "should delay all traffic",
+			WantedDelay: true,
+		},
+		{
+			name:        "should delay only port 5000 traffic",
+			port:        []string{"5000"},
+			interfaces:  []string{"eth0"},
+			WantedDelay: true,
+		},
+		{
+			name:        "should delay only port 80 traffic",
+			port:        []string{"80"},
+			WantedDelay: false,
+		},
+	}
+
+	unaffectedLatency, err := netperf.MeasureLatency()
+	require.NoError(t, err)
+
+	for _, tt := range tests {
+		config := struct {
+			Duration     int      `json:"duration"`
+			Delay        int      `json:"networkDelay"`
+			Jitter       bool     `json:"networkDelayJitter"`
+			Ip           []string `json:"ip"`
+			Hostname     []string `json:"hostname"`
+			Port         []string `json:"port"`
+			NetInterface []string `json:"networkInterface"`
+		}{
+			Duration:     10000,
+			Delay:        200,
+			Jitter:       false,
+			Ip:           tt.ip,
+			Hostname:     tt.hostname,
+			Port:         tt.port,
+			NetInterface: tt.interfaces,
+		}
+
+    if m.stdout == nil {
+      m.stdout = os.Stdout
+    }
+		t.Run(tt.name, func(t *testing.T) {
+			action, err := e.RunAction(exthost.BaseActionID+".network_delay", target, config, executionContext)
+			defer func() { _ = action.Cancel() }()
+			require.NoError(t, err)
+
+			latency, err := netperf.MeasureLatency()
+			require.NoError(t, err)
+			delay := latency - unaffectedLatency
+			if tt.WantedDelay {
+				require.True(t, delay > 200*time.Millisecond, "service should be delayed >200ms but was delayed %s", delay.String())
+			} else {
+				require.True(t, delay < 50*time.Millisecond, "service should not be delayed but was delayed %s", delay.String())
+			}
+			require.NoError(t, action.Cancel())
+
+			latency, err = netperf.MeasureLatency()
+			require.NoError(t, err)
+			delay = latency - unaffectedLatency
+			require.True(t, delay < 50*time.Millisecond, "service should not be delayed but was delayed %s", delay.String())
+		})
+	}
+}
+
+func testNetworkPackageLoss(t *testing.T, m *Minikube, e *Extension) {
+	iperf := iperf{minikube: m}
+	err := iperf.Deploy("loss")
+	defer func() { _ = iperf.Delete() }()
+	require.NoError(t, err)
+
+	tests := []struct {
+		name       string
+		ip         []string
+		hostname   []string
+		port       []string
+		interfaces []string
+		WantedLoss bool
+	}{
+		{
+			name:       "should loose packages on all traffic",
+			WantedLoss: true,
+		},
+		{
+			name:       "should loose packages only on port 5001 traffic",
+			port:       []string{"5001"},
+			interfaces: []string{"eth0"},
+			WantedLoss: true,
+		},
+		{
+			name:       "should loose packages only on port 80 traffic",
+			port:       []string{"80"},
+			WantedLoss: false,
+		},
+	}
+
+	for _, tt := range tests {
+		config := struct {
+			Duration     int      `json:"duration"`
+			Loss         int      `json:"networkLoss"`
+			Ip           []string `json:"ip"`
+			Hostname     []string `json:"hostname"`
+			Port         []string `json:"port"`
+			NetInterface []string `json:"networkInterface"`
+		}{
+			Duration:     10000,
+			Loss:         10,
+			Ip:           tt.ip,
+			Hostname:     tt.hostname,
+			Port:         tt.port,
+			NetInterface: tt.interfaces,
+		}
+
+    if m.stdout == nil {
+      m.stdout = os.Stdout
+    }
+		t.Run(tt.name, func(t *testing.T) {
+			action, err := e.RunAction(exthost.BaseActionID+".network_package_loss", target, config, executionContext)
+			defer func() { _ = action.Cancel() }()
+			require.NoError(t, err)
+
+			loss, err := iperf.MeasurePackageLoss()
+			require.NoError(t, err)
+			if tt.WantedLoss {
+				require.True(t, loss >= 7.0, "~10%% packages should be lost but was %.2f", loss)
+			} else {
+				require.True(t, loss <= 2.0, "packages should be lost but was %.2f", loss)
+			}
+			require.NoError(t, action.Cancel())
+
+			loss, err = iperf.MeasurePackageLoss()
+			require.NoError(t, err)
+			require.True(t, loss <= 2.0, "packages should be lost but was %.2f", loss)
+		})
+	}
+}
+
+func testNetworkPackageCorruption(t *testing.T, m *Minikube, e *Extension) {
+	iperf := iperf{minikube: m}
+	err := iperf.Deploy("corruption")
+	defer func() { _ = iperf.Delete() }()
+	require.NoError(t, err)
+
+	tests := []struct {
+		name             string
+		ip               []string
+		hostname         []string
+		port             []string
+		interfaces       []string
+		WantedCorruption bool
+	}{
+		{
+			name:             "should corrupt packages on all traffic",
+			WantedCorruption: true,
+		},
+		{
+			name:             "should corrupt packages only on port 5001 traffic",
+			port:             []string{"5001"},
+			interfaces:       []string{"eth0"},
+			WantedCorruption: true,
+		},
+		{
+			name:             "should corrupt packages only on port 80 traffic",
+			port:             []string{"80"},
+			WantedCorruption: false,
+		},
+	}
+
+	for _, tt := range tests {
+		config := struct {
+			Duration     int      `json:"duration"`
+			Corruption   int      `json:"networkCorruption"`
+			Ip           []string `json:"ip"`
+			Hostname     []string `json:"hostname"`
+			Port         []string `json:"port"`
+			NetInterface []string `json:"networkInterface"`
+		}{
+			Duration:     10000,
+			Corruption:   10,
+			Ip:           tt.ip,
+			Hostname:     tt.hostname,
+			Port:         tt.port,
+			NetInterface: tt.interfaces,
+		}
+
+    if m.stdout == nil {
+      m.stdout = os.Stdout
+    }
+		t.Run(tt.name, func(t *testing.T) {
+			action, err := e.RunAction(exthost.BaseActionID+".network_package_corruption", target, config, executionContext)
+			defer func() { _ = action.Cancel() }()
+			require.NoError(t, err)
+
+			loss, err := iperf.MeasurePackageLoss()
+			require.NoError(t, err)
+			if tt.WantedCorruption {
+				require.True(t, loss >= 7.0, "~10%% packages should be corrupted but was %.2f", loss)
+			} else {
+				require.True(t, loss <= 2.0, "packages should be corrupted but was %.2f", loss)
+			}
+			require.NoError(t, action.Cancel())
+
+			loss, err = iperf.MeasurePackageLoss()
+			require.NoError(t, err)
+			require.True(t, loss <= 2.0, "packages should be corrupted but was %.2f", loss)
+		})
+	}
+}
+
+func testNetworkLimitBandwidth(t *testing.T, m *Minikube, e *Extension) {
+	iperf := iperf{minikube: m}
+	err := iperf.Deploy("bandwidth")
+	defer func() { _ = iperf.Delete() }()
+	require.NoError(t, err)
+
+	tests := []struct {
+		name        string
+		ip          []string
+		hostname    []string
+		port        []string
+		interfaces  []string
+		WantedLimit bool
+	}{
+		{
+			name:        "should limit bandwidth on all traffic",
+			WantedLimit: true,
+		},
+		{
+			name:        "should limit bandwidth only on port 5001 traffic",
+			port:        []string{"5001"},
+			interfaces:  []string{"eth0"},
+			WantedLimit: true,
+		},
+		{
+			name:        "should limit bandwidth only on port 80 traffic",
+			port:        []string{"80"},
+			WantedLimit: false,
+		},
+	}
+
+	unlimited, err := iperf.MeasureBandwidth()
+	require.NoError(t, err)
+	limit := unlimited / 3
+
+	for _, tt := range tests {
+		config := struct {
+			Duration     int      `json:"duration"`
+			Bandwidth    string   `json:"bandwidth"`
+			Ip           []string `json:"ip"`
+			Hostname     []string `json:"hostname"`
+			Port         []string `json:"port"`
+			NetInterface []string `json:"networkInterface"`
+		}{
+			Duration:     10000,
+			Bandwidth:    fmt.Sprintf("%dmbit", int(limit)),
+			Ip:           tt.ip,
+			Hostname:     tt.hostname,
+			Port:         tt.port,
+			NetInterface: tt.interfaces,
+		}
+
+    if m.stdout == nil {
+      m.stdout = os.Stdout
+    }
+		t.Run(tt.name, func(t *testing.T) {
+			action, err := e.RunAction(exthost.BaseActionID+".network_bandwidth", target, config, executionContext)
+			defer func() { _ = action.Cancel() }()
+			require.NoError(t, err)
+
+			bandwidth, err := iperf.MeasureBandwidth()
+			require.NoError(t, err)
+			if tt.WantedLimit {
+				require.True(t, bandwidth <= (limit*1.05), "bandwidth should be ~%.2fmbit but was %.2fmbit", limit, bandwidth)
+			} else {
+				require.True(t, bandwidth > (unlimited*0.95), "bandwidth should not be limited (~%.2fmbit) but was %.2fmbit", unlimited, bandwidth)
+			}
+			require.NoError(t, action.Cancel())
+
+			bandwidth, err = iperf.MeasureBandwidth()
+			require.NoError(t, err)
+			require.True(t, bandwidth > (unlimited*0.95), "bandwidth should not be limited (~%.2fmbit) but was %.2fmbit", unlimited, bandwidth)
+		})
+	}
+}
+
+func testNetworkBlockDns(t *testing.T, m *Minikube, e *Extension) {
+	nginx := Nginx{minikube: m}
+	err := nginx.Deploy("nginx-network-block-dns")
+	require.NoError(t, err, "failed to create pod")
+	defer func() { _ = nginx.Delete() }()
+
+	tests := []struct {
+		name             string
+		ip               []string
+		hostname         []string
+		dnsPort          uint
+		WantedReachable  bool
+		WantedReachesUrl bool
+	}{
+		{
+			name:             "should block dns traffic",
+			dnsPort:          53,
+			WantedReachable:  true,
+			WantedReachesUrl: false,
+		},
+		{
+			name:             "should block dns traffic on port 5353",
+			dnsPort:          5353,
+			WantedReachable:  true,
+			WantedReachesUrl: true,
+		},
+	}
+
+	for _, tt := range tests {
+		config := struct {
+			Duration int  `json:"duration"`
+			DnsPort  uint `json:"dnsPort"`
+		}{
+			Duration: 10000,
+			DnsPort:  tt.dnsPort,
+		}
+
+    if m.stdout == nil {
+      m.stdout = os.Stdout
+    }
+		t.Run(tt.name, func(t *testing.T) {
+			require.NoError(t, nginx.IsReachable(), "service should be reachable before block dns")
+			require.NoError(t, nginx.CanReach("https://google.com"), "service should reach url before block dns")
+
+			action, err := e.RunAction(exthost.BaseActionID+".network_block_dns", target, config, executionContext)
+			defer func() { _ = action.Cancel() }()
+			require.NoError(t, err)
+
+			if tt.WantedReachable {
+				require.NoError(t, nginx.IsReachable(), "service should be reachable during block dns")
+			} else {
+				require.Error(t, nginx.IsReachable(), "service should not be reachable during block dns")
+			}
+
+			if tt.WantedReachesUrl {
+				require.NoError(t, nginx.CanReach("https://google.com"), "service should be reachable during block dns")
+			} else {
+				require.ErrorContains(t, nginx.CanReach("https://google.com"), "Resolving timed out", "service should not be reachable during block dns")
+			}
+
+			require.NoError(t, action.Cancel())
+			require.NoError(t, nginx.IsReachable(), "service should be reachable after block dns")
+			require.NoError(t, nginx.CanReach("https://google.com"), "service should reach url after block dns")
 		})
 	}
 }

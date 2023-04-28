@@ -17,7 +17,7 @@ spec:
         app.kubernetes.io/name: {{ include "extensionlib.names.name" . }}
         steadybit.com/extension: "true"
       annotations:
-        "container.apparmor.security.beta.kubernetes.io/extension-host": "unconfined"
+        "container.apparmor.security.beta.kubernetes.io/{{ include "extensionlib.names.name" . }}": "unconfined"
         "steadybit.com/extension-auto-discovery": >
           {
             "extensions": [
