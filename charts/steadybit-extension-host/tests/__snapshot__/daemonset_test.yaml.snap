@@ -9,6 +9,7 @@ manifest should match snapshot with TLS:
     spec:
       selector:
         matchLabels:
+          app: steadybit-extension-host
           app.kubernetes.io/name: steadybit-extension-host
       template:
         metadata:
@@ -16,6 +17,7 @@ manifest should match snapshot with TLS:
             container.apparmor.security.beta.kubernetes.io/steadybit-extension-host: unconfined
             steadybit.com/extension-auto-discovery: "{\n  \"extensions\": [\n    {\n      \"port\": \"8085\",\n      \"types\": [\"ACTION\",\"DISCOVERY\"],\n      \"tls\": {\n        \"server\": {\n          \"extraCertsFile\": \"/opt/steadybit/agent/etc/extension-mtls/server-cert/tls.crt\"\n          }\n          \n    }\n    }\n  ]\n}\n"
           labels:
+            app: steadybit-extension-host
             app.kubernetes.io/name: steadybit-extension-host
             steadybit.com/extension: "true"
         spec:
@@ -35,7 +37,7 @@ manifest should match snapshot with TLS:
                 httpGet:
                   path: /health/liveness
                   port: 8081
-              name: extension
+              name: steadybit-extension-host
               readinessProbe:
                 httpGet:
                   path: /health/readiness
@@ -76,6 +78,7 @@ manifest should match snapshot with mutual TLS:
     spec:
       selector:
         matchLabels:
+          app: steadybit-extension-host
           app.kubernetes.io/name: steadybit-extension-host
       template:
         metadata:
@@ -100,6 +103,7 @@ manifest should match snapshot with mutual TLS:
                 ]
               }
           labels:
+            app: steadybit-extension-host
             app.kubernetes.io/name: steadybit-extension-host
             steadybit.com/extension: "true"
         spec:
@@ -121,7 +125,7 @@ manifest should match snapshot with mutual TLS:
                 httpGet:
                   path: /health/liveness
                   port: 8081
-              name: extension
+              name: steadybit-extension-host
               readinessProbe:
                 httpGet:
                   path: /health/readiness
@@ -169,6 +173,7 @@ manifest should match snapshot without TLS:
     spec:
       selector:
         matchLabels:
+          app: steadybit-extension-host
           app.kubernetes.io/name: steadybit-extension-host
       template:
         metadata:
@@ -176,6 +181,7 @@ manifest should match snapshot without TLS:
             container.apparmor.security.beta.kubernetes.io/steadybit-extension-host: unconfined
             steadybit.com/extension-auto-discovery: "{\n  \"extensions\": [\n    {\n      \"port\": \"8085\",\n      \"types\": [\"ACTION\",\"DISCOVERY\"],\n      \"tls\": {\n          \n    }\n    }\n  ]\n}\n"
           labels:
+            app: steadybit-extension-host
             app.kubernetes.io/name: steadybit-extension-host
             steadybit.com/extension: "true"
         spec:
@@ -191,7 +197,7 @@ manifest should match snapshot without TLS:
                 httpGet:
                   path: /health/liveness
                   port: 8081
-              name: extension
+              name: steadybit-extension-host
               readinessProbe:
                 httpGet:
                   path: /health/readiness

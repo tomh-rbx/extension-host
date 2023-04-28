@@ -58,5 +58,5 @@ func CheckTargetHostname(attributes map[string][]string) (*string, error) {
 	if hostname[0] != osHostname {
 		return nil, extension_kit.ToError(fmt.Sprintf("Target (%s) is not the current host (%s).", hostname[0], osHostname), nil)
 	}
-	return nil, nil
+	return extutil.Ptr(osHostname), nil
 }

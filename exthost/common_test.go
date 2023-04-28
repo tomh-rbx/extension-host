@@ -2,7 +2,8 @@ package exthost
 
 import (
 	"fmt"
-	"github.com/stretchr/testify/assert"
+  "github.com/steadybit/extension-kit/extutil"
+  "github.com/stretchr/testify/assert"
 	"testing"
 )
 
@@ -48,8 +49,11 @@ func TestCheckTargetHostname(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			_, err := CheckTargetHostname(tt.args.attributes)
+			hn, err := CheckTargetHostname(tt.args.attributes)
 			tt.wantErr(t, err, fmt.Sprintf("CheckTargetHostname(%v)", tt.args.attributes))
+      if err == nil {
+        assert.Equal(t, extutil.Ptr("myhostname"), hn)
+      }
 		})
 	}
 }
