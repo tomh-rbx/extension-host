@@ -72,7 +72,7 @@ func testStressCpu(t *testing.T, m *Minikube, e *Extension) {
 		CpuLoad  int `json:"cpuLoad"`
 		Workers  int `json:"workers"`
 	}{Duration: 50000, Workers: 0, CpuLoad: 50}
-	exec, err := e.RunAction("com.github.steadybit.extension_host.stress-cpu", target, config)
+	exec, err := e.RunAction("com.github.steadybit.extension_host.stress-cpu", target, config, nil)
 	require.NoError(t, err)
 
 	assertProcessRunningInContainer(t, m, e.pod, "extension-host", "stress-ng")
@@ -86,7 +86,7 @@ func testStressMemory(t *testing.T, m *Minikube, e *Extension) {
 		Percentage int `json:"percentage"`
 	}{Duration: 50000, Percentage: 50}
 
-	exec, err := e.RunAction("com.github.steadybit.extension_host.stress-mem", target, config)
+	exec, err := e.RunAction("com.github.steadybit.extension_host.stress-mem", target, config, nil)
 	require.NoError(t, err)
 	assertProcessRunningInContainer(t, m, e.pod, "extension-host", "stress-ng")
 	require.NoError(t, exec.Cancel())
@@ -99,7 +99,7 @@ func testStressIo(t *testing.T, m *Minikube, e *Extension) {
 		Percentage int `json:"percentage"`
 		Workers    int `json:"workers"`
 	}{Duration: 50000, Workers: 1, Percentage: 50}
-	exec, err := e.RunAction("com.github.steadybit.extension_host.stress-io", target, config)
+	exec, err := e.RunAction("com.github.steadybit.extension_host.stress-io", target, config, nil)
 	require.NoError(t, err)
 	assertProcessRunningInContainer(t, m, e.pod, "extension-host", "stress-ng")
 	require.NoError(t, exec.Cancel())
@@ -114,7 +114,7 @@ func testTimeTravel(t *testing.T, m *Minikube, e *Extension) {
 	}{Duration: 3000, Offset: 360000, DisableNtp: false}
 	tolerance := time.Duration(1) * time.Second
 	now := time.Now()
-	exec, err := e.RunAction("com.github.steadybit.extension_host.timetravel", target, config)
+	exec, err := e.RunAction("com.github.steadybit.extension_host.timetravel", target, config, nil)
 	if !runsInCi() {
 		require.NoError(t, err)
 		diff := getTimeDiffBetweenNowAndContainerTime(t, m, e, now)
@@ -177,7 +177,7 @@ func testStopProcess(t *testing.T, m *Minikube, e *Extension) {
 
 	assertProcessRunningInContainer(t, m, e.pod, "extension-host", "sleep")
 
-	exec, err := e.RunAction("com.github.steadybit.extension_host.stop-process", target, config)
+	exec, err := e.RunAction("com.github.steadybit.extension_host.stop-process", target, config, nil)
 	require.NoError(t, err)
 	assertProcessNOTRunningInContainer(t, m, e.pod, "extension-host", "sleep")
 	require.NoError(t, exec.Cancel())
@@ -188,7 +188,7 @@ func testShutdownHost(t *testing.T, m *Minikube, e *Extension) {
 		Reboot bool `json:"reboot"`
 	}{Reboot: true}
 
-	exec, err := e.RunAction("com.github.steadybit.extension_host.shutdown", target, config)
+	exec, err := e.RunAction("com.github.steadybit.extension_host.shutdown", target, config, nil)
 	if !runsInCi() {
 		require.NoError(t, err)
 	}
@@ -196,7 +196,11 @@ func testShutdownHost(t *testing.T, m *Minikube, e *Extension) {
 }
 
 func testNetworkBlackhole(t *testing.T, m *Minikube, e *Extension) {
-	nginx := Nginx{minikube: m}
+  executionContext := &action_kit_api.ExecutionContext{
+    AgentAwsAccountId: nil,
+    RestrictedUrls:   extutil.Ptr([]string{"0.0.0.0:8443"}) ,
+  }
+  nginx := Nginx{minikube: m}
 	err := nginx.Deploy("nginx-network-blackhole")
 	require.NoError(t, err, "failed to create pod")
 	defer func() { _ = nginx.Delete() }()
@@ -249,7 +253,7 @@ func testNetworkBlackhole(t *testing.T, m *Minikube, e *Extension) {
 			require.NoError(t, nginx.IsReachable(), "service should be reachable before blackhole")
 			require.NoError(t, nginx.CanReach("https://google.com"), "service should reach url before blackhole")
 
-			action, err := e.RunAction(exthost.BaseActionID+".network_blackhole", target, config)
+			action, err := e.RunAction(exthost.BaseActionID+".network_blackhole", target, config, executionContext)
 			require.NoError(t, err)
 
 			if tt.WantedReachable {

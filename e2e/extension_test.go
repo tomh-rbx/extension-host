@@ -46,14 +46,14 @@ func (e *Extension) DiscoverTargets(targetId string) ([]discovery_kit_api.Target
 	return nil, fmt.Errorf("discovery not found: %s", targetId)
 }
 
-func (e *Extension) RunAction(actionId string, target action_kit_api.Target, config interface{}) (*ActionExecution, error) {
+func (e *Extension) RunAction(actionId string, target action_kit_api.Target, config interface{}, executionContext *action_kit_api.ExecutionContext) (*ActionExecution, error) {
 	actions, err := e.describeActions()
 	if err != nil {
 		return nil, fmt.Errorf("failed to get action descriptions: %w", err)
 	}
 	for _, action := range actions {
 		if action.Id == actionId {
-			return e.execAction(action, target, config)
+			return e.execAction(action, target, config, executionContext)
 		}
 	}
 	return nil, fmt.Errorf("action not found: %s", actionId)
@@ -167,10 +167,10 @@ func (a *ActionExecution) Cancel() error {
 	return nil
 }
 
-func (e *Extension) execAction(action action_kit_api.ActionDescription, target action_kit_api.Target, config interface{}) (*ActionExecution, error) {
+func (e *Extension) execAction(action action_kit_api.ActionDescription, target action_kit_api.Target, config interface{}, executionContext *action_kit_api.ExecutionContext) (*ActionExecution, error) {
 	executionId := uuid.New()
 
-	state, duration, err := e.prepareAction(action, target, config, executionId)
+	state, duration, err := e.prepareAction(action, target, config, executionId, executionContext)
 	if err != nil {
 		return nil, err
 	}
@@ -230,11 +230,12 @@ func (e *Extension) execAction(action action_kit_api.ActionDescription, target a
 	}, nil
 }
 
-func (e *Extension) prepareAction(action action_kit_api.ActionDescription, target action_kit_api.Target, config interface{}, executionId uuid.UUID) (action_kit_api.ActionState, time.Duration, error) {
+func (e *Extension) prepareAction(action action_kit_api.ActionDescription, target action_kit_api.Target, config interface{}, executionId uuid.UUID, executionContext *action_kit_api.ExecutionContext) (action_kit_api.ActionState, time.Duration, error) {
 	var duration time.Duration
 	prepareBody := action_kit_api.PrepareActionRequestBody{
 		ExecutionId: executionId,
 		Target:      &target,
+    ExecutionContext: executionContext,
 	}
 	if err := extconversion.Convert(config, &prepareBody.Config); err != nil {
 		return nil, duration, fmt.Errorf("failed to convert config: %w", err)
