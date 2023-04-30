@@ -196,7 +196,9 @@ func mapToNetworkFilter(ctx context.Context, hostname string, config map[string]
 		if err != nil {
 			return networkutils.Filter{}, err
 		}
-
+		if len(ips) == 0 || ips[0] == "0.0.0.0" {
+			ips = []string{"::/0", "0.0.0.0/0"}
+		}
 		excludes = append(excludes, networkutils.NewCidrWithPortRanges(ips, networkutils.PortRange{From: port, To: port})...)
 	}
 
