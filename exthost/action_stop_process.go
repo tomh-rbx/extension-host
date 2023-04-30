@@ -221,7 +221,7 @@ func stopProcess(state *StopProcessActionState) {
 	if len(pids) == 0 {
 		return
 	}
-	err := stopprocess.StopProcesses(pids, state.Graceful)
+	err := stopprocess.StopProcesses(pids, !state.Graceful)
 	if err != nil {
 		log.Error().Err(err).Msg("Failed to stop processes")
 		return
