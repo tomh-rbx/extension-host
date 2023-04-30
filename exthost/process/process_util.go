@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"github.com/mitchellh/go-ps"
 	"github.com/rs/zerolog/log"
+	"github.com/steadybit/extension-host/exthost/common"
 	"github.com/steadybit/extension-kit/extutil"
 	"os/exec"
 	"runtime"
@@ -56,14 +57,7 @@ func StopProcessUnix(pid int, force bool) error {
 		err := syscall.Kill(pid, syscall.SIGKILL)
 		if err != nil {
 			log.Error().Err(err).Int("pid", pid).Msg("Failed to kill process via syscall")
-			cmd := exec.Command("kill", "-9", fmt.Sprintf("%d", pid))
-			cmd.SysProcAttr = &syscall.SysProcAttr{
-				Credential: &syscall.Credential{
-					Uid: 0,
-					Gid: 0,
-				},
-			}
-			err := cmd.Run()
+			err := common.RunAsRoot("kill", "-9", fmt.Sprintf("%d", pid))
 			if err != nil {
 				log.Error().Err(err).Int("pid", pid).Msg("Failed to kill process via exec")
 				return err
@@ -73,14 +67,7 @@ func StopProcessUnix(pid int, force bool) error {
 		err := syscall.Kill(pid, syscall.SIGTERM)
 		if err != nil {
 			log.Error().Err(err).Int("pid", pid).Msg("Failed to send SIGTERM via syscall")
-			cmd := exec.Command("kill", fmt.Sprintf("%d", pid))
-			cmd.SysProcAttr = &syscall.SysProcAttr{
-				Credential: &syscall.Credential{
-					Uid: 0,
-					Gid: 0,
-				},
-			}
-			err := cmd.Run()
+			err := common.RunAsRoot("kill", fmt.Sprintf("%d", pid))
 			if err != nil {
 				log.Error().Err(err).Int("pid", pid).Msg("Failed to send SIGTERM via exec")
 			}
