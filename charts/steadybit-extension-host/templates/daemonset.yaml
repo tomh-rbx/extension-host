@@ -57,6 +57,8 @@ spec:
           env:
                   {{- include "extensionlib.deployment.env" (list .) | nindent 12 }}
           volumeMounts:
+            - name: tmp-dir
+              mountPath: /tmp
                   {{- include "extensionlib.deployment.volumeMounts" (list .) | nindent 12 }}
           livenessProbe:
             httpGet:
@@ -70,8 +72,14 @@ spec:
             seccompProfile:
               type: "Unconfined"
             capabilities:
-              add: [ "SYS_BOOT", "NET_ADMIN", "NET_RAW", "KILL", "SYS_TIME", "AUDIT_WRITE", "SETUID", "SETGID" ]
+              add: [ "SYS_ADMIN", "SYS_RESOURCE", "SYS_BOOT",  "NET_RAW",  "SYS_TIME", "SYS_PTRACE", "KILL", "NET_ADMIN", "DAC_OVERRIDE", "SETUID", "SETGID", "AUDIT_WRITE" ]
+            readOnlyRootFilesystem: true
+            runAsNonRoot: true
+            runAsUser: 10000
+            runAsGroup: 10000
       volumes:
+        - name: tmp-dir
+          emptyDir: { }
             {{- include "extensionlib.deployment.volumes" (list .) | nindent 8 }}
           {{- with .Values.nodeSelector }}
       nodeSelector:

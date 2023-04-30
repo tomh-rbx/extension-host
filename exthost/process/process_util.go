@@ -55,14 +55,35 @@ func StopProcessUnix(pid int, force bool) error {
 	if force {
 		err := syscall.Kill(pid, syscall.SIGKILL)
 		if err != nil {
-			log.Error().Err(err).Int("pid", pid).Msg("Failed to kill process")
-			return err
+			log.Error().Err(err).Int("pid", pid).Msg("Failed to kill process via syscall")
+			cmd := exec.Command("kill", "-9", fmt.Sprintf("%d", pid))
+			cmd.SysProcAttr = &syscall.SysProcAttr{
+				Credential: &syscall.Credential{
+					Uid: 0,
+					Gid: 0,
+				},
+			}
+			err := cmd.Run()
+			if err != nil {
+				log.Error().Err(err).Int("pid", pid).Msg("Failed to kill process via exec")
+				return err
+			}
 		}
 	} else {
 		err := syscall.Kill(pid, syscall.SIGTERM)
 		if err != nil {
-			log.Error().Err(err).Int("pid", pid).Msg("Failed to send SIGTERM")
-			return err
+			log.Error().Err(err).Int("pid", pid).Msg("Failed to send SIGTERM via syscall")
+			cmd := exec.Command("kill", fmt.Sprintf("%d", pid))
+			cmd.SysProcAttr = &syscall.SysProcAttr{
+				Credential: &syscall.Credential{
+					Uid: 0,
+					Gid: 0,
+				},
+			}
+			err := cmd.Run()
+			if err != nil {
+				log.Error().Err(err).Int("pid", pid).Msg("Failed to send SIGTERM via exec")
+			}
 		}
 	}
 	return nil

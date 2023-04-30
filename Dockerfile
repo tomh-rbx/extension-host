@@ -27,7 +27,7 @@ RUN go build \
     -X 'github.com/steadybit/extension-kit/extbuild.Revision=${REVISION}'" \
     -o ./extension \
     main.go \
-    && setcap "cap_sys_boot,cap_sys_time,cap_setuid,cap_setgid,cap_net_raw,cap_net_admin+eip" ./extension
+    && setcap "cap_sys_boot,cap_sys_time,cap_setuid,cap_setgid,cap_net_raw,cap_net_admin,cap_sys_admin,cap_dac_override+eip" ./extension
 
 ##
 ## Runtime

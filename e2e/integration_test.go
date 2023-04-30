@@ -97,7 +97,7 @@ func testStressCpu(t *testing.T, m *Minikube, e *Extension) {
 	exec, err := e.RunAction("com.github.steadybit.extension_host.stress-cpu", target, config, nil)
 	require.NoError(t, err)
 
-	assertProcessRunningInContainer(t, m, e.pod, "extension-host", "stress-ng")
+	assertProcessRunningInContainer(t, m, e.pod, "steadybit-extension-host", "stress-ng")
 	require.NoError(t, exec.Cancel())
 }
 
@@ -110,7 +110,7 @@ func testStressMemory(t *testing.T, m *Minikube, e *Extension) {
 
 	exec, err := e.RunAction("com.github.steadybit.extension_host.stress-mem", target, config, nil)
 	require.NoError(t, err)
-	assertProcessRunningInContainer(t, m, e.pod, "extension-host", "stress-ng")
+	assertProcessRunningInContainer(t, m, e.pod, "steadybit-extension-host", "stress-ng")
 	require.NoError(t, exec.Cancel())
 }
 
@@ -123,7 +123,7 @@ func testStressIo(t *testing.T, m *Minikube, e *Extension) {
 	}{Duration: 50000, Workers: 1, Percentage: 50}
 	exec, err := e.RunAction("com.github.steadybit.extension_host.stress-io", target, config, nil)
 	require.NoError(t, err)
-	assertProcessRunningInContainer(t, m, e.pod, "extension-host", "stress-ng")
+	assertProcessRunningInContainer(t, m, e.pod, "steadybit-extension-host", "stress-ng")
 	require.NoError(t, exec.Cancel())
 }
 
@@ -156,7 +156,7 @@ func testTimeTravel(t *testing.T, m *Minikube, e *Extension) {
 }
 
 func getTimeDiffBetweenNowAndContainerTime(t *testing.T, m *Minikube, e *Extension, now time.Time) time.Duration {
-	out, err := m.Exec(e.pod, "extension-host", "date", "+%s")
+	out, err := m.Exec(e.pod, "steadybit-extension-host", "date", "+%s")
 	if err != nil {
 		t.Fatal(err)
 		return 0
@@ -190,18 +190,18 @@ func testStopProcess(t *testing.T, m *Minikube, e *Extension) {
 		Graceful bool   `json:"graceful"`
 		Process  string `json:"process"`
 		Delay    int    `json:"delay"`
-	}{Duration: 10000, Graceful: true, Process: "sleep", Delay: 1}
+	}{Duration: 10000, Graceful: true, Process: "tail", Delay: 1}
 
-	assertProcessNOTRunningInContainer(t, m, e.pod, "extension-host", "sleep")
+	assertProcessNOTRunningInContainer(t, m, e.pod, "steadybit-extension-host", "tail")
 	go func() {
-		_, _ = m.Exec(e.pod, "extension-host", "sleep", "30")
+		_, _ = m.Exec(e.pod, "steadybit-extension-host", "tail", "-f", "/dev/null")
 	}()
 
-	assertProcessRunningInContainer(t, m, e.pod, "extension-host", "sleep")
+	assertProcessRunningInContainer(t, m, e.pod, "steadybit-extension-host", "tail")
 
 	exec, err := e.RunAction("com.github.steadybit.extension_host.stop-process", target, config, nil)
 	require.NoError(t, err)
-	assertProcessNOTRunningInContainer(t, m, e.pod, "extension-host", "sleep")
+	assertProcessNOTRunningInContainer(t, m, e.pod, "steadybit-extension-host", "tail")
 	require.NoError(t, exec.Cancel())
 }
 func testShutdownHost(t *testing.T, m *Minikube, e *Extension) {
@@ -346,9 +346,9 @@ func testNetworkDelay(t *testing.T, m *Minikube, e *Extension) {
 			NetInterface: tt.interfaces,
 		}
 
-    if m.stdout == nil {
-      m.stdout = os.Stdout
-    }
+		if m.stdout == nil {
+			m.stdout = os.Stdout
+		}
 		t.Run(tt.name, func(t *testing.T) {
 			action, err := e.RunAction(exthost.BaseActionID+".network_delay", target, config, executionContext)
 			defer func() { _ = action.Cancel() }()
@@ -420,9 +420,9 @@ func testNetworkPackageLoss(t *testing.T, m *Minikube, e *Extension) {
 			NetInterface: tt.interfaces,
 		}
 
-    if m.stdout == nil {
-      m.stdout = os.Stdout
-    }
+		if m.stdout == nil {
+			m.stdout = os.Stdout
+		}
 		t.Run(tt.name, func(t *testing.T) {
 			action, err := e.RunAction(exthost.BaseActionID+".network_package_loss", target, config, executionContext)
 			defer func() { _ = action.Cancel() }()
@@ -492,9 +492,9 @@ func testNetworkPackageCorruption(t *testing.T, m *Minikube, e *Extension) {
 			NetInterface: tt.interfaces,
 		}
 
-    if m.stdout == nil {
-      m.stdout = os.Stdout
-    }
+		if m.stdout == nil {
+			m.stdout = os.Stdout
+		}
 		t.Run(tt.name, func(t *testing.T) {
 			action, err := e.RunAction(exthost.BaseActionID+".network_package_corruption", target, config, executionContext)
 			defer func() { _ = action.Cancel() }()
@@ -568,9 +568,9 @@ func testNetworkLimitBandwidth(t *testing.T, m *Minikube, e *Extension) {
 			NetInterface: tt.interfaces,
 		}
 
-    if m.stdout == nil {
-      m.stdout = os.Stdout
-    }
+		if m.stdout == nil {
+			m.stdout = os.Stdout
+		}
 		t.Run(tt.name, func(t *testing.T) {
 			action, err := e.RunAction(exthost.BaseActionID+".network_bandwidth", target, config, executionContext)
 			defer func() { _ = action.Cancel() }()
@@ -629,9 +629,9 @@ func testNetworkBlockDns(t *testing.T, m *Minikube, e *Extension) {
 			DnsPort:  tt.dnsPort,
 		}
 
-    if m.stdout == nil {
-      m.stdout = os.Stdout
-    }
+		if m.stdout == nil {
+			m.stdout = os.Stdout
+		}
 		t.Run(tt.name, func(t *testing.T) {
 			require.NoError(t, nginx.IsReachable(), "service should be reachable before block dns")
 			require.NoError(t, nginx.CanReach("https://google.com"), "service should reach url before block dns")
