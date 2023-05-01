@@ -5,6 +5,7 @@
 package main
 
 import (
+	"github.com/rs/zerolog/log"
 	"github.com/steadybit/action-kit/go/action_kit_api/v2"
 	"github.com/steadybit/action-kit/go/action_kit_sdk"
 	"github.com/steadybit/discovery-kit/go/discovery_kit_api"
@@ -15,6 +16,7 @@ import (
 	"github.com/steadybit/extension-kit/exthealth"
 	"github.com/steadybit/extension-kit/exthttp"
 	"github.com/steadybit/extension-kit/extlogging"
+	"kernel.org/pub/linux/libs/security/libcap/cap"
 )
 
 func main() {
@@ -67,6 +69,9 @@ func main() {
 
 	//This will switch the readiness state of the application to true.
 	exthealth.SetReady(true)
+
+	proc := cap.GetProc()
+	log.Info().Msgf("Capabilities: %s", proc.String())
 
 	exthttp.Listen(exthttp.ListenOpts{
 		// This is the default port under which your extension is accessible.

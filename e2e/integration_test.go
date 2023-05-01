@@ -68,8 +68,8 @@ func TestWithMinikube(t *testing.T) {
 		//	Test: testNetworkBlackhole,
 		//},
 		//{
-		//  Name: "network delay",
-		//  Test: testNetworkDelay,
+		//	Name: "network delay",
+		//	Test: testNetworkDelay,
 		//},
 		//{
 		//	Name: "network block dns",
@@ -77,10 +77,12 @@ func TestWithMinikube(t *testing.T) {
 		//}, {
 		//	Name: "network limit bandwidth",
 		//	Test: testNetworkLimitBandwidth,
-		//}, {
+		//},
+		//{
 		//	Name: "network package loss",
 		//	Test: testNetworkPackageLoss,
-		//}, {
+		//},
+		//{
 		//	Name: "network package corruption",
 		//	Test: testNetworkPackageCorruption,
 		//},
