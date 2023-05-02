@@ -35,7 +35,7 @@ func main() {
 	//This will start /health/liveness and /health/readiness endpoints on port 8081 for use with kubernetes
 	//The port can be configured using the STEADYBIT_EXTENSION_HEALTH_PORT environment variable
 	exthealth.SetReady(false)
-	exthealth.StartProbes(8081)
+	exthealth.StartProbes(int(common.GetOwnHealthPort()))
 
 	// Most extensions require some form of configuration. These calls exist to parse and validate the
 	// configuration obtained from environment variables.
@@ -75,7 +75,7 @@ func main() {
 		// This is the default port under which your extension is accessible.
 		// The port can be configured externally through the
 		// STEADYBIT_EXTENSION_PORT environment variable.
-		Port: 8085,
+		Port: int(common.GetOwnPort()),
 	})
 }
 

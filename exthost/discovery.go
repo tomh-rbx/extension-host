@@ -8,10 +8,10 @@ import (
 	"github.com/elastic/go-sysinfo"
 	"github.com/rs/zerolog/log"
 	"github.com/steadybit/discovery-kit/go/discovery_kit_api"
+	"github.com/steadybit/extension-host/exthost/common"
 	"github.com/steadybit/extension-kit/extbuild"
 	"github.com/steadybit/extension-kit/exthttp"
 	"github.com/steadybit/extension-kit/extutil"
-	"net"
 	"net/http"
 	"os"
 )
@@ -147,7 +147,7 @@ func getDiscoveredTargets(w http.ResponseWriter, _ *http.Request, _ []byte) {
 func getHostTarget() []discovery_kit_api.Target {
 	targets := make([]discovery_kit_api.Target, 1)
 	hostname, _ := os.Hostname()
-	ip4s, nics := getIP4sAndNICs()
+	ip4s, nics := common.GetIP4sAndNICs()
 	host, err := sysinfo.Host()
 	var osFamily string
 	var osManufacturer string
@@ -191,37 +191,4 @@ func getHostTarget() []discovery_kit_api.Target {
 	}
 
 	return targets
-}
-
-func getIP4sAndNICs() ([]string, []string) {
-	ifaces, err := net.Interfaces()
-	if err != nil {
-		log.Error().Err(err).Msg("Failed to get interfaces")
-		return []string{}, []string{}
-	}
-	resultIP4s := make([]string, 0)
-	resultNICs := make([]string, 0)
-	for _, i := range ifaces {
-		addrs, err := i.Addrs()
-		resultNICs = append(resultNICs, i.Name)
-		if err != nil {
-			log.Error().Err(err).Msg("Failed to get addresses")
-			break
-		}
-		// handle err
-		for _, addr := range addrs {
-			var ip net.IP
-			switch v := addr.(type) {
-			case *net.IPNet:
-				ip = v.IP
-			case *net.IPAddr:
-				ip = v.IP
-			}
-			// process IP address
-			if !ip.IsLoopback() && ip.To4() != nil {
-				resultIP4s = append(resultIP4s, ip.String())
-			}
-		}
-	}
-	return resultIP4s, resultNICs
 }

@@ -67,12 +67,12 @@ func corruptPackages() networkOptsProvider {
 		}
 		corruption := extutil.ToUInt(request.Config["networkCorruption"])
 
-		var restrictedUrls []string
-		if request.ExecutionContext != nil && request.ExecutionContext.RestrictedUrls != nil {
-			restrictedUrls = *request.ExecutionContext.RestrictedUrls
+		var restrictedCIDRs []action_kit_api.RestrictedCIDR
+		if request.ExecutionContext != nil && request.ExecutionContext.RestrictedCIDRs != nil {
+			restrictedCIDRs = *request.ExecutionContext.RestrictedCIDRs
 		}
 
-		filter, err := mapToNetworkFilter(ctx, request.Config, restrictedUrls)
+		filter, err := mapToNetworkFilter(ctx, request.Config, restrictedCIDRs)
 		if err != nil {
 			return nil, err
 		}

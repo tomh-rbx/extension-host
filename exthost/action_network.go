@@ -11,6 +11,7 @@ import (
 	"github.com/steadybit/action-kit/go/action_kit_api/v2"
 	"github.com/steadybit/action-kit/go/action_kit_sdk"
 	"github.com/steadybit/extension-container/pkg/networkutils"
+	"github.com/steadybit/extension-host/exthost/common"
 	"github.com/steadybit/extension-host/exthost/network"
 	extension_kit "github.com/steadybit/extension-kit"
 	"github.com/steadybit/extension-kit/extutil"
@@ -166,7 +167,7 @@ func parsePortRanges(raw []string) ([]networkutils.PortRange, error) {
 	return ranges, nil
 }
 
-func mapToNetworkFilter(ctx context.Context, config map[string]interface{}, restrictedUrls []string) (networkutils.Filter, error) {
+func mapToNetworkFilter(ctx context.Context, config map[string]interface{}, restrictedCIDRs []action_kit_api.RestrictedCIDR) (networkutils.Filter, error) {
 	toResolve := append(
 		extutil.ToStringArray(config["ip"]),
 		extutil.ToStringArray(config["hostname"])...,
@@ -192,14 +193,21 @@ func mapToNetworkFilter(ctx context.Context, config map[string]interface{}, rest
 	includes := networkutils.NewCidrWithPortRanges(includeCidrs, portRanges...)
 	var excludes []networkutils.CidrWithPortRange
 
-	for _, restrictedUrl := range restrictedUrls {
-		ips, port, err := resolveUrl(ctx, restrictedUrl)
-		if err != nil {
-			log.Warn().Err(err).Msgf("Failed to resolve url %s", restrictedUrl)
-			continue
-		}
+	for _, restrictedCIDR := range restrictedCIDRs {
+		excludes = append(excludes, networkutils.NewCidrWithPortRanges([]string{restrictedCIDR.Cidr}, networkutils.PortRange{From: uint16(restrictedCIDR.PortMin), To: uint16(restrictedCIDR.PortMax)})...)
+	}
 
-		excludes = append(excludes, networkutils.NewCidrWithPortRanges(ips, networkutils.PortRange{From: port, To: port})...)
+	// add own ip to exclude list
+	ip4s, _ := common.GetIP4sAndNICs()
+	ownPort := common.GetOwnPort()
+	ownHealthPort := common.GetOwnHealthPort()
+	for _, ip4 := range ip4s {
+		cidrs, err := networkutils.IpRangeToCIDR(ip4, ip4)
+		if err != nil {
+			log.Warn().Err(err).Msgf("Failed to convert ip %s to cidr", ip4)
+		}
+		excludes = append(excludes, networkutils.NewCidrWithPortRanges(cidrs, networkutils.PortRange{From: ownPort, To: ownPort})...)
+		excludes = append(excludes, networkutils.NewCidrWithPortRanges(cidrs, networkutils.PortRange{From: ownHealthPort, To: ownHealthPort})...)
 	}
 
 	return networkutils.Filter{
