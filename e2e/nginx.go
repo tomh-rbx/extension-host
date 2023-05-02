@@ -4,13 +4,13 @@
 package e2e
 
 import (
-  "errors"
-  "github.com/steadybit/action-kit/go/action_kit_api/v2"
-  "github.com/steadybit/extension-kit/extutil"
-  corev1 "k8s.io/api/core/v1"
-  metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-  acorev1 "k8s.io/client-go/applyconfigurations/core/v1"
-  ametav1 "k8s.io/client-go/applyconfigurations/meta/v1"
+	"errors"
+	"github.com/steadybit/action-kit/go/action_kit_api/v2"
+	"github.com/steadybit/extension-kit/extutil"
+	corev1 "k8s.io/api/core/v1"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	acorev1 "k8s.io/client-go/applyconfigurations/core/v1"
+	ametav1 "k8s.io/client-go/applyconfigurations/meta/v1"
 )
 
 type Nginx struct {
@@ -30,7 +30,7 @@ func (n *Nginx) Deploy(podName string) error {
 			Labels: map[string]string{"app": podName},
 		},
 		Spec: &acorev1.PodSpecApplyConfiguration{
-      HostNetwork: extutil.Ptr(true),
+			HostNetwork:   extutil.Ptr(true),
 			RestartPolicy: extutil.Ptr(corev1.RestartPolicyNever),
 			Containers: []acorev1.ContainerApplyConfiguration{
 				{

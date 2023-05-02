@@ -4,18 +4,18 @@
 package exthost
 
 import (
-  "context"
-  "encoding/json"
-  "github.com/google/uuid"
-  "github.com/rs/zerolog/log"
-  "github.com/steadybit/action-kit/go/action_kit_api/v2"
-  "github.com/steadybit/action-kit/go/action_kit_sdk"
-  "github.com/steadybit/extension-container/pkg/networkutils"
-  "github.com/steadybit/extension-host/exthost/network"
-  extension_kit "github.com/steadybit/extension-kit"
-  "github.com/steadybit/extension-kit/extutil"
-  "net/url"
-  "strconv"
+	"context"
+	"encoding/json"
+	"github.com/google/uuid"
+	"github.com/rs/zerolog/log"
+	"github.com/steadybit/action-kit/go/action_kit_api/v2"
+	"github.com/steadybit/action-kit/go/action_kit_sdk"
+	"github.com/steadybit/extension-container/pkg/networkutils"
+	"github.com/steadybit/extension-host/exthost/network"
+	extension_kit "github.com/steadybit/extension-kit"
+	"github.com/steadybit/extension-kit/extutil"
+	"net/url"
+	"strconv"
 )
 
 type networkOptsProvider func(ctx context.Context, request action_kit_api.PrepareActionRequestBody) (networkutils.Opts, error)
@@ -232,12 +232,12 @@ func resolveUrl(ctx context.Context, raw string) ([]string, uint16, error) {
 		return nil, port, err
 	}
 
-  resolvedIps, err := network.ResolveHostnames(ctx, u.Hostname())
+	resolvedIps, err := network.ResolveHostnames(ctx, u.Hostname())
 	if err != nil {
 		return nil, port, err
 	}
 
-  ips := make([]string, 0)
+	ips := make([]string, 0)
 	for _, ip := range resolvedIps {
 		cidr, err := networkutils.IpRangeToCIDR(ip, ip)
 		if err != nil {
@@ -245,7 +245,7 @@ func resolveUrl(ctx context.Context, raw string) ([]string, uint16, error) {
 			continue
 		}
 		log.Debug().Msgf("Converted ip %s to cidr: %s", ip, cidr[0])
-    ips = append(ips, cidr[0])
+		ips = append(ips, cidr[0])
 	}
 
 	portStr := u.Port()

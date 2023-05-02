@@ -5,17 +5,17 @@
 package main
 
 import (
-  "github.com/steadybit/action-kit/go/action_kit_api/v2"
-  "github.com/steadybit/action-kit/go/action_kit_sdk"
-  "github.com/steadybit/discovery-kit/go/discovery_kit_api"
-  "github.com/steadybit/event-kit/go/event_kit_api"
-  "github.com/steadybit/extension-host/config"
-  "github.com/steadybit/extension-host/exthost"
-  "github.com/steadybit/extension-host/exthost/common"
-  "github.com/steadybit/extension-kit/extbuild"
-  "github.com/steadybit/extension-kit/exthealth"
-  "github.com/steadybit/extension-kit/exthttp"
-  "github.com/steadybit/extension-kit/extlogging"
+	"github.com/steadybit/action-kit/go/action_kit_api/v2"
+	"github.com/steadybit/action-kit/go/action_kit_sdk"
+	"github.com/steadybit/discovery-kit/go/discovery_kit_api"
+	"github.com/steadybit/event-kit/go/event_kit_api"
+	"github.com/steadybit/extension-host/config"
+	"github.com/steadybit/extension-host/exthost"
+	"github.com/steadybit/extension-host/exthost/common"
+	"github.com/steadybit/extension-kit/extbuild"
+	"github.com/steadybit/extension-kit/exthealth"
+	"github.com/steadybit/extension-kit/exthttp"
+	"github.com/steadybit/extension-kit/extlogging"
 )
 
 func main() {
@@ -69,7 +69,7 @@ func main() {
 	//This will switch the readiness state of the application to true.
 	exthealth.SetReady(true)
 
-  common.PrintCaps()
+	common.PrintCaps()
 
 	exthttp.Listen(exthttp.ListenOpts{
 		// This is the default port under which your extension is accessible.

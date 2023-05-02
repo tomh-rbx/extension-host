@@ -4,15 +4,15 @@
 package exthost
 
 import (
-  "context"
-  "encoding/json"
-  "fmt"
-  "github.com/steadybit/action-kit/go/action_kit_api/v2"
-  "github.com/steadybit/action-kit/go/action_kit_sdk"
-  "github.com/steadybit/extension-container/pkg/networkutils"
-  "github.com/steadybit/extension-kit/extbuild"
-  "github.com/steadybit/extension-kit/extutil"
-  "time"
+	"context"
+	"encoding/json"
+	"fmt"
+	"github.com/steadybit/action-kit/go/action_kit_api/v2"
+	"github.com/steadybit/action-kit/go/action_kit_sdk"
+	"github.com/steadybit/extension-container/pkg/networkutils"
+	"github.com/steadybit/extension-kit/extbuild"
+	"github.com/steadybit/extension-kit/extutil"
+	"time"
 )
 
 func NewNetworkDelayContainerAction() action_kit_sdk.Action[NetworkActionState] {

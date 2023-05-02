@@ -64,10 +64,10 @@ func TestWithMinikube(t *testing.T) {
 			Name: "shutdown host",
 			Test: testShutdownHost,
 		},
-    {
-      Name: "network delay",
-      Test: testNetworkDelay,
-    },
+		{
+			Name: "network delay",
+			Test: testNetworkDelay,
+		},
 		//{
 		//	Name: "network blackhole",
 		//	Test: testNetworkBlackhole,
@@ -76,7 +76,7 @@ func TestWithMinikube(t *testing.T) {
 		//	Name: "network block dns",
 		//	Test: testNetworkBlockDns,
 		//},
-    //{
+		//{
 		//	Name: "network limit bandwidth",
 		//	Test: testNetworkLimitBandwidth,
 		//},
@@ -596,7 +596,7 @@ func testNetworkLimitBandwidth(t *testing.T, m *Minikube, e *Extension) {
 }
 
 func testNetworkBlockDns(t *testing.T, m *Minikube, e *Extension) {
-  dnsutils := DNSUtils{minikube: m}
+	dnsutils := DNSUtils{minikube: m}
 	err := dnsutils.Deploy("dnsutils-network-block-dns")
 	require.NoError(t, err, "failed to create pod")
 	defer func() { _ = dnsutils.Delete() }()

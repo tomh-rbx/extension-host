@@ -1,6 +1,7 @@
 //go:build !linux
+
 package common
 
-func PrintCaps(){
-  // Do nothing
+func PrintCaps() {
+	// Do nothing
 }
