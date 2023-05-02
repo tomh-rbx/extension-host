@@ -192,15 +192,13 @@ func mapToNetworkFilter(ctx context.Context, config map[string]interface{}, rest
 	includes := networkutils.NewCidrWithPortRanges(includeCidrs, portRanges...)
 	var excludes []networkutils.CidrWithPortRange
 
-	//restrictedUrls = []string{"https://192.168.58.2:8443"}
 	for _, restrictedUrl := range restrictedUrls {
 		ips, port, err := resolveUrl(ctx, restrictedUrl)
 		if err != nil {
-			return networkutils.Filter{}, err
+			log.Warn().Err(err).Msgf("Failed to resolve url %s", restrictedUrl)
+			continue
 		}
-		if len(ips) == 0 || ips[0] == "0.0.0.0" {
-			ips = []string{"::/0", "0.0.0.0/0"}
-		}
+
 		excludes = append(excludes, networkutils.NewCidrWithPortRanges(ips, networkutils.PortRange{From: port, To: port})...)
 	}
 
@@ -231,14 +229,21 @@ func resolveUrl(ctx context.Context, raw string) ([]string, uint16, error) {
 	if err != nil {
 		return nil, port, err
 	}
-
-	resolvedIps, err := network.ResolveHostnames(ctx, u.Hostname())
-	if err != nil {
-		return nil, port, err
+	resolvedIps := []string{}
+	if u.Hostname() == "localhost" {
+		resolvedIps = append(resolvedIps, "127.0.0.1")
+	} else {
+		resolvedIps, err = network.ResolveHostnames(ctx, u.Hostname())
+		if err != nil {
+			return nil, port, err
+		}
 	}
 
 	ips := make([]string, 0)
 	for _, ip := range resolvedIps {
+		if ip == "" {
+			continue
+		}
 		cidr, err := networkutils.IpRangeToCIDR(ip, ip)
 		if err != nil {
 			log.Warn().Err(err).Msgf("Failed to convert ip range to cidr: %s", ip)
