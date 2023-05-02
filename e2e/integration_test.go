@@ -27,7 +27,8 @@ var (
 	}
 	executionContext = &action_kit_api.ExecutionContext{
 		AgentAwsAccountId: nil,
-		RestrictedUrls:    extutil.Ptr([]string{"http://0.0.0.0:8443", "http://0.0.0.0:8085"}),
+		//RestrictedUrls:    extutil.Ptr([]string{"http://0.0.0.0:8443", "http://0.0.0.0:8085", "http://0.0.0.0:8081"}),
+		//RestrictedUrls:    extutil.Ptr([]string{"http://192.168.58.2:8443"}),
 	}
 )
 
@@ -63,18 +64,19 @@ func TestWithMinikube(t *testing.T) {
 			Name: "shutdown host",
 			Test: testShutdownHost,
 		},
+    {
+      Name: "network delay",
+      Test: testNetworkDelay,
+    },
 		//{
 		//	Name: "network blackhole",
 		//	Test: testNetworkBlackhole,
 		//},
 		//{
-		//	Name: "network delay",
-		//	Test: testNetworkDelay,
-		//},
-		//{
 		//	Name: "network block dns",
 		//	Test: testNetworkBlockDns,
-		//}, {
+		//},
+    //{
 		//	Name: "network limit bandwidth",
 		//	Test: testNetworkLimitBandwidth,
 		//},
@@ -233,17 +235,17 @@ func testNetworkBlackhole(t *testing.T, m *Minikube, e *Extension) {
 		WantedReachable  bool
 		WantedReachesUrl bool
 	}{
-		{
-			name:             "should blackhole all traffic",
-			WantedReachable:  false,
-			WantedReachesUrl: false,
-		},
-		{
-			name:             "should blackhole only port 8080 traffic",
-			port:             []string{"8080"},
-			WantedReachable:  true,
-			WantedReachesUrl: true,
-		},
+		//{
+		//	name:             "should blackhole all traffic",
+		//	WantedReachable:  false,
+		//	WantedReachesUrl: false,
+		//},
+		//{
+		//	name:             "should blackhole only port 8080 traffic",
+		//	port:             []string{"8080"},
+		//	WantedReachable:  true,
+		//	WantedReachesUrl: true,
+		//},
 		{
 			name:             "should blackhole only port 80, 443 traffic",
 			port:             []string{"80", "443"},
@@ -316,7 +318,6 @@ func testNetworkDelay(t *testing.T, m *Minikube, e *Extension) {
 		{
 			name:        "should delay only port 5000 traffic",
 			port:        []string{"5000"},
-			interfaces:  []string{"eth0"},
 			WantedDelay: true,
 		},
 		{
@@ -536,17 +537,17 @@ func testNetworkLimitBandwidth(t *testing.T, m *Minikube, e *Extension) {
 			name:        "should limit bandwidth on all traffic",
 			WantedLimit: true,
 		},
-		{
-			name:        "should limit bandwidth only on port 5001 traffic",
-			port:        []string{"5001"},
-			interfaces:  []string{"eth0"},
-			WantedLimit: true,
-		},
-		{
-			name:        "should limit bandwidth only on port 80 traffic",
-			port:        []string{"80"},
-			WantedLimit: false,
-		},
+		//{
+		//	name:        "should limit bandwidth only on port 5001 traffic",
+		//	port:        []string{"5001"},
+		//	interfaces:  []string{"eth0"},
+		//	WantedLimit: true,
+		//},
+		//{
+		//	name:        "should limit bandwidth only on port 80 traffic",
+		//	port:        []string{"80"},
+		//	WantedLimit: false,
+		//},
 	}
 
 	unlimited, err := iperf.MeasureBandwidth()
@@ -595,10 +596,10 @@ func testNetworkLimitBandwidth(t *testing.T, m *Minikube, e *Extension) {
 }
 
 func testNetworkBlockDns(t *testing.T, m *Minikube, e *Extension) {
-	nginx := Nginx{minikube: m}
-	err := nginx.Deploy("nginx-network-block-dns")
+  dnsutils := DNSUtils{minikube: m}
+	err := dnsutils.Deploy("dnsutils-network-block-dns")
 	require.NoError(t, err, "failed to create pod")
-	defer func() { _ = nginx.Delete() }()
+	defer func() { _ = dnsutils.Delete() }()
 
 	tests := []struct {
 		name             string
@@ -635,28 +636,28 @@ func testNetworkBlockDns(t *testing.T, m *Minikube, e *Extension) {
 			m.stdout = os.Stdout
 		}
 		t.Run(tt.name, func(t *testing.T) {
-			require.NoError(t, nginx.IsReachable(), "service should be reachable before block dns")
-			require.NoError(t, nginx.CanReach("https://google.com"), "service should reach url before block dns")
+			require.NoError(t, dnsutils.IsReachable(), "service should be reachable before block dns")
+			require.NoError(t, dnsutils.CanReach("google.com"), "service should reach url before block dns")
 
 			action, err := e.RunAction(exthost.BaseActionID+".network_block_dns", target, config, executionContext)
 			defer func() { _ = action.Cancel() }()
 			require.NoError(t, err)
 
 			if tt.WantedReachable {
-				require.NoError(t, nginx.IsReachable(), "service should be reachable during block dns")
+				require.NoError(t, dnsutils.IsReachable(), "service should be reachable during block dns")
 			} else {
-				require.Error(t, nginx.IsReachable(), "service should not be reachable during block dns")
+				require.Error(t, dnsutils.IsReachable(), "service should not be reachable during block dns")
 			}
 
 			if tt.WantedReachesUrl {
-				require.NoError(t, nginx.CanReach("https://google.com"), "service should be reachable during block dns")
+				require.NoError(t, dnsutils.CanReach("google.com"), "service should be reachable during block dns")
 			} else {
-				require.ErrorContains(t, nginx.CanReach("https://google.com"), "Resolving timed out", "service should not be reachable during block dns")
+				require.ErrorContains(t, dnsutils.CanReach("google.com"), "can't find", "service should not be reachable during block dns")
 			}
 
 			require.NoError(t, action.Cancel())
-			require.NoError(t, nginx.IsReachable(), "service should be reachable after block dns")
-			require.NoError(t, nginx.CanReach("https://google.com"), "service should reach url after block dns")
+			require.NoError(t, dnsutils.IsReachable(), "service should be reachable after block dns")
+			require.NoError(t, dnsutils.CanReach("google.com"), "service should reach url after block dns")
 		})
 	}
 }

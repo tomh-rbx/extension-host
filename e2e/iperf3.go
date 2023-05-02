@@ -35,6 +35,7 @@ func (n *iperf) Deploy(name string) error {
 			Labels: map[string]string{"app": serverPodName},
 		},
 		Spec: &acorev1.PodSpecApplyConfiguration{
+      HostNetwork: extutil.Ptr(true),
 			RestartPolicy: extutil.Ptr(corev1.RestartPolicyNever),
 			Containers: []acorev1.ContainerApplyConfiguration{
 				{
