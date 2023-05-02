@@ -21,10 +21,10 @@ func Apply(ctx context.Context, hostname string, opts networkutils.Opts) error {
 		Str("hostname", hostname).
 		Msg("applying network config")
 
-	return generateAndRunCommands(ctx, hostname, opts, networkutils.ModeAdd)
+	return generateAndRunCommands(ctx, opts, networkutils.ModeAdd)
 }
 
-func generateAndRunCommands(ctx context.Context, hostname string, opts networkutils.Opts, mode networkutils.Mode) error {
+func generateAndRunCommands(ctx context.Context, opts networkutils.Opts, mode networkutils.Mode) error {
 	ipCommandsV4, err := opts.IpCommands(networkutils.FamilyV4, mode)
 	if err != nil {
 		return err
@@ -69,7 +69,7 @@ func Revert(ctx context.Context, hostname string, opts networkutils.Opts) error 
 		Str("hostname", hostname).
 		Msg("reverting network config")
 
-	return generateAndRunCommands(ctx, hostname, opts, networkutils.ModeDelete)
+	return generateAndRunCommands(ctx, opts, networkutils.ModeDelete)
 
 }
 

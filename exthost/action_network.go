@@ -4,17 +4,18 @@
 package exthost
 
 import (
-	"context"
-	"encoding/json"
-	"github.com/google/uuid"
-	"github.com/steadybit/action-kit/go/action_kit_api/v2"
-	"github.com/steadybit/action-kit/go/action_kit_sdk"
-	"github.com/steadybit/extension-container/pkg/networkutils"
-	"github.com/steadybit/extension-host/exthost/network"
-	extension_kit "github.com/steadybit/extension-kit"
-	"github.com/steadybit/extension-kit/extutil"
-	"net/url"
-	"strconv"
+  "context"
+  "encoding/json"
+  "github.com/google/uuid"
+  "github.com/rs/zerolog/log"
+  "github.com/steadybit/action-kit/go/action_kit_api/v2"
+  "github.com/steadybit/action-kit/go/action_kit_sdk"
+  "github.com/steadybit/extension-container/pkg/networkutils"
+  "github.com/steadybit/extension-host/exthost/network"
+  extension_kit "github.com/steadybit/extension-kit"
+  "github.com/steadybit/extension-kit/extutil"
+  "net/url"
+  "strconv"
 )
 
 type networkOptsProvider func(ctx context.Context, request action_kit_api.PrepareActionRequestBody) (networkutils.Opts, error)
@@ -165,12 +166,12 @@ func parsePortRanges(raw []string) ([]networkutils.PortRange, error) {
 	return ranges, nil
 }
 
-func mapToNetworkFilter(ctx context.Context, hostname string, config map[string]interface{}, restrictedUrls []string) (networkutils.Filter, error) {
+func mapToNetworkFilter(ctx context.Context, config map[string]interface{}, restrictedUrls []string) (networkutils.Filter, error) {
 	toResolve := append(
 		extutil.ToStringArray(config["ip"]),
 		extutil.ToStringArray(config["hostname"])...,
 	)
-	includeCidrs, err := network.ResolveHostnames(ctx, hostname, toResolve...)
+	includeCidrs, err := network.ResolveHostnames(ctx, toResolve...)
 	if err != nil {
 		return networkutils.Filter{}, err
 	}
@@ -191,8 +192,9 @@ func mapToNetworkFilter(ctx context.Context, hostname string, config map[string]
 	includes := networkutils.NewCidrWithPortRanges(includeCidrs, portRanges...)
 	var excludes []networkutils.CidrWithPortRange
 
+	//restrictedUrls = []string{"https://192.168.58.2:8443"}
 	for _, restrictedUrl := range restrictedUrls {
-		ips, port, err := resolveUrl(ctx, hostname, restrictedUrl)
+		ips, port, err := resolveUrl(ctx, restrictedUrl)
 		if err != nil {
 			return networkutils.Filter{}, err
 		}
@@ -223,16 +225,27 @@ func readNetworkInterfaces(ctx context.Context) ([]string, error) {
 	return ifcNames, nil
 }
 
-func resolveUrl(ctx context.Context, hostname string, raw string) ([]string, uint16, error) {
+func resolveUrl(ctx context.Context, raw string) ([]string, uint16, error) {
 	port := uint16(0)
 	u, err := url.Parse(raw)
 	if err != nil {
 		return nil, port, err
 	}
 
-	ips, err := network.ResolveHostnames(ctx, hostname, u.Hostname())
+  resolvedIps, err := network.ResolveHostnames(ctx, u.Hostname())
 	if err != nil {
 		return nil, port, err
+	}
+
+  ips := make([]string, 0)
+	for _, ip := range resolvedIps {
+		cidr, err := networkutils.IpRangeToCIDR(ip, ip)
+		if err != nil {
+			log.Warn().Err(err).Msgf("Failed to convert ip range to cidr: %s", ip)
+			continue
+		}
+		log.Debug().Msgf("Converted ip %s to cidr: %s", ip, cidr[0])
+    ips = append(ips, cidr[0])
 	}
 
 	portStr := u.Port()

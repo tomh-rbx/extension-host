@@ -61,7 +61,7 @@ func getNetworkCorruptPackagesDescription() action_kit_api.ActionDescription {
 
 func corruptPackages() networkOptsProvider {
 	return func(ctx context.Context, request action_kit_api.PrepareActionRequestBody) (networkutils.Opts, error) {
-		hostname, err := CheckTargetHostname(request.Target.Attributes)
+		_, err := CheckTargetHostname(request.Target.Attributes)
 		if err != nil {
 			return nil, err
 		}
@@ -72,7 +72,7 @@ func corruptPackages() networkOptsProvider {
 			restrictedUrls = *request.ExecutionContext.RestrictedUrls
 		}
 
-		filter, err := mapToNetworkFilter(ctx, *hostname, request.Config, restrictedUrls)
+		filter, err := mapToNetworkFilter(ctx, request.Config, restrictedUrls)
 		if err != nil {
 			return nil, err
 		}

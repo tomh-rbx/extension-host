@@ -56,6 +56,8 @@ spec:
           name: {{ include "extensionlib.names.name" . }}
           env:
                   {{- include "extensionlib.deployment.env" (list .) | nindent 12 }}
+{{/*            - name: STEADYBIT_LOG_LEVEL*/}}
+{{/*              value: DEBUG*/}}
           volumeMounts:
             - name: tmp-dir
               mountPath: /tmp

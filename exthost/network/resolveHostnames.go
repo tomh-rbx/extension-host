@@ -13,7 +13,7 @@ import (
 	"strings"
 )
 
-func ResolveHostnames(ctx context.Context, hostname string, ipOrHostnames ...string) ([]string, error) {
+func ResolveHostnames(ctx context.Context, ipOrHostnames ...string) ([]string, error) {
 	hostnames, ips := classifyResolved(ipOrHostnames)
 
 	if len(hostnames) == 0 {
