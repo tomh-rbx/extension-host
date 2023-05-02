@@ -148,38 +148,31 @@ func (l *shutdownAction) Start(_ context.Context, state *ActionState) (*action_k
 			}
 		}
 	} else {
-		if state.Reboot {
-			log.Info().Msg("Rebooting host via syscall")
-			err := shutdown.RebootSyscall()
-			if err != nil {
-				log.Info().Msg("Rebooting host via sysrq")
-				err := shutdown.RebootSysrq()
-				if err != nil {
-					return &action_kit_api.StartResult{
-						Error: &action_kit_api.ActionKitError{
-							Title:  "Reboot failed",
-							Status: extutil.Ptr(action_kit_api.Failed),
-						},
-					}, nil
-				}
-			}
-		} else {
-			log.Info().Msg("Shutting down host via syscall")
-			err := shutdown.ShutdownSyscall()
-			if err != nil {
-				log.Error().Err(err).Msg("Shutting down host via syscall failed")
-				log.Info().Msg("Shutting down host via sysrq")
-				err := shutdown.ShutdownSysrq()
-				if err != nil {
-					return &action_kit_api.StartResult{
-						Error: &action_kit_api.ActionKitError{
-							Title:  "Shutdown failed",
-							Status: extutil.Ptr(action_kit_api.Failed),
-						},
-					}, nil
-				}
-			}
-		}
+    go func() {
+      if state.Reboot {
+        log.Info().Msg("Rebooting host via syscall")
+        err := shutdown.RebootSyscall()
+        if err != nil {
+          log.Error().Err(err).Msg("Rebooting host via syscall failed")
+          log.Info().Msg("Rebooting host via sysrq")
+          err := shutdown.RebootSysrq()
+          if err != nil {
+            log.Error().Err(err).Msg("Rebooting host via sysrq failed")
+          }
+        }
+      } else {
+        log.Info().Msg("Shutting down host via syscall")
+        err := shutdown.ShutdownSyscall()
+        if err != nil {
+          log.Error().Err(err).Msg("Shutting down host via syscall failed")
+          log.Info().Msg("Shutting down host via sysrq")
+          err := shutdown.ShutdownSysrq()
+          if err != nil {
+            log.Error().Err(err).Msg("Shutting down host via sysrq failed")
+          }
+        }
+      }
+    }()
 	}
 	return nil, nil
 }

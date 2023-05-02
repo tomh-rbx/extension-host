@@ -1,4 +1,7 @@
+//go:build !linux
+
 package shutdown
+
 
 import (
 	"fmt"
