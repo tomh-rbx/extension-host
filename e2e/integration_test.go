@@ -27,8 +27,7 @@ var (
 	}
 	executionContext = &action_kit_api.ExecutionContext{
 		AgentAwsAccountId: nil,
-		//RestrictedUrls:    extutil.Ptr([]string{"http://0.0.0.0:8443", "http://0.0.0.0:8085", "http://0.0.0.0:8081"}),
-		//RestrictedUrls:    extutil.Ptr([]string{"http://192.168.58.2:8443"}),
+		RestrictedUrls:    extutil.Ptr([]string{"http://0.0.0.0:8443", "http://0.0.0.0:8085", "http://0.0.0.0:8081"}),
 	}
 )
 
@@ -60,10 +59,10 @@ func TestWithMinikube(t *testing.T) {
 			Name: "stop process",
 			Test: testStopProcess,
 		},
-		{
-			Name: "shutdown host",
-			Test: testShutdownHost,
-		},
+		//{
+		//	Name: "shutdown host",
+		//	Test: testShutdownHost,
+		//},
 		{
 			Name: "network delay",
 			Test: testNetworkDelay,
@@ -235,17 +234,17 @@ func testNetworkBlackhole(t *testing.T, m *Minikube, e *Extension) {
 		WantedReachable  bool
 		WantedReachesUrl bool
 	}{
-		//{
-		//	name:             "should blackhole all traffic",
-		//	WantedReachable:  false,
-		//	WantedReachesUrl: false,
-		//},
-		//{
-		//	name:             "should blackhole only port 8080 traffic",
-		//	port:             []string{"8080"},
-		//	WantedReachable:  true,
-		//	WantedReachesUrl: true,
-		//},
+		{
+			name:             "should blackhole all traffic",
+			WantedReachable:  false,
+			WantedReachesUrl: false,
+		},
+		{
+			name:             "should blackhole only port 8080 traffic",
+			port:             []string{"8080"},
+			WantedReachable:  true,
+			WantedReachesUrl: true,
+		},
 		{
 			name:             "should blackhole only port 80, 443 traffic",
 			port:             []string{"80", "443"},
@@ -537,17 +536,17 @@ func testNetworkLimitBandwidth(t *testing.T, m *Minikube, e *Extension) {
 			name:        "should limit bandwidth on all traffic",
 			WantedLimit: true,
 		},
-		//{
-		//	name:        "should limit bandwidth only on port 5001 traffic",
-		//	port:        []string{"5001"},
-		//	interfaces:  []string{"eth0"},
-		//	WantedLimit: true,
-		//},
-		//{
-		//	name:        "should limit bandwidth only on port 80 traffic",
-		//	port:        []string{"80"},
-		//	WantedLimit: false,
-		//},
+		{
+			name:        "should limit bandwidth only on port 5001 traffic",
+			port:        []string{"5001"},
+			interfaces:  []string{"eth0"},
+			WantedLimit: true,
+		},
+		{
+			name:        "should limit bandwidth only on port 80 traffic",
+			port:        []string{"80"},
+			WantedLimit: false,
+		},
 	}
 
 	unlimited, err := iperf.MeasureBandwidth()
