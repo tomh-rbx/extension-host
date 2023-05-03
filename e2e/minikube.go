@@ -107,6 +107,7 @@ func (m *Minikube) start() error {
 	defer globalMinikubeMutex.Unlock()
 
 	args := []string{"start", "--keep-context", "--container-runtime=docker", "--ports=8085"}
+	//args := []string{"start", "--keep-context", "--container-runtime=docker", "--ports=8085", "--driver=qemu", "--network=socket_vmnet"}
 
 	if err := m.command(args...).Run(); err != nil {
 		return err
@@ -155,6 +156,7 @@ func (m *Minikube) waitForDefaultServiceaccount() error {
 func (m *Minikube) delete() error {
 	globalMinikubeMutex.Lock()
 	defer globalMinikubeMutex.Unlock()
+	log.Info().Msg("Deleting minikube")
 	return m.command("delete").Run()
 }
 

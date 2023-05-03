@@ -83,12 +83,12 @@ func delay() networkOptsProvider {
 			jitter = delay * 30 / 100
 		}
 
-		var restrictedCIDRs []action_kit_api.RestrictedCIDR
-		if request.ExecutionContext != nil && request.ExecutionContext.RestrictedCIDRs != nil {
-			restrictedCIDRs = *request.ExecutionContext.RestrictedCIDRs
+		var restrictedEndpoints []action_kit_api.RestrictedEndpoint
+		if request.ExecutionContext != nil && request.ExecutionContext.RestrictedEndpoints != nil {
+			restrictedEndpoints = *request.ExecutionContext.RestrictedEndpoints
 		}
 
-		filter, err := mapToNetworkFilter(ctx, request.Config, restrictedCIDRs)
+		filter, err := mapToNetworkFilter(ctx, request.Config, restrictedEndpoints)
 		if err != nil {
 			return nil, err
 		}

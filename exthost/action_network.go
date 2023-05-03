@@ -167,7 +167,7 @@ func parsePortRanges(raw []string) ([]networkutils.PortRange, error) {
 	return ranges, nil
 }
 
-func mapToNetworkFilter(ctx context.Context, config map[string]interface{}, restrictedCIDRs []action_kit_api.RestrictedCIDR) (networkutils.Filter, error) {
+func mapToNetworkFilter(ctx context.Context, config map[string]interface{}, restrictedEndpoints []action_kit_api.RestrictedEndpoint) (networkutils.Filter, error) {
 	toResolve := append(
 		extutil.ToStringArray(config["ip"]),
 		extutil.ToStringArray(config["hostname"])...,
@@ -193,8 +193,9 @@ func mapToNetworkFilter(ctx context.Context, config map[string]interface{}, rest
 	includes := networkutils.NewCidrWithPortRanges(includeCidrs, portRanges...)
 	var excludes []networkutils.CidrWithPortRange
 
-	for _, restrictedCIDR := range restrictedCIDRs {
-		excludes = append(excludes, networkutils.NewCidrWithPortRanges([]string{restrictedCIDR.Cidr}, networkutils.PortRange{From: uint16(restrictedCIDR.PortMin), To: uint16(restrictedCIDR.PortMax)})...)
+	for _, restrictedEndpoint := range restrictedEndpoints {
+		log.Debug().Msgf("Adding restricted endpoint %s (%S) => %s:%d-%d", restrictedEndpoint.Name, restrictedEndpoint.Url, restrictedEndpoint.Cidr, restrictedEndpoint.PortMin, restrictedEndpoint.PortMax)
+		excludes = append(excludes, networkutils.NewCidrWithPortRanges([]string{restrictedEndpoint.Cidr}, networkutils.PortRange{From: uint16(restrictedEndpoint.PortMin), To: uint16(restrictedEndpoint.PortMax)})...)
 	}
 
 	// add own ip to exclude list

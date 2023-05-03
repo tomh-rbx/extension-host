@@ -27,10 +27,10 @@ var (
 	}
 	executionContext = &action_kit_api.ExecutionContext{
 		AgentAwsAccountId: nil,
-		//RestrictedCIDRs:    extutil.Ptr([]string{"http://0.0.0.0:8443", "http://0.0.0.0:8085", "http://0.0.0.0:8081"}),
-		RestrictedCIDRs: extutil.Ptr([]action_kit_api.RestrictedCIDR{
+		RestrictedEndpoints: extutil.Ptr([]action_kit_api.RestrictedEndpoint{
 			{
 				Name:    "minikube ssh",
+				Url:     "",
 				Cidr:    "0.0.0.0/0",
 				PortMin: 8443,
 				PortMax: 8443,
