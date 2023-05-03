@@ -4,17 +4,17 @@
 package exthost
 
 import (
-  "context"
-  "encoding/json"
-  "github.com/google/uuid"
-  "github.com/rs/zerolog/log"
-  "github.com/steadybit/action-kit/go/action_kit_api/v2"
-  "github.com/steadybit/action-kit/go/action_kit_sdk"
-  "github.com/steadybit/extension-container/pkg/networkutils"
-  "github.com/steadybit/extension-host/exthost/common"
-  "github.com/steadybit/extension-host/exthost/network"
-  extension_kit "github.com/steadybit/extension-kit"
-  "github.com/steadybit/extension-kit/extutil"
+	"context"
+	"encoding/json"
+	"github.com/google/uuid"
+	"github.com/rs/zerolog/log"
+	"github.com/steadybit/action-kit/go/action_kit_api/v2"
+	"github.com/steadybit/action-kit/go/action_kit_sdk"
+	"github.com/steadybit/extension-container/pkg/networkutils"
+	"github.com/steadybit/extension-host/exthost/common"
+	"github.com/steadybit/extension-host/exthost/network"
+	extension_kit "github.com/steadybit/extension-kit"
+	"github.com/steadybit/extension-kit/extutil"
 )
 
 type networkOptsProvider func(ctx context.Context, request action_kit_api.PrepareActionRequestBody) (networkutils.Opts, error)
@@ -205,6 +205,7 @@ func mapToNetworkFilter(ctx context.Context, config map[string]interface{}, rest
 		if err != nil {
 			log.Warn().Err(err).Msgf("Failed to convert ip %s to cidr", ip4)
 		}
+		log.Debug().Msgf("Adding own ip %s -> %s to exclude list (Ports %d and %d)", ip4, cidrs, ownPort, ownHealthPort)
 		excludes = append(excludes, networkutils.NewCidrWithPortRanges(cidrs, networkutils.PortRange{From: ownPort, To: ownPort})...)
 		excludes = append(excludes, networkutils.NewCidrWithPortRanges(cidrs, networkutils.PortRange{From: ownHealthPort, To: ownHealthPort})...)
 	}
