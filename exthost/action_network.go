@@ -194,7 +194,7 @@ func mapToNetworkFilter(ctx context.Context, config map[string]interface{}, rest
 	var excludes []networkutils.CidrWithPortRange
 
 	for _, restrictedEndpoint := range restrictedEndpoints {
-		log.Debug().Msgf("Adding restricted endpoint %s (%S) => %s:%d-%d", restrictedEndpoint.Name, restrictedEndpoint.Url, restrictedEndpoint.Cidr, restrictedEndpoint.PortMin, restrictedEndpoint.PortMax)
+		log.Debug().Msgf("Adding restricted endpoint %s (%s) => %s:%d-%d", restrictedEndpoint.Name, restrictedEndpoint.Url, restrictedEndpoint.Cidr, restrictedEndpoint.PortMin, restrictedEndpoint.PortMax)
 		excludes = append(excludes, networkutils.NewCidrWithPortRanges([]string{restrictedEndpoint.Cidr}, networkutils.PortRange{From: uint16(restrictedEndpoint.PortMin), To: uint16(restrictedEndpoint.PortMax)})...)
 	}
 
