@@ -4,19 +4,17 @@
 package exthost
 
 import (
-	"context"
-	"encoding/json"
-	"github.com/google/uuid"
-	"github.com/rs/zerolog/log"
-	"github.com/steadybit/action-kit/go/action_kit_api/v2"
-	"github.com/steadybit/action-kit/go/action_kit_sdk"
-	"github.com/steadybit/extension-container/pkg/networkutils"
-	"github.com/steadybit/extension-host/exthost/common"
-	"github.com/steadybit/extension-host/exthost/network"
-	extension_kit "github.com/steadybit/extension-kit"
-	"github.com/steadybit/extension-kit/extutil"
-	"net/url"
-	"strconv"
+  "context"
+  "encoding/json"
+  "github.com/google/uuid"
+  "github.com/rs/zerolog/log"
+  "github.com/steadybit/action-kit/go/action_kit_api/v2"
+  "github.com/steadybit/action-kit/go/action_kit_sdk"
+  "github.com/steadybit/extension-container/pkg/networkutils"
+  "github.com/steadybit/extension-host/exthost/common"
+  "github.com/steadybit/extension-host/exthost/network"
+  extension_kit "github.com/steadybit/extension-kit"
+  "github.com/steadybit/extension-kit/extutil"
 )
 
 type networkOptsProvider func(ctx context.Context, request action_kit_api.PrepareActionRequestBody) (networkutils.Opts, error)
@@ -230,50 +228,4 @@ func readNetworkInterfaces(ctx context.Context) ([]string, error) {
 		}
 	}
 	return ifcNames, nil
-}
-
-func resolveUrl(ctx context.Context, raw string) ([]string, uint16, error) {
-	port := uint16(0)
-	u, err := url.Parse(raw)
-	if err != nil {
-		return nil, port, err
-	}
-	resolvedIps := []string{}
-	if u.Hostname() == "localhost" {
-		resolvedIps = append(resolvedIps, "127.0.0.1")
-	} else {
-		resolvedIps, err = network.ResolveHostnames(ctx, u.Hostname())
-		if err != nil {
-			return nil, port, err
-		}
-	}
-
-	ips := make([]string, 0)
-	for _, ip := range resolvedIps {
-		if ip == "" {
-			continue
-		}
-		cidr, err := networkutils.IpRangeToCIDR(ip, ip)
-		if err != nil {
-			log.Warn().Err(err).Msgf("Failed to convert ip range to cidr: %s", ip)
-			continue
-		}
-		log.Debug().Msgf("Converted ip %s to cidr: %s", ip, cidr[0])
-		ips = append(ips, cidr[0])
-	}
-
-	portStr := u.Port()
-	if portStr != "" {
-		parsed, _ := strconv.ParseUint(portStr, 10, 16)
-		port = uint16(parsed)
-	} else {
-		switch u.Scheme {
-		case "https":
-			port = 443
-		default:
-			port = 80
-		}
-	}
-
-	return ips, port, nil
 }
