@@ -110,7 +110,7 @@ func testStressCpu(t *testing.T, m *e2e.Minikube, e *e2e.Extension) {
 	exec, err := e.RunAction("com.github.steadybit.extension_host.stress-cpu", target, config, nil)
 	require.NoError(t, err)
 
-	e2e.AssertProcessRunningInContainer(t, m, e.Pod, "steadybit-extension-host", "stress-ng", extutil.Ptr("-A"))
+	e2e.AssertProcessRunningInContainer(t, m, e.Pod, "steadybit-extension-host", "stress-ng", true)
 	require.NoError(t, exec.Cancel())
 }
 
@@ -123,7 +123,7 @@ func testStressMemory(t *testing.T, m *e2e.Minikube, e *e2e.Extension) {
 
 	exec, err := e.RunAction("com.github.steadybit.extension_host.stress-mem", target, config, nil)
 	require.NoError(t, err)
-	e2e.AssertProcessRunningInContainer(t, m, e.Pod, "steadybit-extension-host", "stress-ng", extutil.Ptr("-A"))
+	e2e.AssertProcessRunningInContainer(t, m, e.Pod, "steadybit-extension-host", "stress-ng", true)
 	require.NoError(t, exec.Cancel())
 }
 
@@ -136,7 +136,7 @@ func testStressIo(t *testing.T, m *e2e.Minikube, e *e2e.Extension) {
 	}{Duration: 50000, Workers: 1, Percentage: 50}
 	exec, err := e.RunAction("com.github.steadybit.extension_host.stress-io", target, config, nil)
 	require.NoError(t, err)
-	e2e.AssertProcessRunningInContainer(t, m, e.Pod, "steadybit-extension-host", "stress-ng", extutil.Ptr("-A"))
+	e2e.AssertProcessRunningInContainer(t, m, e.Pod, "steadybit-extension-host", "stress-ng", true)
 	require.NoError(t, exec.Cancel())
 }
 
@@ -210,7 +210,7 @@ func testStopProcess(t *testing.T, m *e2e.Minikube, e *e2e.Extension) {
 		_, _ = m.Exec(e.Pod, "steadybit-extension-host", "tail", "-f", "/dev/null")
 	}()
 
-	e2e.AssertProcessRunningInContainer(t, m, e.Pod, "steadybit-extension-host", "tail", extutil.Ptr("-A"))
+	e2e.AssertProcessRunningInContainer(t, m, e.Pod, "steadybit-extension-host", "tail", true)
 
 	exec, err := e.RunAction("com.github.steadybit.extension_host.stop-process", target, config, nil)
 	require.NoError(t, err)
