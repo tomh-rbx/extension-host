@@ -67,12 +67,8 @@ func packageLoss() networkOptsProvider {
 		}
 		loss := extutil.ToUInt(request.Config["networkLoss"])
 
-		var restrictedEndpoints []action_kit_api.RestrictedEndpoint
-		if request.ExecutionContext != nil && request.ExecutionContext.RestrictedEndpoints != nil {
-			restrictedEndpoints = *request.ExecutionContext.RestrictedEndpoints
-		}
 
-		filter, err := mapToNetworkFilter(ctx, request.Config, restrictedEndpoints)
+		filter, err := mapToNetworkFilter(ctx, request.Config, getRestrictedEndpoints(request))
 		if err != nil {
 			return nil, err
 		}

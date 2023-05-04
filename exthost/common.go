@@ -60,3 +60,11 @@ func CheckTargetHostname(attributes map[string][]string) (*string, error) {
 	}
 	return extutil.Ptr(osHostname), nil
 }
+
+func getRestrictedEndpoints(request action_kit_api.PrepareActionRequestBody) []action_kit_api.RestrictedEndpoint {
+  var restrictedEndpoints []action_kit_api.RestrictedEndpoint
+  if request.ExecutionContext != nil && request.ExecutionContext.RestrictedEndpoints != nil {
+    restrictedEndpoints = *request.ExecutionContext.RestrictedEndpoints
+  }
+  return restrictedEndpoints
+}

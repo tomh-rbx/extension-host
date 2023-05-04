@@ -67,34 +67,29 @@ func limitBandwidth() networkOptsProvider {
 		}
 		bandwidth := extutil.ToString(request.Config["bandwidth"])
 
-		var restrictedEndpoints []action_kit_api.RestrictedEndpoint
-		if request.ExecutionContext != nil && request.ExecutionContext.RestrictedEndpoints != nil {
-			restrictedEndpoints = *request.ExecutionContext.RestrictedEndpoints
-		}
+    filter, err := mapToNetworkFilter(ctx, request.Config,  getRestrictedEndpoints(request))
+    if err != nil {
+      return nil, err
+    }
 
-		filter, err := mapToNetworkFilter(ctx, request.Config, restrictedEndpoints)
-		if err != nil {
-			return nil, err
-		}
+    interfaces := extutil.ToStringArray(request.Config["networkInterface"])
+    if len(interfaces) == 0 {
+      interfaces, err = readNetworkInterfaces(ctx)
+      if err != nil {
+        return nil, err
+      }
+    }
 
-		interfaces := extutil.ToStringArray(request.Config["networkInterface"])
-		if len(interfaces) == 0 {
-			interfaces, err = readNetworkInterfaces(ctx)
-			if err != nil {
-				return nil, err
-			}
-		}
+    if len(interfaces) == 0 {
+      return nil, fmt.Errorf("no network interfaces specified")
+    }
 
-		if len(interfaces) == 0 {
-			return nil, fmt.Errorf("no network interfaces specified")
-		}
-
-		return &networkutils.LimitBandwidthOpts{
-			Filter:     filter,
-			Bandwidth:  bandwidth,
-			Interfaces: interfaces,
-		}, nil
-	}
+    return &networkutils.LimitBandwidthOpts{
+      Filter:     filter,
+      Bandwidth:  bandwidth,
+      Interfaces: interfaces,
+    }, nil
+  }
 }
 
 func limitBandwidthDecode(data json.RawMessage) (networkutils.Opts, error) {
