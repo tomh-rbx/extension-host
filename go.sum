@@ -138,8 +138,8 @@ github.com/steadybit/discovery-kit/go/discovery_kit_api v1.3.0 h1:HwvovoYbAYpJ5P
 github.com/steadybit/discovery-kit/go/discovery_kit_api v1.3.0/go.mod h1:OnIfjrBhmMQCYxriHmr8mT1wCpvqIZxwBHWnanFhgNA=
 github.com/steadybit/event-kit/go/event_kit_api v1.1.0 h1:fz7gBUqEz67dhelYmWzyWIf/2Q+39y6bET2Gq7Hkeh4=
 github.com/steadybit/event-kit/go/event_kit_api v1.1.0/go.mod h1:YAliz224K5oWE48iOz73kLdLR/YuqjI7UraOTHJmlAA=
-github.com/steadybit/extension-container v0.0.0-20230504140342-4a0d7c00d10a h1:5KUKwXs7VMmAr9yk3vXy3UJqSorJfB/JiNlAzC7V6Ic=
-github.com/steadybit/extension-container v0.0.0-20230504140342-4a0d7c00d10a/go.mod h1:NKIqvlgtdikuhRvjif1tiNDoY9PrEjYDs6GXAVM0ARs=
+github.com/steadybit/extension-container v0.0.0-20230505072531-333aef8f4422 h1:4Em5M/es2j0vQKqY6ChR72DkOWJ9jXrLsP53CdH4N4g=
+github.com/steadybit/extension-container v0.0.0-20230505072531-333aef8f4422/go.mod h1:Fi1qwDUjD2uvANKQlukHKdk+oEE/Bb1laW5QpoaRVVw=
 github.com/steadybit/extension-kit v1.7.16 h1:AhXzBLhCYaptxhICURH0pXa8vTTI7DwdjWlEjzmuA70=
 github.com/steadybit/extension-kit v1.7.16/go.mod h1:zC5Tw+wrJTx4xvOlsIY+MfMoRYoglj83vR15Xr3aP5c=
 github.com/stoewer/go-strcase v1.2.0/go.mod h1:IBiWB2sKIp3wVVQ3Y035++gc+knqhUQag1KpM8ahLw8=
