@@ -4,28 +4,23 @@
 package e2e
 
 import (
-	"context"
-	"fmt"
-	"github.com/rs/zerolog/log"
-	"github.com/steadybit/action-kit/go/action_kit_api/v2"
-	"github.com/steadybit/action-kit/go/action_kit_test/e2e"
-	"github.com/steadybit/discovery-kit/go/discovery_kit_api"
-	"github.com/steadybit/extension-host/exthost"
-	"github.com/steadybit/extension-kit/extutil"
-	"github.com/stretchr/testify/assert"
-	"github.com/stretchr/testify/require"
-	"os"
-	"strings"
-	"testing"
-	"time"
+  "context"
+  "fmt"
+  "github.com/rs/zerolog/log"
+  "github.com/steadybit/action-kit/go/action_kit_api/v2"
+  "github.com/steadybit/action-kit/go/action_kit_test/e2e"
+  "github.com/steadybit/discovery-kit/go/discovery_kit_api"
+  "github.com/steadybit/extension-host/exthost"
+  "github.com/steadybit/extension-kit/extutil"
+  "github.com/stretchr/testify/assert"
+  "github.com/stretchr/testify/require"
+  "os"
+  "strings"
+  "testing"
+  "time"
 )
 
 var (
-	target = action_kit_api.Target{
-		Attributes: map[string][]string{
-			"host.hostname": {"e2e-docker"},
-		},
-	}
 	executionContext = &action_kit_api.ExecutionContext{
 		AgentAwsAccountId: nil,
 		RestrictedEndpoints: extutil.Ptr([]action_kit_api.RestrictedEndpoint{
@@ -40,12 +35,33 @@ var (
 	}
 )
 
+func getTarget(m *e2e.Minikube) action_kit_api.Target {
+	return action_kit_api.Target{
+		Attributes: map[string][]string{
+			"host.hostname": {m.Profile},
+		},
+	}
+}
+
 func runsInCi() bool {
 	return os.Getenv("CI") != ""
 }
 func TestWithMinikube(t *testing.T) {
-  //e2e.AllRuntimes
-	e2e.WithMinikube(t, []e2e.Runtime{e2e.RuntimeDocker}, 8085, "extension-host", "steadybit-extension-host", "../charts/steadybit-extension-host", []e2e.WithMinikubeTestCase{
+	extFactory := e2e.HelmExtensionFactory{
+		Name: "extension-host",
+		Port: 8085,
+		ExtraArgs: func(m *e2e.Minikube) []string {
+			return []string{"--set", fmt.Sprintf("container.runtime=%s", m.Runtime)}
+		},
+	}
+
+	mOpts := e2e.DefaultMiniKubeOpts
+	mOpts.Runtimes = []e2e.Runtime{e2e.RuntimeDocker}
+	//if runtime.GOOS == "linux" {
+	//	mOpts.Driver = "kvm2"
+	//}
+
+	e2e.WithMinikube(t, mOpts, &extFactory, []e2e.WithMinikubeTestCase{
 		{
 			Name: "target discovery",
 			Test: testDiscovery,
@@ -107,7 +123,7 @@ func testStressCpu(t *testing.T, m *e2e.Minikube, e *e2e.Extension) {
 		CpuLoad  int `json:"cpuLoad"`
 		Workers  int `json:"workers"`
 	}{Duration: 50000, Workers: 0, CpuLoad: 50}
-	exec, err := e.RunAction("com.github.steadybit.extension_host.stress-cpu", target, config, nil)
+	exec, err := e.RunAction("com.github.steadybit.extension_host.stress-cpu", getTarget(m), config, nil)
 	require.NoError(t, err)
 
 	e2e.AssertProcessRunningInContainer(t, m, e.Pod, "steadybit-extension-host", "stress-ng", true)
@@ -121,7 +137,7 @@ func testStressMemory(t *testing.T, m *e2e.Minikube, e *e2e.Extension) {
 		Percentage int `json:"percentage"`
 	}{Duration: 50000, Percentage: 50}
 
-	exec, err := e.RunAction("com.github.steadybit.extension_host.stress-mem", target, config, nil)
+	exec, err := e.RunAction("com.github.steadybit.extension_host.stress-mem", getTarget(m), config, nil)
 	require.NoError(t, err)
 	e2e.AssertProcessRunningInContainer(t, m, e.Pod, "steadybit-extension-host", "stress-ng", true)
 	require.NoError(t, exec.Cancel())
@@ -134,7 +150,7 @@ func testStressIo(t *testing.T, m *e2e.Minikube, e *e2e.Extension) {
 		Percentage int `json:"percentage"`
 		Workers    int `json:"workers"`
 	}{Duration: 50000, Workers: 1, Percentage: 50}
-	exec, err := e.RunAction("com.github.steadybit.extension_host.stress-io", target, config, nil)
+	exec, err := e.RunAction("com.github.steadybit.extension_host.stress-io", getTarget(m), config, nil)
 	require.NoError(t, err)
 	e2e.AssertProcessRunningInContainer(t, m, e.Pod, "steadybit-extension-host", "stress-ng", true)
 	require.NoError(t, exec.Cancel())
@@ -149,7 +165,7 @@ func testTimeTravel(t *testing.T, m *e2e.Minikube, e *e2e.Extension) {
 	}{Duration: 3000, Offset: 360000, DisableNtp: false}
 	tolerance := time.Duration(1) * time.Second
 	now := time.Now()
-	exec, err := e.RunAction("com.github.steadybit.extension_host.timetravel", target, config, nil)
+	exec, err := e.RunAction("com.github.steadybit.extension_host.timetravel", getTarget(m), config, nil)
 	if !runsInCi() {
 		require.NoError(t, err)
 		diff := getTimeDiffBetweenNowAndContainerTime(t, m, e, now)
@@ -212,7 +228,7 @@ func testStopProcess(t *testing.T, m *e2e.Minikube, e *e2e.Extension) {
 
 	e2e.AssertProcessRunningInContainer(t, m, e.Pod, "steadybit-extension-host", "tail", true)
 
-	exec, err := e.RunAction("com.github.steadybit.extension_host.stop-process", target, config, nil)
+	exec, err := e.RunAction("com.github.steadybit.extension_host.stop-process", getTarget(m), config, nil)
 	require.NoError(t, err)
 	e2e.AssertProcessNOTRunningInContainer(t, m, e.Pod, "steadybit-extension-host", "tail")
 	require.NoError(t, exec.Cancel())
@@ -223,7 +239,7 @@ func testShutdownHost(t *testing.T, m *e2e.Minikube, e *e2e.Extension) {
 		Reboot bool `json:"reboot"`
 	}{Reboot: true}
 
-	exec, err := e.RunAction("com.github.steadybit.extension_host.shutdown", target, config, nil)
+	exec, err := e.RunAction("com.github.steadybit.extension_host.shutdown", getTarget(m), config, nil)
 	if !runsInCi() {
 		require.NoError(t, err)
 	}
@@ -284,7 +300,7 @@ func testNetworkBlackhole(t *testing.T, m *e2e.Minikube, e *e2e.Extension) {
 			require.NoError(t, nginx.IsReachable(), "service should be reachable before blackhole")
 			require.NoError(t, nginx.CanReach("https://google.com"), "service should reach url before blackhole")
 
-			action, err := e.RunAction(exthost.BaseActionID+".network_blackhole", target, config, executionContext)
+			action, err := e.RunAction(exthost.BaseActionID+".network_blackhole", getTarget(m), config, executionContext)
 			require.NoError(t, err)
 
 			if tt.WantedReachable {
@@ -362,7 +378,7 @@ func testNetworkDelay(t *testing.T, m *e2e.Minikube, e *e2e.Extension) {
 			m.Stdout = os.Stdout
 		}
 		t.Run(tt.name, func(t *testing.T) {
-			action, err := e.RunAction(exthost.BaseActionID+".network_delay", target, config, executionContext)
+			action, err := e.RunAction(exthost.BaseActionID+".network_delay", getTarget(m), config, executionContext)
 			defer func() { _ = action.Cancel() }()
 			require.NoError(t, err)
 
@@ -436,7 +452,7 @@ func testNetworkPackageLoss(t *testing.T, m *e2e.Minikube, e *e2e.Extension) {
 			m.Stdout = os.Stdout
 		}
 		t.Run(tt.name, func(t *testing.T) {
-			action, err := e.RunAction(exthost.BaseActionID+".network_package_loss", target, config, executionContext)
+			action, err := e.RunAction(exthost.BaseActionID+".network_package_loss", getTarget(m), config, executionContext)
 			defer func() { _ = action.Cancel() }()
 			require.NoError(t, err)
 
@@ -508,7 +524,7 @@ func testNetworkPackageCorruption(t *testing.T, m *e2e.Minikube, e *e2e.Extensio
 			m.Stdout = os.Stdout
 		}
 		t.Run(tt.name, func(t *testing.T) {
-			action, err := e.RunAction(exthost.BaseActionID+".network_package_corruption", target, config, executionContext)
+			action, err := e.RunAction(exthost.BaseActionID+".network_package_corruption", getTarget(m), config, executionContext)
 			defer func() { _ = action.Cancel() }()
 			require.NoError(t, err)
 
@@ -584,7 +600,7 @@ func testNetworkLimitBandwidth(t *testing.T, m *e2e.Minikube, e *e2e.Extension) 
 			m.Stdout = os.Stdout
 		}
 		t.Run(tt.name, func(t *testing.T) {
-			action, err := e.RunAction(exthost.BaseActionID+".network_bandwidth", target, config, executionContext)
+			action, err := e.RunAction(exthost.BaseActionID+".network_bandwidth", getTarget(m), config, executionContext)
 			defer func() { _ = action.Cancel() }()
 			require.NoError(t, err)
 
@@ -648,7 +664,7 @@ func testNetworkBlockDns(t *testing.T, m *e2e.Minikube, e *e2e.Extension) {
 			require.NoError(t, dnsutils.IsReachable(), "service should be reachable before block dns")
 			require.NoError(t, dnsutils.CanReach("google.com"), "service should reach url before block dns")
 
-			action, err := e.RunAction(exthost.BaseActionID+".network_block_dns", target, config, executionContext)
+			action, err := e.RunAction(exthost.BaseActionID+".network_block_dns", getTarget(m), config, executionContext)
 			defer func() { _ = action.Cancel() }()
 			require.NoError(t, err)
 
