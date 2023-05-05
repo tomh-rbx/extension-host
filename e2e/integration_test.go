@@ -93,10 +93,10 @@ func TestWithMinikube(t *testing.T) {
 			Name: "network delay",
 			Test: testNetworkDelay,
 		},
-		//{
-		//	Name: "network blackhole",
-		//	Test: testNetworkBlackhole,
-		//},
+		{
+			Name: "network blackhole",
+			Test: testNetworkBlackhole,
+		},
 		//{
 		//	Name: "network block dns",
 		//	Test: testNetworkBlockDns,
