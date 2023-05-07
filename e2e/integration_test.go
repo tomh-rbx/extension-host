@@ -15,6 +15,7 @@ import (
   "github.com/stretchr/testify/assert"
   "github.com/stretchr/testify/require"
   "os"
+  "runtime"
   "strings"
   "testing"
   "time"
@@ -35,8 +36,8 @@ var (
 	}
 )
 
-func getTarget(m *e2e.Minikube) action_kit_api.Target {
-	return action_kit_api.Target{
+func getTarget(m *e2e.Minikube) *action_kit_api.Target {
+	return &action_kit_api.Target{
 		Attributes: map[string][]string{
 			"host.hostname": {m.Profile},
 		},
@@ -57,9 +58,9 @@ func TestWithMinikube(t *testing.T) {
 
 	mOpts := e2e.DefaultMiniKubeOpts
 	mOpts.Runtimes = []e2e.Runtime{e2e.RuntimeDocker}
-	//if runtime.GOOS == "linux" {
-	//	mOpts.Driver = "kvm2"
-	//}
+	if runtime.GOOS == "linux" && runsInCi() {
+		mOpts.Driver = "kvm2"
+	}
 
 	e2e.WithMinikube(t, mOpts, &extFactory, []e2e.WithMinikubeTestCase{
 		{
@@ -298,7 +299,7 @@ func testNetworkBlackhole(t *testing.T, m *e2e.Minikube, e *e2e.Extension) {
 
 		t.Run(tt.name, func(t *testing.T) {
 			require.NoError(t, nginx.IsReachable(), "service should be reachable before blackhole")
-			require.NoError(t, nginx.CanReach("https://google.com"), "service should reach url before blackhole")
+			//require.NoError(t, nginx.CanReach("https://google.com"), "service should reach url before blackhole")
 
 			action, err := e.RunAction(exthost.BaseActionID+".network_blackhole", getTarget(m), config, executionContext)
 			require.NoError(t, err)

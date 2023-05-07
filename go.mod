@@ -10,10 +10,10 @@ require (
 	github.com/rs/zerolog v1.29.1
 	github.com/steadybit/action-kit/go/action_kit_api/v2 v2.6.0
 	github.com/steadybit/action-kit/go/action_kit_sdk v1.1.1
-	github.com/steadybit/action-kit/go/action_kit_test v0.0.0-20230504205809-c457dedd61ae
+	github.com/steadybit/action-kit/go/action_kit_test v0.0.0-20230507080126-0b8bc1d8d037
 	github.com/steadybit/discovery-kit/go/discovery_kit_api v1.3.0
 	github.com/steadybit/event-kit/go/event_kit_api v1.1.0
-	github.com/steadybit/extension-container v0.0.0-20230505072531-333aef8f4422
+	github.com/steadybit/extension-container v0.0.0-20230507080250-d18bfa163935
 	github.com/steadybit/extension-kit v1.7.16
 	github.com/stretchr/testify v1.8.2
 	golang.org/x/exp v0.0.0-20230420155640-133eef4313cb
