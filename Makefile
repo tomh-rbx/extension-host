@@ -58,4 +58,4 @@ run: tidy build
 ## container: build the container image
 .PHONY: container
 container:
-	docker build -t extension-host:latest .
+	docker buildx build -t extension-host:latest --output=type=docker .
