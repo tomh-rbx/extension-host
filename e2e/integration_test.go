@@ -4,21 +4,21 @@
 package e2e
 
 import (
-  "context"
-  "fmt"
-  "github.com/rs/zerolog/log"
-  "github.com/steadybit/action-kit/go/action_kit_api/v2"
-  "github.com/steadybit/action-kit/go/action_kit_test/e2e"
-  "github.com/steadybit/discovery-kit/go/discovery_kit_api"
-  "github.com/steadybit/extension-host/exthost"
-  "github.com/steadybit/extension-kit/extutil"
-  "github.com/stretchr/testify/assert"
-  "github.com/stretchr/testify/require"
-  "os"
-  "runtime"
-  "strings"
-  "testing"
-  "time"
+	"context"
+	"fmt"
+	"github.com/rs/zerolog/log"
+	"github.com/steadybit/action-kit/go/action_kit_api/v2"
+	"github.com/steadybit/action-kit/go/action_kit_test/e2e"
+	"github.com/steadybit/discovery-kit/go/discovery_kit_api"
+	"github.com/steadybit/extension-host/exthost"
+	"github.com/steadybit/extension-kit/extutil"
+	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
+	"os"
+	"runtime"
+	"strings"
+	"testing"
+	"time"
 )
 
 var (
@@ -435,14 +435,14 @@ func testNetworkPackageLoss(t *testing.T, m *e2e.Minikube, e *e2e.Extension) {
 	for _, tt := range tests {
 		config := struct {
 			Duration     int      `json:"duration"`
-			Loss         int      `json:"networkLoss"`
+			Percentage   int      `json:"percentage"`
 			Ip           []string `json:"ip"`
 			Hostname     []string `json:"hostname"`
 			Port         []string `json:"port"`
 			NetInterface []string `json:"networkInterface"`
 		}{
 			Duration:     10000,
-			Loss:         10,
+			Percentage:   10,
 			Ip:           tt.ip,
 			Hostname:     tt.hostname,
 			Port:         tt.port,
