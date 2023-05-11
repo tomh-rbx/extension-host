@@ -1,16 +1,20 @@
 package common
 
 import (
+	"context"
 	"github.com/rs/zerolog/log"
 	"os/exec"
 	"strings"
 	"syscall"
+	"time"
 )
 
 func ExecuteIpTablesCommand(args ...string) error {
 	log.Debug().Msg("Executing iptables command")
 	log.Debug().Msg(strings.Join(args, " "))
-	cmd := exec.Command("iptables", args...)
+	ctxctx, cancel := context.WithTimeout(context.Background(), 30*time.Second)
+	defer cancel()
+	cmd := exec.CommandContext(ctxctx, "iptables", args...)
 	cmd.SysProcAttr = &syscall.SysProcAttr{
 		Credential: &syscall.Credential{
 			Uid: 0,
