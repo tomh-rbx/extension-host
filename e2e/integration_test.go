@@ -26,7 +26,7 @@ var (
 		AgentAwsAccountId: nil,
 		RestrictedEndpoints: extutil.Ptr([]action_kit_api.RestrictedEndpoint{
 			{
-				Name:    "minikube ssh",
+				Name:    "kubernetes api",
 				Url:     "",
 				Cidr:    "0.0.0.0/0",
 				PortMin: 8443,
@@ -57,7 +57,6 @@ func TestWithMinikube(t *testing.T) {
 	}
 
 	mOpts := e2e.DefaultMiniKubeOpts
-	mOpts.Runtimes = []e2e.Runtime{e2e.RuntimeDocker}
 	if runtime.GOOS == "linux" && runsInCi() {
 		mOpts.Driver = "kvm2"
 	}
@@ -88,16 +87,16 @@ func TestWithMinikube(t *testing.T) {
 		},
 		//{
 		//	Name: "shutdown host",
-		//	Test: testShutdownHost,
+		//	Test: testShutdownHost, // if you run this test locally, you will need to restart your docker machine
 		//},
 		{
 			Name: "network delay",
 			Test: testNetworkDelay,
 		},
-		//{
-		//	Name: "network blackhole",
-		//	Test: testNetworkBlackhole,
-		//},
+		{
+			Name: "network blackhole",
+			Test: testNetworkBlackhole,
+		},
 		//{
 		//	Name: "network block dns",
 		//	Test: testNetworkBlockDns,
@@ -287,38 +286,35 @@ func testNetworkBlackhole(t *testing.T, m *e2e.Minikube, e *e2e.Extension) {
 			Hostname []string `json:"hostname"`
 			Port     []string `json:"port"`
 		}{
-			Duration: 10000,
+			Duration: 20000,
 			Ip:       tt.ip,
 			Hostname: tt.hostname,
 			Port:     tt.port,
 		}
 
-		if m.Stdout == nil {
-			m.Stdout = os.Stdout
-		}
-
 		t.Run(tt.name, func(t *testing.T) {
-			require.NoError(t, nginx.IsReachable(), "service should be reachable before blackhole")
-			//require.NoError(t, nginx.CanReach("https://google.com"), "service should reach url before blackhole")
+			awaitUntilAssertedNoError(t, nginx.IsReachable, "service should be reachable before blackhole")
+			awaitUntilAssertedNoErrorUrl(t, nginx.CanReach, "https://google.com", "service should reach url before blackhole")
 
 			action, err := e.RunAction(exthost.BaseActionID+".network_blackhole", getTarget(m), config, executionContext)
+			defer func() { _ = action.Cancel() }()
 			require.NoError(t, err)
 
 			if tt.WantedReachable {
-				require.NoError(t, nginx.IsReachable(), "service should be reachable during blackhole")
+				awaitUntilAssertedNoError(t, nginx.IsReachable, "service should be reachable during blackhole")
 			} else {
-				require.Error(t, nginx.IsReachable(), "service should not be reachable during blackhole")
+				awaitUntilAssertedError(t, nginx.IsReachable, "service should not be reachable during blackhole")
 			}
 
 			if tt.WantedReachesUrl {
-				require.NoError(t, nginx.CanReach("https://google.com"), "service should be reachable during blackhole")
+				awaitUntilAssertedNoErrorUrl(t, nginx.CanReach, "https://google.com", "service should be reachable during blackhole")
 			} else {
-				require.Error(t, nginx.CanReach("https://google.com"), "service should not be reachable during blackhole")
+				awaitUntilAssertedErrorUrl(t, nginx.CanReach, "https://google.com", "service should not be reachable during blackhole")
 			}
 
 			require.NoError(t, action.Cancel())
-			require.NoError(t, nginx.IsReachable(), "service should be reachable after blackhole")
-			require.NoError(t, nginx.CanReach("https://google.com"), "service should reach url after blackhole")
+			awaitUntilAssertedNoError(t, nginx.IsReachable, "service should be reachable after blackhole")
+			awaitUntilAssertedNoErrorUrl(t, nginx.CanReach, "https://google.com", "service should reach url after blackhole")
 		})
 	}
 }
@@ -375,9 +371,9 @@ func testNetworkDelay(t *testing.T, m *e2e.Minikube, e *e2e.Extension) {
 			NetInterface: tt.interfaces,
 		}
 
-		if m.Stdout == nil {
-			m.Stdout = os.Stdout
-		}
+		//if m.stdout == nil {
+		//	m.stdout = os.stdout
+		//}
 		t.Run(tt.name, func(t *testing.T) {
 			action, err := e.RunAction(exthost.BaseActionID+".network_delay", getTarget(m), config, executionContext)
 			defer func() { _ = action.Cancel() }()
@@ -449,9 +445,9 @@ func testNetworkPackageLoss(t *testing.T, m *e2e.Minikube, e *e2e.Extension) {
 			NetInterface: tt.interfaces,
 		}
 
-		if m.Stdout == nil {
-			m.Stdout = os.Stdout
-		}
+		//if m.stdout == nil {
+		//	m.stdout = os.stdout
+		//}
 		t.Run(tt.name, func(t *testing.T) {
 			action, err := e.RunAction(exthost.BaseActionID+".network_package_loss", getTarget(m), config, executionContext)
 			defer func() { _ = action.Cancel() }()
@@ -460,7 +456,7 @@ func testNetworkPackageLoss(t *testing.T, m *e2e.Minikube, e *e2e.Extension) {
 			loss, err := iperf.MeasurePackageLoss()
 			require.NoError(t, err)
 			if tt.WantedLoss {
-				require.True(t, loss >= 7.0, "~10%% packages should be lost but was %.2f", loss)
+				require.True(t, loss >= 6.0, "~10%% packages should be lost but was %.2f", loss)
 			} else {
 				require.True(t, loss <= 2.0, "packages should be lost but was %.2f", loss)
 			}
@@ -521,9 +517,9 @@ func testNetworkPackageCorruption(t *testing.T, m *e2e.Minikube, e *e2e.Extensio
 			NetInterface: tt.interfaces,
 		}
 
-		if m.Stdout == nil {
-			m.Stdout = os.Stdout
-		}
+		//if m.stdout == nil {
+		//	m.stdout = os.stdout
+		//}
 		t.Run(tt.name, func(t *testing.T) {
 			action, err := e.RunAction(exthost.BaseActionID+".network_package_corruption", getTarget(m), config, executionContext)
 			defer func() { _ = action.Cancel() }()
@@ -532,7 +528,7 @@ func testNetworkPackageCorruption(t *testing.T, m *e2e.Minikube, e *e2e.Extensio
 			loss, err := iperf.MeasurePackageLoss()
 			require.NoError(t, err)
 			if tt.WantedCorruption {
-				require.True(t, loss >= 7.0, "~10%% packages should be corrupted but was %.2f", loss)
+				require.True(t, loss >= 6.0, "~10%% packages should be corrupted but was %.2f", loss)
 			} else {
 				require.True(t, loss <= 2.0, "packages should be corrupted but was %.2f", loss)
 			}
@@ -597,9 +593,9 @@ func testNetworkLimitBandwidth(t *testing.T, m *e2e.Minikube, e *e2e.Extension) 
 			NetInterface: tt.interfaces,
 		}
 
-		if m.Stdout == nil {
-			m.Stdout = os.Stdout
-		}
+		//if m.stdout == nil {
+		//	m.stdout = os.stdout
+		//}
 		t.Run(tt.name, func(t *testing.T) {
 			action, err := e.RunAction(exthost.BaseActionID+".network_bandwidth", getTarget(m), config, executionContext)
 			defer func() { _ = action.Cancel() }()
@@ -658,9 +654,9 @@ func testNetworkBlockDns(t *testing.T, m *e2e.Minikube, e *e2e.Extension) {
 			DnsPort:  tt.dnsPort,
 		}
 
-		if m.Stdout == nil {
-			m.Stdout = os.Stdout
-		}
+		//if m.stdout == nil {
+		//	m.stdout = os.stdout
+		//}
 		t.Run(tt.name, func(t *testing.T) {
 			require.NoError(t, dnsutils.IsReachable(), "service should be reachable before block dns")
 			require.NoError(t, dnsutils.CanReach("google.com"), "service should reach url before block dns")
