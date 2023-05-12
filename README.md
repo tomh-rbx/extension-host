@@ -1,3 +1,5 @@
+<img src="./logo.svg" height="130" align="right" alt="Istio logo depicting sails with the text 'Datadog'">
+
 # Steadybit extension-host
 
 This extension provides a Host discovery and the following attacks for host targets:
@@ -5,7 +7,15 @@ This extension provides a Host discovery and the following attacks for host targ
  - stress CPU
  - stress Memory
  - stress Disk
- -
+ - time travel
+ - stop process
+ - reboot / shutdown host
+ - reduce host network bandwidth
+ - blackhole host network
+ - inject corrupt packets to host network
+ - delay host network
+ - block host dns requests
+ - cause packet loss for outgoing host network traffic (egress)
 
 ## Configuration
 
