@@ -24,5 +24,4 @@ func AdjustOOMScoreAdj() {
     return
   }
   log.Info().Msgf("OOM score adj: %s", output)
-  return
 }
