@@ -79,6 +79,83 @@ manifest should match snapshot with TLS:
               secret:
                 optional: false
                 secretName: server-cert
+manifest should match snapshot with extra env vars:
+  1: |
+    apiVersion: apps/v1
+    kind: DaemonSet
+    metadata:
+      labels: null
+      name: RELEASE-NAME-steadybit-extension-host
+      namespace: NAMESPACE
+    spec:
+      selector:
+        matchLabels:
+          app: steadybit-extension-host
+          app.kubernetes.io/name: steadybit-extension-host
+      template:
+        metadata:
+          annotations:
+            container.apparmor.security.beta.kubernetes.io/steadybit-extension-host: unconfined
+            steadybit.com/extension-auto-discovery: "{\n  \"extensions\": [\n    {\n      \"port\": \"8085\",\n      \"types\": [\"ACTION\",\"DISCOVERY\"],\n      \"tls\": {\n          \n    }\n    }\n  ]\n}\n"
+          labels:
+            app: steadybit-extension-host
+            app.kubernetes.io/name: steadybit-extension-host
+            steadybit.com/extension: "true"
+        spec:
+          containers:
+            - env:
+                - name: STEADYBIT_LOG_LEVEL
+                  value: INFO
+                - name: STEADYBIT_LOG_FORMAT
+                  value: text
+                - name: FOO
+                  value: bar
+              envFrom:
+                - configMapRef: null
+                  name: env-configmap
+                - name: env-secrets
+                  secretRef: null
+              image: ghcr.io/steadybit/extension-host:latest
+              imagePullPolicy: Always
+              livenessProbe:
+                httpGet:
+                  path: /health/liveness
+                  port: 8081
+              name: steadybit-extension-host
+              readinessProbe:
+                httpGet:
+                  path: /health/readiness
+                  port: 8081
+              securityContext:
+                capabilities:
+                  add:
+                    - SYS_ADMIN
+                    - SYS_RESOURCE
+                    - SYS_BOOT
+                    - NET_RAW
+                    - SYS_TIME
+                    - SYS_PTRACE
+                    - KILL
+                    - NET_ADMIN
+                    - DAC_OVERRIDE
+                    - SETUID
+                    - SETGID
+                    - AUDIT_WRITE
+                readOnlyRootFilesystem: true
+                runAsGroup: 10000
+                runAsNonRoot: true
+                runAsUser: 10000
+                seccompProfile:
+                  type: Unconfined
+              volumeMounts:
+                - mountPath: /tmp
+                  name: tmp-dir
+          dnsPolicy: ClusterFirstWithHostNet
+          hostNetwork: true
+          hostPID: true
+          volumes:
+            - emptyDir: {}
+              name: tmp-dir
 manifest should match snapshot with mutual TLS:
   1: |
     apiVersion: apps/v1

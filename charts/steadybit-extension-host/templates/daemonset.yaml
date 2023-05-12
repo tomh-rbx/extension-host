@@ -55,9 +55,14 @@ spec:
           imagePullPolicy: {{ .Values.image.pullPolicy }}
           name: {{ include "extensionlib.names.name" . }}
           env:
-                  {{- include "extensionlib.deployment.env" (list .) | nindent 12 }}
-{{/*            - name: STEADYBIT_LOG_LEVEL*/}}
-{{/*              value: DEBUG*/}}
+            {{- include "extensionlib.deployment.env" (list .) | nindent 12 }}
+            {{- with .Values.extraEnv }}
+              {{- toYaml . | nindent 12 }}
+            {{- end }}
+          {{- with .Values.extraEnvFrom }}
+          envFrom:
+            {{- toYaml . | nindent 12 }}
+          {{- end }}
           volumeMounts:
             - name: tmp-dir
               mountPath: /tmp
