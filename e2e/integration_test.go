@@ -52,7 +52,10 @@ func TestWithMinikube(t *testing.T) {
 		Name: "extension-host",
 		Port: 8085,
 		ExtraArgs: func(m *e2e.Minikube) []string {
-			return []string{"--set", fmt.Sprintf("container.runtime=%s", m.Runtime)}
+			return []string{
+				"--set", fmt.Sprintf("container.runtime=%s", m.Runtime),
+				"--set", "log.level=debug",
+			}
 		},
 	}
 
@@ -105,14 +108,14 @@ func TestWithMinikube(t *testing.T) {
 		//	Name: "network limit bandwidth",
 		//	Test: testNetworkLimitBandwidth,
 		//},
-		//{
-		//	Name: "network package loss",
-		//	Test: testNetworkPackageLoss,
-		//},
-		//{
-		//	Name: "network package corruption",
-		//	Test: testNetworkPackageCorruption,
-		//},
+		{
+			Name: "network package loss",
+			Test: testNetworkPackageLoss,
+		},
+		{
+			Name: "network package corruption",
+			Test: testNetworkPackageCorruption,
+		},
 	})
 }
 
@@ -405,7 +408,6 @@ func testNetworkPackageLoss(t *testing.T, m *e2e.Minikube, e *e2e.Extension) {
 	err := iperf.Deploy("loss")
 	defer func() { _ = iperf.Delete() }()
 	require.NoError(t, err)
-
 	tests := []struct {
 		name       string
 		ip         []string
@@ -421,7 +423,6 @@ func testNetworkPackageLoss(t *testing.T, m *e2e.Minikube, e *e2e.Extension) {
 		{
 			name:       "should loose packages only on port 5001 traffic",
 			port:       []string{"5001"},
-			interfaces: []string{"eth0"},
 			WantedLoss: true,
 		},
 		{
@@ -450,6 +451,7 @@ func testNetworkPackageLoss(t *testing.T, m *e2e.Minikube, e *e2e.Extension) {
 
 		t.Run(tt.name, func(t *testing.T) {
 			action, err := e.RunAction(exthost.BaseActionID+".network_package_loss", getTarget(m), config, executionContext)
+			time.Sleep(3 * time.Second)
 			defer func() { _ = action.Cancel() }()
 			require.NoError(t, err)
 
@@ -461,6 +463,7 @@ func testNetworkPackageLoss(t *testing.T, m *e2e.Minikube, e *e2e.Extension) {
 				require.True(t, loss <= 2.0, "packages should be lost but was %.2f", loss)
 			}
 			require.NoError(t, action.Cancel())
+			time.Sleep(3 * time.Second)
 
 			loss, err = iperf.MeasurePackageLoss()
 			require.NoError(t, err)
@@ -490,7 +493,6 @@ func testNetworkPackageCorruption(t *testing.T, m *e2e.Minikube, e *e2e.Extensio
 		{
 			name:             "should corrupt packages only on port 5001 traffic",
 			port:             []string{"5001"},
-			interfaces:       []string{"eth0"},
 			WantedCorruption: true,
 		},
 		{
@@ -519,6 +521,7 @@ func testNetworkPackageCorruption(t *testing.T, m *e2e.Minikube, e *e2e.Extensio
 
 		t.Run(tt.name, func(t *testing.T) {
 			action, err := e.RunAction(exthost.BaseActionID+".network_package_corruption", getTarget(m), config, executionContext)
+			time.Sleep(3 * time.Second)
 			defer func() { _ = action.Cancel() }()
 			require.NoError(t, err)
 
@@ -530,6 +533,7 @@ func testNetworkPackageCorruption(t *testing.T, m *e2e.Minikube, e *e2e.Extensio
 				require.True(t, loss <= 2.0, "packages should be corrupted but was %.2f", loss)
 			}
 			require.NoError(t, action.Cancel())
+			time.Sleep(3 * time.Second)
 
 			loss, err = iperf.MeasurePackageLoss()
 			require.NoError(t, err)
@@ -557,9 +561,9 @@ func testNetworkLimitBandwidth(t *testing.T, m *e2e.Minikube, e *e2e.Extension) 
 			WantedLimit: true,
 		},
 		{
-			name:        "should limit bandwidth only on port 5001 traffic",
-			port:        []string{"5001"},
-			interfaces:  []string{"eth0"},
+			name: "should limit bandwidth only on port 5001 traffic",
+			port: []string{"5001"},
+			//interfaces:  []string{"eth0"},
 			WantedLimit: true,
 		},
 		{
