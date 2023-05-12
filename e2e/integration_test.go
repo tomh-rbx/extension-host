@@ -668,7 +668,7 @@ func testNetworkBlockDns(t *testing.T, m *e2e.Minikube, e *e2e.Extension) {
 				awaitUntilAssertedNoErrorUrl(t, nginx.CanReach, "https://steadybit.com", "service should be reachable during block dns")
 			} else {
 				time.Sleep(3 * time.Second)
-				require.ErrorContains(t, nginx.CanReach("https://steadybit.com"), "Could not resolve host", "service should not be reachable during block dns")
+				require.ErrorContains(t, nginx.CanReach("https://steadybit.com"), "Resolving timed out after", "service should not be reachable during block dns")
 			}
 
 			require.NoError(t, action.Cancel())
