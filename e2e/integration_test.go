@@ -277,6 +277,12 @@ func testNetworkBlackhole(t *testing.T, m *e2e.Minikube, e *e2e.Extension) {
 			WantedReachable:  false,
 			WantedReachesUrl: false,
 		},
+		{
+			name:             "should blackhole only traffic for steadybit.com",
+			hostname:         []string{"steadybit.com"},
+			WantedReachable:  true,
+			WantedReachesUrl: false,
+		},
 	}
 
 	for _, tt := range tests {
@@ -294,7 +300,7 @@ func testNetworkBlackhole(t *testing.T, m *e2e.Minikube, e *e2e.Extension) {
 
 		t.Run(tt.name, func(t *testing.T) {
 			awaitUntilAssertedNoError(t, nginx.IsReachable, "service should be reachable before blackhole")
-			awaitUntilAssertedNoErrorUrl(t, nginx.CanReach, "https://google.com", "service should reach url before blackhole")
+			awaitUntilAssertedNoErrorUrl(t, nginx.CanReach, "https://steadybit.com", "service should reach url before blackhole")
 
 			action, err := e.RunAction(exthost.BaseActionID+".network_blackhole", getTarget(m), config, executionContext)
 			defer func() { _ = action.Cancel() }()
@@ -307,14 +313,14 @@ func testNetworkBlackhole(t *testing.T, m *e2e.Minikube, e *e2e.Extension) {
 			}
 
 			if tt.WantedReachesUrl {
-				awaitUntilAssertedNoErrorUrl(t, nginx.CanReach, "https://google.com", "service should be reachable during blackhole")
+				awaitUntilAssertedNoErrorUrl(t, nginx.CanReach, "https://steadybit.com", "service should be reachable during blackhole")
 			} else {
-				awaitUntilAssertedErrorUrl(t, nginx.CanReach, "https://google.com", "service should not be reachable during blackhole")
+				awaitUntilAssertedErrorUrl(t, nginx.CanReach, "https://steadybit.com", "service should not be reachable during blackhole")
 			}
 
 			require.NoError(t, action.Cancel())
 			awaitUntilAssertedNoError(t, nginx.IsReachable, "service should be reachable after blackhole")
-			awaitUntilAssertedNoErrorUrl(t, nginx.CanReach, "https://google.com", "service should reach url after blackhole")
+			awaitUntilAssertedNoErrorUrl(t, nginx.CanReach, "https://steadybit.com", "service should reach url after blackhole")
 		})
 	}
 }
@@ -649,7 +655,7 @@ func testNetworkBlockDns(t *testing.T, m *e2e.Minikube, e *e2e.Extension) {
 
     t.Run(tt.name, func(t *testing.T) {
       require.NoError(t, nginx.IsReachable(), "service should be reachable before block dns")
-      awaitUntilAssertedNoErrorUrl(t, nginx.CanReach, "https://google.com", "service should reach url before block dns")
+      awaitUntilAssertedNoErrorUrl(t, nginx.CanReach, "https://steadybit.com", "service should reach url before block dns")
 
       action, err := e.RunAction(exthost.BaseActionID+".network_block_dns", getTarget(m), config, executionContext)
       defer func() { _ = action.Cancel() }()
@@ -662,15 +668,15 @@ func testNetworkBlockDns(t *testing.T, m *e2e.Minikube, e *e2e.Extension) {
       }
 
       if tt.WantedReachesUrl {
-        awaitUntilAssertedNoErrorUrl(t, nginx.CanReach,"https://google.com", "service should be reachable during block dns")
+        awaitUntilAssertedNoErrorUrl(t, nginx.CanReach,"https://steadybit.com", "service should be reachable during block dns")
       } else {
         time.Sleep(3 * time.Second)
-        require.ErrorContains(t, nginx.CanReach("https://google.com"), "Could not resolve host", "service should not be reachable during block dns")
+        require.ErrorContains(t, nginx.CanReach("https://steadybit.com"), "Could not resolve host", "service should not be reachable during block dns")
       }
 
       require.NoError(t, action.Cancel())
       require.NoError(t, nginx.IsReachable(), "service should be reachable after block dns")
-      awaitUntilAssertedNoErrorUrl(t, nginx.CanReach,"https://google.com", "service should reach url after block dns")
+      awaitUntilAssertedNoErrorUrl(t, nginx.CanReach,"https://steadybit.com", "service should reach url after block dns")
     })
 	}
 }

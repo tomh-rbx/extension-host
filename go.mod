@@ -13,16 +13,16 @@ require (
 	github.com/steadybit/action-kit/go/action_kit_test v0.0.0-20230511191143-5a01a3801e03
 	github.com/steadybit/discovery-kit/go/discovery_kit_api v1.3.0
 	github.com/steadybit/event-kit/go/event_kit_api v1.1.0
-	github.com/steadybit/extension-container v0.0.0-20230511121005-fa8746ed186c
-	github.com/steadybit/extension-kit v1.7.16
+	github.com/steadybit/extension-container v0.0.0-20230512120929-1e9f3c7391d9
+	github.com/steadybit/extension-kit v1.7.17
 	github.com/stretchr/testify v1.8.2
-	golang.org/x/exp v0.0.0-20230420155640-133eef4313cb
+	golang.org/x/exp v0.0.0-20230510235704-dd950f8aeaea
 	kernel.org/pub/linux/libs/security/libcap/cap v1.2.68
 )
 
 require (
 	github.com/davecgh/go-spew v1.1.1 // indirect
-	github.com/elastic/go-windows v1.0.0 // indirect
+	github.com/elastic/go-windows v1.0.1 // indirect
 	github.com/emicklei/go-restful/v3 v3.10.1 // indirect
 	github.com/go-logr/logr v1.2.4 // indirect
 	github.com/go-openapi/jsonpointer v0.19.6 // indirect
@@ -47,13 +47,13 @@ require (
 	github.com/munnerz/goautoneg v0.0.0-20191010083416-a7dc8b61c822 // indirect
 	github.com/pkg/errors v0.9.1 // indirect
 	github.com/pmezard/go-difflib v1.0.0 // indirect
-	github.com/prometheus/procfs v0.8.0 // indirect
+	github.com/prometheus/procfs v0.9.0 // indirect
 	github.com/spf13/pflag v1.0.5 // indirect
 	github.com/yalp/jsonpath v0.0.0-20180802001716-5cc68e5049a0 // indirect
-	golang.org/x/net v0.9.0 // indirect
-	golang.org/x/oauth2 v0.4.0 // indirect
-	golang.org/x/sys v0.7.0 // indirect
-	golang.org/x/term v0.7.0 // indirect
+	golang.org/x/net v0.10.0 // indirect
+	golang.org/x/oauth2 v0.6.0 // indirect
+	golang.org/x/sys v0.8.0 // indirect
+	golang.org/x/term v0.8.0 // indirect
 	golang.org/x/text v0.9.0 // indirect
 	golang.org/x/time v0.3.0 // indirect
 	google.golang.org/appengine v1.6.7 // indirect
@@ -61,7 +61,7 @@ require (
 	gopkg.in/inf.v0 v0.9.1 // indirect
 	gopkg.in/yaml.v2 v2.4.0 // indirect
 	gopkg.in/yaml.v3 v3.0.1 // indirect
-	howett.net/plist v0.0.0-20181124034731-591f970eefbb // indirect
+	howett.net/plist v1.0.0 // indirect
 	k8s.io/api v0.27.1 // indirect
 	k8s.io/apimachinery v0.27.1 // indirect
 	k8s.io/client-go v0.27.1 // indirect
