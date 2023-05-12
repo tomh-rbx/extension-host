@@ -23,10 +23,6 @@ func Retry(t *testing.T, maxAttempts int, sleep time.Duration, f func(r *R)) boo
 		f(r)
 
 		if !r.failed {
-			log.Trace().Msgf("Success after %d attempts", attempt)
-			if r.log.Len() != 0 {
-				log.Trace().Msgf("Success after %d attempts:%s", attempt, r.log.String())
-			}
 			return true
 		}
 

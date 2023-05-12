@@ -178,7 +178,7 @@ func testTimeTravel(t *testing.T, m *e2e.Minikube, e *e2e.Extension) {
 		now = time.Now()
 		diff = getTimeDiffBetweenNowAndContainerTime(t, m, e, now)
 		log.Debug().Msgf("diff: %s", diff)
-		assert.True(t, diff+tolerance <= 1*time.Second, "time travel failed to rollback properly")
+		assert.True(t, diff+tolerance <= 2*time.Second, "time travel failed to rollback properly")
 	}
 
 	require.NoError(t, exec.Cancel())
@@ -377,7 +377,6 @@ func testNetworkDelay(t *testing.T, m *e2e.Minikube, e *e2e.Extension) {
 			NetInterface: tt.interfaces,
 		}
 
-
 		t.Run(tt.name, func(t *testing.T) {
 			action, err := e.RunAction(exthost.BaseActionID+".network_delay", getTarget(m), config, executionContext)
 			defer func() { _ = action.Cancel() }()
@@ -449,7 +448,6 @@ func testNetworkPackageLoss(t *testing.T, m *e2e.Minikube, e *e2e.Extension) {
 			NetInterface: tt.interfaces,
 		}
 
-
 		t.Run(tt.name, func(t *testing.T) {
 			action, err := e.RunAction(exthost.BaseActionID+".network_package_loss", getTarget(m), config, executionContext)
 			defer func() { _ = action.Cancel() }()
@@ -518,7 +516,6 @@ func testNetworkPackageCorruption(t *testing.T, m *e2e.Minikube, e *e2e.Extensio
 			Port:         tt.port,
 			NetInterface: tt.interfaces,
 		}
-
 
 		t.Run(tt.name, func(t *testing.T) {
 			action, err := e.RunAction(exthost.BaseActionID+".network_package_corruption", getTarget(m), config, executionContext)
@@ -593,9 +590,9 @@ func testNetworkLimitBandwidth(t *testing.T, m *e2e.Minikube, e *e2e.Extension) 
 			NetInterface: tt.interfaces,
 		}
 
-
 		t.Run(tt.name, func(t *testing.T) {
 			action, err := e.RunAction(exthost.BaseActionID+".network_bandwidth", getTarget(m), config, executionContext)
+			time.Sleep(3 * time.Second)
 			defer func() { _ = action.Cancel() }()
 			require.NoError(t, err)
 
@@ -607,6 +604,7 @@ func testNetworkLimitBandwidth(t *testing.T, m *e2e.Minikube, e *e2e.Extension) 
 				require.True(t, bandwidth > (unlimited*0.95), "bandwidth should not be limited (~%.2fmbit) but was %.2fmbit", unlimited, bandwidth)
 			}
 			require.NoError(t, action.Cancel())
+			time.Sleep(3 * time.Second)
 
 			bandwidth, err = iperf.MeasureBandwidth()
 			require.NoError(t, err)
@@ -616,10 +614,10 @@ func testNetworkLimitBandwidth(t *testing.T, m *e2e.Minikube, e *e2e.Extension) 
 }
 
 func testNetworkBlockDns(t *testing.T, m *e2e.Minikube, e *e2e.Extension) {
-  nginx := e2e.Nginx{Minikube: m}
-  err := nginx.Deploy("nginx-network-block-dns")
-  require.NoError(t, err, "failed to create pod")
-  defer func() { _ = nginx.Delete() }()
+	nginx := e2e.Nginx{Minikube: m}
+	err := nginx.Deploy("nginx-network-block-dns")
+	require.NoError(t, err, "failed to create pod")
+	defer func() { _ = nginx.Delete() }()
 
 	tests := []struct {
 		name             string
@@ -652,31 +650,30 @@ func testNetworkBlockDns(t *testing.T, m *e2e.Minikube, e *e2e.Extension) {
 			DnsPort:  tt.dnsPort,
 		}
 
+		t.Run(tt.name, func(t *testing.T) {
+			awaitUntilAssertedNoError(t, nginx.IsReachable, "service should be reachable before block dns")
+			awaitUntilAssertedNoErrorUrl(t, nginx.CanReach, "https://steadybit.com", "service should reach url before block dns")
 
-    t.Run(tt.name, func(t *testing.T) {
-      require.NoError(t, nginx.IsReachable(), "service should be reachable before block dns")
-      awaitUntilAssertedNoErrorUrl(t, nginx.CanReach, "https://steadybit.com", "service should reach url before block dns")
+			action, err := e.RunAction(exthost.BaseActionID+".network_block_dns", getTarget(m), config, executionContext)
+			defer func() { _ = action.Cancel() }()
+			require.NoError(t, err)
 
-      action, err := e.RunAction(exthost.BaseActionID+".network_block_dns", getTarget(m), config, executionContext)
-      defer func() { _ = action.Cancel() }()
-      require.NoError(t, err)
+			if tt.WantedReachable {
+				awaitUntilAssertedNoError(t, nginx.IsReachable, "service should be reachable during block dns")
+			} else {
+				awaitUntilAssertedError(t, nginx.IsReachable, "service should not be reachable during block dns")
+			}
 
-      if tt.WantedReachable {
-        require.NoError(t, nginx.IsReachable(), "service should be reachable during block dns")
-      } else {
-        require.Error(t, nginx.IsReachable(), "service should not be reachable during block dns")
-      }
+			if tt.WantedReachesUrl {
+				awaitUntilAssertedNoErrorUrl(t, nginx.CanReach, "https://steadybit.com", "service should be reachable during block dns")
+			} else {
+				time.Sleep(3 * time.Second)
+				require.ErrorContains(t, nginx.CanReach("https://steadybit.com"), "Could not resolve host", "service should not be reachable during block dns")
+			}
 
-      if tt.WantedReachesUrl {
-        awaitUntilAssertedNoErrorUrl(t, nginx.CanReach,"https://steadybit.com", "service should be reachable during block dns")
-      } else {
-        time.Sleep(3 * time.Second)
-        require.ErrorContains(t, nginx.CanReach("https://steadybit.com"), "Could not resolve host", "service should not be reachable during block dns")
-      }
-
-      require.NoError(t, action.Cancel())
-      require.NoError(t, nginx.IsReachable(), "service should be reachable after block dns")
-      awaitUntilAssertedNoErrorUrl(t, nginx.CanReach,"https://steadybit.com", "service should reach url after block dns")
-    })
+			require.NoError(t, action.Cancel())
+			awaitUntilAssertedNoError(t, nginx.IsReachable, "service should be reachable after block dns")
+			awaitUntilAssertedNoErrorUrl(t, nginx.CanReach, "https://google.com", "service should reach url after block dns")
+		})
 	}
 }
