@@ -529,7 +529,7 @@ func testNetworkPackageCorruption(t *testing.T, m *e2e.Minikube, e *e2e.Extensio
 			}
 			require.NoError(t, action.Cancel())
 
-			iperf.AssertPackageLoss(t, 0, 05)
+			iperf.AssertPackageLoss(t, 0, 5)
 		})
 	}
 }
