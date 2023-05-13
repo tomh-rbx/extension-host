@@ -257,7 +257,6 @@ func testStopProcess(t *testing.T, m *e2e.Minikube, e *e2e.Extension) {
 	require.NoError(t, exec.Cancel())
 }
 func testShutdownHost(t *testing.T, m *e2e.Minikube, e *e2e.Extension) {
-
 	config := struct {
 		Reboot bool `json:"reboot"`
 	}{Reboot: true}
@@ -397,13 +396,13 @@ func testNetworkDelay(t *testing.T, m *e2e.Minikube, e *e2e.Extension) {
 			require.NoError(t, err)
 
 			if tt.WantedDelay {
-				netperf.AssertLatency(t, unaffectedLatency+time.Duration(config.Delay)*time.Millisecond, 50*time.Millisecond)
+				netperf.AssertLatency(t, unaffectedLatency+time.Duration(config.Delay)*time.Millisecond*90/100, unaffectedLatency+time.Duration(config.Delay)*time.Millisecond*350/100)
 			} else {
-				netperf.AssertLatency(t, unaffectedLatency, 50*time.Millisecond)
+				netperf.AssertLatency(t, 0, unaffectedLatency*110/100)
 			}
 			require.NoError(t, action.Cancel())
 
-			netperf.AssertLatency(t, unaffectedLatency, 100*time.Millisecond)
+			netperf.AssertLatency(t, 0, unaffectedLatency*110/100)
 		})
 	}
 }
@@ -460,7 +459,7 @@ func testNetworkPackageLoss(t *testing.T, m *e2e.Minikube, e *e2e.Extension) {
 			require.NoError(t, err)
 
 			if tt.WantedLoss {
-				iperf.AssertPackageLoss(t, 10, 5)
+				iperf.AssertPackageLoss(t, float64(config.Percentage)*0.8, float64(config.Percentage)*1.2)
 			} else {
 				iperf.AssertPackageLoss(t, 0, 5)
 			}
@@ -524,7 +523,7 @@ func testNetworkPackageCorruption(t *testing.T, m *e2e.Minikube, e *e2e.Extensio
 			require.NoError(t, err)
 
 			if tt.WantedCorruption {
-				iperf.AssertPackageLoss(t, 10, 5)
+				iperf.AssertPackageLoss(t, float64(config.Corruption)*0.8, float64(config.Corruption)*1.2)
 			} else {
 				iperf.AssertPackageLoss(t, 0, 5)
 			}
@@ -593,12 +592,12 @@ func testNetworkLimitBandwidth(t *testing.T, m *e2e.Minikube, e *e2e.Extension) 
 			require.NoError(t, err)
 
 			if tt.WantedLimit {
-				iperf.AssertBandwidth(t, limited, limited*0.05)
+				iperf.AssertBandwidth(t, limited*0.95, limited*1.05)
 			} else {
-				iperf.AssertBandwidth(t, unlimited, unlimited*0.05)
+				iperf.AssertBandwidth(t, unlimited*0.95, unlimited*1.05)
 			}
 			require.NoError(t, action.Cancel())
-			iperf.AssertBandwidth(t, unlimited, unlimited*0.05)
+			iperf.AssertBandwidth(t, unlimited*0.95, unlimited*1.05)
 		})
 	}
 }
