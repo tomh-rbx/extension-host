@@ -32,6 +32,27 @@ var (
 				PortMin: 22,
 				PortMax: 22,
 			},
+			{
+				Name:    "minikube ssh",
+				Url:     "",
+				Cidr:    "::/0",
+				PortMin: 22,
+				PortMax: 22,
+			},
+			{
+				Name:    "minikube k8s api",
+				Url:     "",
+				Cidr:    "0.0.0.0/0",
+				PortMin: 8443,
+				PortMax: 8443,
+			},
+			{
+				Name:    "minikube k8s api",
+				Url:     "",
+				Cidr:    "::/0",
+				PortMin: 8443,
+				PortMax: 8443,
+			},
 		}),
 	}
 )
@@ -54,7 +75,7 @@ func TestWithMinikube(t *testing.T) {
 		ExtraArgs: func(m *e2e.Minikube) []string {
 			return []string{
 				"--set", fmt.Sprintf("container.runtime=%s", m.Runtime),
-				"--set", "log.level=debug",
+				"--set", "logging.level=debug",
 			}
 		},
 	}
