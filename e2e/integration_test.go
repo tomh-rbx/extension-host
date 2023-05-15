@@ -136,7 +136,7 @@ func TestWithMinikube(t *testing.T) {
 }
 
 func testStressCpu(t *testing.T, m *e2e.Minikube, e *e2e.Extension) {
-
+  log.Info().Msg("Starting testStressCpu")
 	config := struct {
 		Duration int `json:"duration"`
 		CpuLoad  int `json:"cpuLoad"`
@@ -150,7 +150,7 @@ func testStressCpu(t *testing.T, m *e2e.Minikube, e *e2e.Extension) {
 }
 
 func testStressMemory(t *testing.T, m *e2e.Minikube, e *e2e.Extension) {
-
+  log.Info().Msg("Starting testStressMemory")
 	config := struct {
 		Duration   int `json:"duration"`
 		Percentage int `json:"percentage"`
@@ -163,7 +163,7 @@ func testStressMemory(t *testing.T, m *e2e.Minikube, e *e2e.Extension) {
 }
 
 func testStressIo(t *testing.T, m *e2e.Minikube, e *e2e.Extension) {
-
+  log.Info().Msg("Starting testStressIo")
 	config := struct {
 		Duration   int `json:"duration"`
 		Percentage int `json:"percentage"`
@@ -176,7 +176,7 @@ func testStressIo(t *testing.T, m *e2e.Minikube, e *e2e.Extension) {
 }
 
 func testTimeTravel(t *testing.T, m *e2e.Minikube, e *e2e.Extension) {
-
+  log.Info().Msg("Starting testTimeTravel")
 	config := struct {
 		Duration   int  `json:"duration"`
 		Offset     int  `json:"offset"`
@@ -225,7 +225,8 @@ func getTimeDiffBetweenNowAndContainerTime(t *testing.T, m *e2e.Minikube, e *e2e
 	return containerTime.Sub(now)
 }
 
-func testDiscovery(t *testing.T, _ *e2e.Minikube, e *e2e.Extension) {
+func testDiscovery(t *testing.T, _ *e2e.Minikube, e *e2e.Extension) {#
+  log.Info().Msg("Starting testDiscovery")
 	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 	defer cancel()
 
@@ -239,7 +240,7 @@ func testDiscovery(t *testing.T, _ *e2e.Minikube, e *e2e.Extension) {
 }
 
 func testStopProcess(t *testing.T, m *e2e.Minikube, e *e2e.Extension) {
-
+  log.Info().Msg("Starting testStopProcess")
 	config := struct {
 		Duration int    `json:"duration"`
 		Graceful bool   `json:"graceful"`
@@ -260,6 +261,7 @@ func testStopProcess(t *testing.T, m *e2e.Minikube, e *e2e.Extension) {
 	require.NoError(t, exec.Cancel())
 }
 func testShutdownHost(t *testing.T, m *e2e.Minikube, e *e2e.Extension) {
+  log.Info().Msg("Starting testShutdownHost")
 	config := struct {
 		Reboot bool `json:"reboot"`
 	}{Reboot: true}
@@ -272,6 +274,7 @@ func testShutdownHost(t *testing.T, m *e2e.Minikube, e *e2e.Extension) {
 }
 
 func testNetworkBlackhole(t *testing.T, m *e2e.Minikube, e *e2e.Extension) {
+  log.Info().Msg("Starting testNetworkBlackhole")
 	nginx := e2e.Nginx{Minikube: m}
 	err := nginx.Deploy("nginx-network-blackhole")
 	require.NoError(t, err, "failed to create pod")
@@ -342,6 +345,7 @@ func testNetworkBlackhole(t *testing.T, m *e2e.Minikube, e *e2e.Extension) {
 }
 
 func testNetworkDelay(t *testing.T, m *e2e.Minikube, e *e2e.Extension) {
+  log.Info().Msg("Starting testNetworkDelay")
 	netperf := e2e.Netperf{Minikube: m}
 	err := netperf.Deploy("delay")
 	defer func() { _ = netperf.Delete() }()
@@ -411,6 +415,7 @@ func testNetworkDelay(t *testing.T, m *e2e.Minikube, e *e2e.Extension) {
 }
 
 func testNetworkPackageLoss(t *testing.T, m *e2e.Minikube, e *e2e.Extension) {
+  log.Info().Msg("Starting testNetworkPackageLoss")
 	iperf := e2e.Iperf{Minikube: m}
 	err := iperf.Deploy("loss")
 	defer func() { _ = iperf.Delete() }()
@@ -474,6 +479,7 @@ func testNetworkPackageLoss(t *testing.T, m *e2e.Minikube, e *e2e.Extension) {
 }
 
 func testNetworkPackageCorruption(t *testing.T, m *e2e.Minikube, e *e2e.Extension) {
+  log.Info().Msg("Starting testNetworkPackageCorruption")
 	iperf := e2e.Iperf{Minikube: m}
 	err := iperf.Deploy("corruption")
 	defer func() { _ = iperf.Delete() }()
@@ -538,6 +544,7 @@ func testNetworkPackageCorruption(t *testing.T, m *e2e.Minikube, e *e2e.Extensio
 }
 
 func testNetworkLimitBandwidth(t *testing.T, m *e2e.Minikube, e *e2e.Extension) {
+  log.Info().Msg("Starting testNetworkLimitBandwidth")
 	iperf := e2e.Iperf{Minikube: m}
 	err := iperf.Deploy("bandwidth")
 	defer func() { _ = iperf.Delete() }()
@@ -605,6 +612,7 @@ func testNetworkLimitBandwidth(t *testing.T, m *e2e.Minikube, e *e2e.Extension) 
 }
 
 func testNetworkBlockDns(t *testing.T, m *e2e.Minikube, e *e2e.Extension) {
+  log.Info().Msg("Starting testNetworkBlockDns")
 	nginx := e2e.Nginx{Minikube: m}
 	err := nginx.Deploy("nginx-network-block-dns")
 	require.NoError(t, err, "failed to create pod")
