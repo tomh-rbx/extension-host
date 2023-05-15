@@ -189,20 +189,20 @@ func testTimeTravel(t *testing.T, m *e2e.Minikube, e *e2e.Extension) {
 	tolerance := time.Duration(1) * time.Second
 	now := time.Now()
 	exec, err := e.RunAction("com.github.steadybit.extension_host.timetravel", getTarget(m), config, nil)
-	if !runsInCi() {
-		require.NoError(t, err)
-		diff := getTimeDiffBetweenNowAndContainerTime(t, m, e, now)
-		log.Debug().Msgf("diff: %s", diff)
-		// check if is greater than offset
+	//if !runsInCi() { // time travel is not working in CI
+	require.NoError(t, err)
+	diff := getTimeDiffBetweenNowAndContainerTime(t, m, e, now)
+	log.Debug().Msgf("diff: %s", diff)
+	// check if is greater than offset
 
-		assert.True(t, diff+tolerance > time.Duration(config.Offset)*time.Millisecond, "time travel failed")
+	assert.True(t, diff+tolerance > time.Duration(config.Offset)*time.Millisecond, "time travel failed")
 
-		time.Sleep(3 * time.Second) // wait for rollback
-		now = time.Now()
-		diff = getTimeDiffBetweenNowAndContainerTime(t, m, e, now)
-		log.Debug().Msgf("diff: %s", diff)
-		assert.True(t, diff+tolerance <= 2*time.Second, "time travel failed to rollback properly")
-	}
+	time.Sleep(3 * time.Second) // wait for rollback
+	now = time.Now()
+	diff = getTimeDiffBetweenNowAndContainerTime(t, m, e, now)
+	log.Debug().Msgf("diff: %s", diff)
+	assert.True(t, diff+tolerance <= 2*time.Second, "time travel failed to rollback properly")
+	//}
 
 	require.NoError(t, exec.Cancel())
 }
@@ -314,7 +314,7 @@ func testNetworkBlackhole(t *testing.T, m *e2e.Minikube, e *e2e.Extension) {
 			Hostname []string `json:"hostname"`
 			Port     []string `json:"port"`
 		}{
-			Duration: 20000,
+			Duration: 30000,
 			Ip:       tt.ip,
 			Hostname: tt.hostname,
 			Port:     tt.port,
@@ -555,7 +555,6 @@ func testNetworkLimitBandwidth(t *testing.T, m *e2e.Minikube, e *e2e.Extension) 
 		{
 			name: "should limit bandwidth only on port 5001 traffic",
 			port: []string{"5001"},
-			//interfaces:  []string{"eth0"},
 			WantedLimit: true,
 		},
 		{
@@ -578,7 +577,7 @@ func testNetworkLimitBandwidth(t *testing.T, m *e2e.Minikube, e *e2e.Extension) 
 			Port         []string `json:"port"`
 			NetInterface []string `json:"networkInterface"`
 		}{
-			Duration:     10000,
+			Duration:     30000,
 			Bandwidth:    fmt.Sprintf("%dmbit", int(limited)),
 			Ip:           tt.ip,
 			Hostname:     tt.hostname,
