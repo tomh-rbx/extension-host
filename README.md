@@ -1,3 +1,5 @@
+<img src="./logo.svg" height="130" align="right" alt="Host logo">
+
 # Steadybit extension-host
 
 This extension provides a Host discovery and the following attacks for host targets:
