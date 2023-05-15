@@ -1,5 +1,3 @@
-<img src="./logo.svg" height="130" align="right" alt="Istio logo depicting sails with the text 'Datadog'">
-
 # Steadybit extension-host
 
 This extension provides a Host discovery and the following attacks for host targets:
