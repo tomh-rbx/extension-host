@@ -74,7 +74,7 @@ func TestWithMinikube(t *testing.T) {
 		ExtraArgs: func(m *e2e.Minikube) []string {
 			return []string{
 				"--set", fmt.Sprintf("container.runtime=%s", m.Runtime),
-				"--set", "logging.level=debug",
+				//"--set", "logging.level=debug",
 			}
 		},
 	}
@@ -104,10 +104,6 @@ func TestWithMinikube(t *testing.T) {
 			Name: "stop process",
 			Test: testStopProcess,
 		},
-		//{
-		//	Name: "shutdown host",
-		//	Test: testShutdownHost, // if you run this test locally, you will need to restart your docker machine
-		//},
 		{
 			Name: "network delay",
 			Test: testNetworkDelay,
@@ -132,6 +128,10 @@ func TestWithMinikube(t *testing.T) {
 			Name: "network package corruption",
 			Test: testNetworkPackageCorruption,
 		},
+    { // must be the last test
+    	Name: "shutdown host",
+    	Test: testShutdownHost, // if you run this test locally, you will need to restart your docker machine
+    },
 	})
 }
 
@@ -268,11 +268,11 @@ func testShutdownHost(t *testing.T, m *e2e.Minikube, e *e2e.Extension) {
 		Reboot bool `json:"reboot"`
 	}{Reboot: true}
 
-	exec, err := e.RunAction("com.github.steadybit.extension_host.shutdown", getTarget(m), config, nil)
-	if !runsInCi() {
-		require.NoError(t, err)
-	}
-	require.NoError(t, exec.Cancel())
+	_, err := e.RunAction("com.github.steadybit.extension_host.shutdown", getTarget(m), config, nil)
+  require.NoError(t, err)
+  _, err = m.Exec(e.Pod, "steadybit-extension-host", "tail", "-f", "/dev/null")
+  log.Debug().Msgf("err: %v", err)
+  assert.Error(t, err)
 }
 
 func testNetworkBlackhole(t *testing.T, m *e2e.Minikube, e *e2e.Extension) {

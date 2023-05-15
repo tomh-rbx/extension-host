@@ -2,7 +2,8 @@ package shutdown
 
 import (
 	"github.com/rs/zerolog/log"
-	"os"
+  "github.com/steadybit/extension-host/exthost/common"
+  "os"
 	"os/exec"
 	"runtime"
 )
@@ -56,7 +57,7 @@ func getRebootCommand() []string {
 
 func Shutdown() error {
 	cmd := getShutdownCommand()
-	err := exec.Command(cmd[0], cmd[1:]...).Run()
+	err := common.RunAsRoot(cmd[0], cmd[1:]...)
 	if err != nil {
 		log.Err(err).Msg("Failed to shutdown")
 		return err
@@ -66,7 +67,7 @@ func Shutdown() error {
 
 func Reboot() error {
 	cmd := getRebootCommand()
-	err := exec.Command(cmd[0], cmd[1:]...).Run()
+	err := common.RunAsRoot(cmd[0], cmd[1:]...)
 	if err != nil {
 		log.Err(err).Msg("Failed to reboot")
 		return err
