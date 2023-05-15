@@ -204,8 +204,6 @@ func testTimeTravel(t *testing.T, m *e2e.Minikube, e *e2e.Extension) {
 	now = time.Now()
 	diff = getTimeDiffBetweenNowAndContainerTime(t, m, e, now)
 	log.Debug().Msgf("diff: %f", diff.Seconds())
-  min =    float64(2 * time.Second) * -1
-  max =    float64(2 * time.Second) * +1
   assert.True(t, min <= float64(diff) && float64(diff) <= max  , "time travel failed to rollback properly")
 
 }
@@ -222,7 +220,11 @@ func getTimeDiffBetweenNowAndContainerTime(t *testing.T, m *e2e.Minikube, e *e2e
 		return 0
 	}
 	containerTime := time.Unix(containerSecondsSinceEpoch, 0)
-	return containerTime.Sub(now)
+  diff := containerTime.Sub(now)
+  if diff < 0 {
+    diff = diff * -1
+  }
+  return diff
 }
 
 func testDiscovery(t *testing.T, _ *e2e.Minikube, e *e2e.Extension) {
