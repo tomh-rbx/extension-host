@@ -36,8 +36,6 @@ jobs:
       - name: Audit
         run: |
           go mod download
-          minikube config set cpus 6
-          minikube config set memory 16g
           make audit
 
       - name: Check Sonar Token
