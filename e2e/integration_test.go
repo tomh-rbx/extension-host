@@ -185,26 +185,33 @@ func testTimeTravel(t *testing.T, m *e2e.Minikube, e *e2e.Extension) {
 		Duration   int  `json:"duration"`
 		Offset     int  `json:"offset"`
 		DisableNtp bool `json:"disableNtp"`
-	}{Duration: 3000, Offset: 360000, DisableNtp: false}
-	tolerance := time.Duration(1) * time.Second
+	}{Duration: 30000, Offset: int((360 * time.Second).Milliseconds()), DisableNtp: false}
+
+  duration := float64(time.Duration(config.Offset)*time.Millisecond)
+  min :=    float64(duration) * 0.8
+  max :=    float64(duration) * 1.2
+
 	now := time.Now()
-	exec, err := e.RunAction("com.github.steadybit.extension_host.timetravel", getTarget(m), config, nil)
-	//if !runsInCi() { // time travel is not working in CI
+	action, err := e.RunAction("com.github.steadybit.extension_host.timetravel", getTarget(m), config, nil)
+
 	require.NoError(t, err)
+  defer func() { _ = action.Cancel() }()
+  require.NoError(t, err)
 	diff := getTimeDiffBetweenNowAndContainerTime(t, m, e, now)
-	log.Debug().Msgf("diff: %s", diff)
-	// check if is greater than offset
+	log.Debug().Msgf("diff: %f", diff.Seconds())
+	// check if is in tolerance
+  assert.True(t, min <= float64(diff) && float64(diff) <= max  , "time travel failed")
 
-	assert.True(t, diff+tolerance > time.Duration(config.Offset)*time.Millisecond, "time travel failed")
+  // rollback
+  require.NoError(t, action.Cancel())
 
-	time.Sleep(3 * time.Second) // wait for rollback
 	now = time.Now()
 	diff = getTimeDiffBetweenNowAndContainerTime(t, m, e, now)
-	log.Debug().Msgf("diff: %s", diff)
-	assert.True(t, diff+tolerance <= 2*time.Second, "time travel failed to rollback properly")
-	//}
+	log.Debug().Msgf("diff: %f", diff.Seconds())
+  min =    float64(2 * time.Second) * -1
+  max =    float64(2 * time.Second) * +1
+  assert.True(t, min <= float64(diff) && float64(diff) <= max  , "time travel failed to rollback properly")
 
-	require.NoError(t, exec.Cancel())
 }
 
 func getTimeDiffBetweenNowAndContainerTime(t *testing.T, m *e2e.Minikube, e *e2e.Extension, now time.Time) time.Duration {
