@@ -2,30 +2,19 @@
 
 # Steadybit extension-host
 
-This extension provides a Host discovery and the following attacks for host targets:
+This [Steadybit](https://www.steadybit.com/) extension provides a host discovery and the various attacks for host targets.
 
- - stress CPU
- - stress Memory
- - stress Disk
- - time travel
- - stop process
- - reboot / shutdown host
- - reduce host network bandwidth
- - blackhole host network
- - inject corrupt packets to host network
- - delay host network
- - block host dns requests
- - cause packet loss for outgoing host network traffic (egress)
+Learn about the capabilities of this extension in our [Reliability Hub](https://hub.steadybit.com/extension/com.github.steadybit.extension_host).
 
 ## Configuration
 
-| Environment Variable                  | Meaning                                                         | Default |
-|---------------------------------------|-----------------------------------------------------------------|---------|
-| `STEADYBIT_DISCOVERY_ENV_LIST`        | List of environment variables to be added to discovered targets |         |
+| Environment Variable                  | Meaning                                                         | Required | Default |
+|---------------------------------------|-----------------------------------------------------------------|----------|---------|
+| `STEADYBIT_DISCOVERY_ENV_LIST`        | List of environment variables to be added to discovered targets | no       |         |
 
 The extension supports all environment variables provided by [steadybit/extension-kit](https://github.com/steadybit/extension-kit#environment-variables).
 
-## Running the Extension
+## Installation
 
 ### Using Docker
 
@@ -50,3 +39,8 @@ $ helm upgrade steadybit-extension-host \
     --namespace steadybit-extension \
     steadybit-extension-host/steadybit-extension-host
 ```
+
+## Register the extension
+
+Make sure to register the extension at the steadybit platform. Please refer to
+the [documentation](https://docs.steadybit.com/integrate-with-steadybit/extensions/extension-installation) for more information.
