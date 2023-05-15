@@ -30,9 +30,16 @@ func AdjustTime(offset time.Duration, negate bool) error {
   newTime := tp.Sec
 	log.Info().Msgf("New time: %d", tp.Sec)
   diff := newTime - initialTime
+  if diff < 0 {
+    diff = -diff
+  }
   log.Info().Msgf("Time difference: %d", diff)
-  min := offset.Seconds() * 0.8
-  max := offset.Seconds() * 1.2
+  normalizedOffset := offset.Seconds()
+  if offset < 0 {
+    normalizedOffset = -normalizedOffset
+  }
+  min := normalizedOffset * 0.8
+  max := normalizedOffset * 1.2
   if float64(diff) >= min && float64(diff) <= max {
     return nil
   } else {

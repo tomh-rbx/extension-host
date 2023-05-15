@@ -80,9 +80,6 @@ func TestWithMinikube(t *testing.T) {
 	}
 
 	mOpts := e2e.DefaultMiniKubeOpts
-	//if runtime.GOOS == "linux" {
-	//	mOpts.Driver = "kvm2"
-	//}
 	e2e.WithMinikube(t, mOpts, &extFactory, []e2e.WithMinikubeTestCase{
 		{
 			Name: "target discovery",
