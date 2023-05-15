@@ -71,5 +71,3 @@ extraEnv: []
 #  - secretRef:
 #    name: env-secrets
 extraEnvFrom: []
-
-types: ["ACTION", "DISCOVERY"]
