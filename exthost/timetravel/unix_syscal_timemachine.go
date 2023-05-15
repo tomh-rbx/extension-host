@@ -1,7 +1,8 @@
 package timetravel
 
 import (
-	"github.com/rs/zerolog/log"
+  "errors"
+  "github.com/rs/zerolog/log"
 	"syscall"
 	"time"
 )
@@ -9,6 +10,7 @@ import (
 func AdjustTime(offset time.Duration, negate bool) error {
 	tp := syscall.Timeval{}
 	err := syscall.Gettimeofday(&tp)
+  initialTime := tp.Sec
 	log.Info().Msgf("Current time: %d", tp.Sec)
 	if err != nil {
 		log.Err(err).Msg("Could not change time offset - Gettimeofday")
@@ -25,6 +27,11 @@ func AdjustTime(offset time.Duration, negate bool) error {
 		log.Err(err).Msg("Could not change time offset - Settimeofday")
 		return err
 	}
+  newTime := tp.Sec
 	log.Info().Msgf("New time: %d", tp.Sec)
+  diff := newTime - initialTime
+  if float64(diff) >= (offset.Seconds() -2)  {
+    return errors.New("time offset not applied")
+  }
 	return nil
 }
