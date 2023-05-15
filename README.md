@@ -1,4 +1,4 @@
-<img src="./logo.png" height="130" align="right" alt="Host logo">
+<img src="./logo.svg" height="130" align="right" alt="Host logo">
 
 # Steadybit extension-host
 
