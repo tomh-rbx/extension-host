@@ -185,7 +185,7 @@ func testTimeTravel(t *testing.T, m *e2e.Minikube, e *e2e.Extension) {
 		Duration   int  `json:"duration"`
 		Offset     int  `json:"offset"`
 		DisableNtp bool `json:"disableNtp"`
-	}{Duration: 30000, Offset: int((360 * time.Second).Milliseconds()), DisableNtp: false}
+	}{Duration: 30000, Offset: int((360 * time.Second).Milliseconds()), DisableNtp: true}
 
   duration := float64(time.Duration(config.Offset)*time.Millisecond)
   min :=    float64(duration) * 0.8
