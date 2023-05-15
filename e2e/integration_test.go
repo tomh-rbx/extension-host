@@ -225,7 +225,7 @@ func getTimeDiffBetweenNowAndContainerTime(t *testing.T, m *e2e.Minikube, e *e2e
 	return containerTime.Sub(now)
 }
 
-func testDiscovery(t *testing.T, _ *e2e.Minikube, e *e2e.Extension) {#
+func testDiscovery(t *testing.T, _ *e2e.Minikube, e *e2e.Extension) {
   log.Info().Msg("Starting testDiscovery")
 	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 	defer cancel()
