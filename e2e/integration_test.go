@@ -128,7 +128,7 @@ func TestWithMinikube(t *testing.T) {
 			Name: "network package corruption",
 			Test: testNetworkPackageCorruption,
 		},
-    { // must be the last test
+    { // must be the last test, because it will shutdown the minikube host (minikube cannot be restarted)
     	Name: "shutdown host",
     	Test: testShutdownHost, // if you run this test locally, you will need to restart your docker machine
     },
@@ -270,8 +270,15 @@ func testShutdownHost(t *testing.T, m *e2e.Minikube, e *e2e.Extension) {
 
 	_, err := e.RunAction("com.github.steadybit.extension_host.shutdown", getTarget(m), config, nil)
   require.NoError(t, err)
-  _, err = m.Exec(e.Pod, "steadybit-extension-host", "tail", "-f", "/dev/null")
-  log.Debug().Msgf("err: %v", err)
+  e2e.Retry(t, 5, 1*time.Second, func(r *e2e.R) {
+    _, err = m.Exec(e.Pod, "steadybit-extension-host", "tail", "-f", "/dev/null")
+    if err == nil {
+      r.Failed = true
+      _, _ = fmt.Fprintf(r.Log, "expected error but got none")
+    } else {
+      log.Debug().Msgf("err: %v", err)
+    }
+  })
   assert.Error(t, err)
 }
 
