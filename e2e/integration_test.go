@@ -4,21 +4,20 @@
 package e2e
 
 import (
-	"context"
-	"fmt"
-	"github.com/rs/zerolog/log"
-	"github.com/steadybit/action-kit/go/action_kit_api/v2"
-	"github.com/steadybit/action-kit/go/action_kit_test/e2e"
-	"github.com/steadybit/discovery-kit/go/discovery_kit_api"
-	"github.com/steadybit/extension-host/exthost"
-	"github.com/steadybit/extension-kit/extutil"
-	"github.com/stretchr/testify/assert"
-	"github.com/stretchr/testify/require"
-	"os"
-	"runtime"
-	"strings"
-	"testing"
-	"time"
+  "context"
+  "fmt"
+  "github.com/rs/zerolog/log"
+  "github.com/steadybit/action-kit/go/action_kit_api/v2"
+  "github.com/steadybit/action-kit/go/action_kit_test/e2e"
+  "github.com/steadybit/discovery-kit/go/discovery_kit_api"
+  "github.com/steadybit/extension-host/exthost"
+  "github.com/steadybit/extension-kit/extutil"
+  "github.com/stretchr/testify/assert"
+  "github.com/stretchr/testify/require"
+  "os"
+  "strings"
+  "testing"
+  "time"
 )
 
 var (
@@ -81,9 +80,9 @@ func TestWithMinikube(t *testing.T) {
 	}
 
 	mOpts := e2e.DefaultMiniKubeOpts
-	if runtime.GOOS == "linux" {
-		mOpts.Driver = "kvm2"
-	}
+	//if runtime.GOOS == "linux" {
+	//	mOpts.Driver = "kvm2"
+	//}
 	e2e.WithMinikube(t, mOpts, &extFactory, []e2e.WithMinikubeTestCase{
 		{
 			Name: "target discovery",
