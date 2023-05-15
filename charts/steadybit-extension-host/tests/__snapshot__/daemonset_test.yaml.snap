@@ -15,7 +15,7 @@ manifest should match snapshot with TLS:
         metadata:
           annotations:
             container.apparmor.security.beta.kubernetes.io/steadybit-extension-host: unconfined
-            steadybit.com/extension-auto-discovery: "{\n  \"extensions\": [\n    {\n      \"port\": \"8085\",\n      \"types\": [\"ACTION\",\"DISCOVERY\"],\n      \"tls\": {\n        \"server\": {\n          \"extraCertsFile\": \"/opt/steadybit/agent/etc/extension-mtls/server-cert/tls.crt\"\n          }\n          \n    }\n    }\n  ]\n}\n"
+            steadybit.com/extension-auto-discovery: "{\n  \"extensions\": [\n    {\n      \"port\": \"8085\",\n      \"types\": [\"ACTION\", \"DISCOVERY\"],\n      \"tls\": {\n        \"server\": {\n          \"extraCertsFile\": \"/opt/steadybit/agent/etc/extension-mtls/server-cert/tls.crt\"\n          }\n          \n    }\n    }\n  ]\n}\n"
           labels:
             app: steadybit-extension-host
             app.kubernetes.io/name: steadybit-extension-host
@@ -96,7 +96,7 @@ manifest should match snapshot with extra env vars:
         metadata:
           annotations:
             container.apparmor.security.beta.kubernetes.io/steadybit-extension-host: unconfined
-            steadybit.com/extension-auto-discovery: "{\n  \"extensions\": [\n    {\n      \"port\": \"8085\",\n      \"types\": [\"ACTION\",\"DISCOVERY\"],\n      \"tls\": {\n          \n    }\n    }\n  ]\n}\n"
+            steadybit.com/extension-auto-discovery: "{\n  \"extensions\": [\n    {\n      \"port\": \"8085\",\n      \"types\": [\"ACTION\", \"DISCOVERY\"],\n      \"tls\": {\n          \n    }\n    }\n  ]\n}\n"
           labels:
             app: steadybit-extension-host
             app.kubernetes.io/name: steadybit-extension-host
@@ -178,7 +178,7 @@ manifest should match snapshot with mutual TLS:
                 "extensions": [
                   {
                     "port": "8085",
-                    "types": ["ACTION","DISCOVERY"],
+                    "types": ["ACTION", "DISCOVERY"],
                     "tls": {
                       "server": {
                         "extraCertsFile": "/opt/steadybit/agent/etc/extension-mtls/server-cert/tls.crt"
@@ -280,7 +280,7 @@ manifest should match snapshot without TLS:
         metadata:
           annotations:
             container.apparmor.security.beta.kubernetes.io/steadybit-extension-host: unconfined
-            steadybit.com/extension-auto-discovery: "{\n  \"extensions\": [\n    {\n      \"port\": \"8085\",\n      \"types\": [\"ACTION\",\"DISCOVERY\"],\n      \"tls\": {\n          \n    }\n    }\n  ]\n}\n"
+            steadybit.com/extension-auto-discovery: "{\n  \"extensions\": [\n    {\n      \"port\": \"8085\",\n      \"types\": [\"ACTION\", \"DISCOVERY\"],\n      \"tls\": {\n          \n    }\n    }\n  ]\n}\n"
           labels:
             app: steadybit-extension-host
             app.kubernetes.io/name: steadybit-extension-host
