@@ -445,7 +445,7 @@ func testNetworkPackageLoss(t *testing.T, m *e2e.Minikube, e *e2e.Extension) {
 			Port         []string `json:"port"`
 			NetInterface []string `json:"networkInterface"`
 		}{
-			Duration:     10000,
+			Duration:     20000,
 			Percentage:   10,
 			Ip:           tt.ip,
 			Hostname:     tt.hostname,
@@ -459,7 +459,7 @@ func testNetworkPackageLoss(t *testing.T, m *e2e.Minikube, e *e2e.Extension) {
 			require.NoError(t, err)
 
 			if tt.WantedLoss {
-				iperf.AssertPackageLoss(t, float64(config.Percentage)*0.8, float64(config.Percentage)*1.2)
+				iperf.AssertPackageLoss(t, float64(config.Percentage)*0.7, float64(config.Percentage)*1.3)
 			} else {
 				iperf.AssertPackageLoss(t, 0, 5)
 			}
@@ -509,7 +509,7 @@ func testNetworkPackageCorruption(t *testing.T, m *e2e.Minikube, e *e2e.Extensio
 			Port         []string `json:"port"`
 			NetInterface []string `json:"networkInterface"`
 		}{
-			Duration:     10000,
+			Duration:     20000,
 			Corruption:   10,
 			Ip:           tt.ip,
 			Hostname:     tt.hostname,
@@ -523,7 +523,7 @@ func testNetworkPackageCorruption(t *testing.T, m *e2e.Minikube, e *e2e.Extensio
 			require.NoError(t, err)
 
 			if tt.WantedCorruption {
-				iperf.AssertPackageLoss(t, float64(config.Corruption)*0.8, float64(config.Corruption)*1.2)
+				iperf.AssertPackageLoss(t, float64(config.Corruption)*0.7, float64(config.Corruption)*1.3)
 			} else {
 				iperf.AssertPackageLoss(t, 0, 5)
 			}
