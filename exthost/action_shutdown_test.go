@@ -180,10 +180,7 @@ func (m *mockApi) Shutdown() error {
 
 func (m *mockApi) IsShutdownCommandExecutable() bool {
 	log.Debug().Msg("mockApi.IsShutdownCommandExecutable")
-	if m.cmdExecutable {
-		return true
-	}
-	return false
+	return m.cmdExecutable
 }
 func newMockApi(shouldError bool, cmdExecutable bool) shutdown.Command {
 	return &mockApi{shouldError: shouldError, cmdExecutable: cmdExecutable}

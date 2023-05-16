@@ -67,7 +67,6 @@ func corruptPackages() networkOptsProvider {
 		}
 		corruption := extutil.ToUInt(request.Config["networkCorruption"])
 
-
 		filter, err := mapToNetworkFilter(ctx, request.Config, getRestrictedEndpoints(request))
 		if err != nil {
 			return nil, err

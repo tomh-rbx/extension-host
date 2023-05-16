@@ -4,20 +4,20 @@
 package e2e
 
 import (
-  "context"
-  "fmt"
-  "github.com/rs/zerolog/log"
-  "github.com/steadybit/action-kit/go/action_kit_api/v2"
-  "github.com/steadybit/action-kit/go/action_kit_test/e2e"
-  "github.com/steadybit/discovery-kit/go/discovery_kit_api"
-  "github.com/steadybit/extension-host/exthost"
-  "github.com/steadybit/extension-kit/extutil"
-  "github.com/stretchr/testify/assert"
-  "github.com/stretchr/testify/require"
-  "os"
-  "strings"
-  "testing"
-  "time"
+	"context"
+	"fmt"
+	"github.com/rs/zerolog/log"
+	"github.com/steadybit/action-kit/go/action_kit_api/v2"
+	"github.com/steadybit/action-kit/go/action_kit_test/e2e"
+	"github.com/steadybit/discovery-kit/go/discovery_kit_api"
+	"github.com/steadybit/extension-host/exthost"
+	"github.com/steadybit/extension-kit/extutil"
+	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
+	"os"
+	"strings"
+	"testing"
+	"time"
 )
 
 var (
@@ -128,15 +128,15 @@ func TestWithMinikube(t *testing.T) {
 			Name: "network package corruption",
 			Test: testNetworkPackageCorruption,
 		},
-    { // must be the last test, because it will shutdown the minikube host (minikube cannot be restarted)
-    	Name: "shutdown host",
-    	Test: testShutdownHost, // if you run this test locally, you will need to restart your docker machine
-    },
+		{ // must be the last test, because it will shutdown the minikube host (minikube cannot be restarted)
+			Name: "shutdown host",
+			Test: testShutdownHost, // if you run this test locally, you will need to restart your docker machine
+		},
 	})
 }
 
 func testStressCpu(t *testing.T, m *e2e.Minikube, e *e2e.Extension) {
-  log.Info().Msg("Starting testStressCpu")
+	log.Info().Msg("Starting testStressCpu")
 	config := struct {
 		Duration int `json:"duration"`
 		CpuLoad  int `json:"cpuLoad"`
@@ -150,7 +150,7 @@ func testStressCpu(t *testing.T, m *e2e.Minikube, e *e2e.Extension) {
 }
 
 func testStressMemory(t *testing.T, m *e2e.Minikube, e *e2e.Extension) {
-  log.Info().Msg("Starting testStressMemory")
+	log.Info().Msg("Starting testStressMemory")
 	config := struct {
 		Duration   int `json:"duration"`
 		Percentage int `json:"percentage"`
@@ -163,7 +163,7 @@ func testStressMemory(t *testing.T, m *e2e.Minikube, e *e2e.Extension) {
 }
 
 func testStressIo(t *testing.T, m *e2e.Minikube, e *e2e.Extension) {
-  log.Info().Msg("Starting testStressIo")
+	log.Info().Msg("Starting testStressIo")
 	config := struct {
 		Duration   int `json:"duration"`
 		Percentage int `json:"percentage"`
@@ -176,35 +176,35 @@ func testStressIo(t *testing.T, m *e2e.Minikube, e *e2e.Extension) {
 }
 
 func testTimeTravel(t *testing.T, m *e2e.Minikube, e *e2e.Extension) {
-  log.Info().Msg("Starting testTimeTravel")
+	log.Info().Msg("Starting testTimeTravel")
 	config := struct {
 		Duration   int  `json:"duration"`
 		Offset     int  `json:"offset"`
 		DisableNtp bool `json:"disableNtp"`
 	}{Duration: 30000, Offset: int((360 * time.Second).Milliseconds()), DisableNtp: true}
 
-  duration := float64(time.Duration(config.Offset)*time.Millisecond)
-  min :=    float64(duration) * 0.8
-  max :=    float64(duration) * 1.2
+	duration := float64(time.Duration(config.Offset) * time.Millisecond)
+	min := float64(duration) * 0.8
+	max := float64(duration) * 1.2
 
 	now := time.Now()
 	action, err := e.RunAction("com.github.steadybit.extension_host.timetravel", getTarget(m), config, nil)
 
 	require.NoError(t, err)
-  defer func() { _ = action.Cancel() }()
-  require.NoError(t, err)
+	defer func() { _ = action.Cancel() }()
+	require.NoError(t, err)
 	diff := getTimeDiffBetweenNowAndContainerTime(t, m, e, now)
 	log.Debug().Msgf("diff: %f", diff.Seconds())
 	// check if is in tolerance
-  assert.True(t, min <= float64(diff) && float64(diff) <= max  , "time travel failed")
+	assert.True(t, min <= float64(diff) && float64(diff) <= max, "time travel failed")
 
-  // rollback
-  require.NoError(t, action.Cancel())
+	// rollback
+	require.NoError(t, action.Cancel())
 
 	now = time.Now()
 	diff = getTimeDiffBetweenNowAndContainerTime(t, m, e, now)
 	log.Debug().Msgf("diff: %f", diff.Seconds())
-  assert.True(t, min <= float64(diff) && float64(diff) <= max  , "time travel failed to rollback properly")
+	assert.True(t, min <= float64(diff) && float64(diff) <= max, "time travel failed to rollback properly")
 
 }
 
@@ -220,15 +220,15 @@ func getTimeDiffBetweenNowAndContainerTime(t *testing.T, m *e2e.Minikube, e *e2e
 		return 0
 	}
 	containerTime := time.Unix(containerSecondsSinceEpoch, 0)
-  diff := containerTime.Sub(now)
-  if diff < 0 {
-    diff = diff * -1
-  }
-  return diff
+	diff := containerTime.Sub(now)
+	if diff < 0 {
+		diff = diff * -1
+	}
+	return diff
 }
 
 func testDiscovery(t *testing.T, _ *e2e.Minikube, e *e2e.Extension) {
-  log.Info().Msg("Starting testDiscovery")
+	log.Info().Msg("Starting testDiscovery")
 	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 	defer cancel()
 
@@ -242,7 +242,7 @@ func testDiscovery(t *testing.T, _ *e2e.Minikube, e *e2e.Extension) {
 }
 
 func testStopProcess(t *testing.T, m *e2e.Minikube, e *e2e.Extension) {
-  log.Info().Msg("Starting testStopProcess")
+	log.Info().Msg("Starting testStopProcess")
 	config := struct {
 		Duration int    `json:"duration"`
 		Graceful bool   `json:"graceful"`
@@ -263,27 +263,27 @@ func testStopProcess(t *testing.T, m *e2e.Minikube, e *e2e.Extension) {
 	require.NoError(t, exec.Cancel())
 }
 func testShutdownHost(t *testing.T, m *e2e.Minikube, e *e2e.Extension) {
-  log.Info().Msg("Starting testShutdownHost")
+	log.Info().Msg("Starting testShutdownHost")
 	config := struct {
 		Reboot bool `json:"reboot"`
 	}{Reboot: true}
 
 	_, err := e.RunAction("com.github.steadybit.extension_host.shutdown", getTarget(m), config, nil)
-  require.NoError(t, err)
-  e2e.Retry(t, 5, 1*time.Second, func(r *e2e.R) {
-    _, err = m.Exec(e.Pod, "steadybit-extension-host", "tail", "-f", "/dev/null")
-    if err == nil {
-      r.Failed = true
-      _, _ = fmt.Fprintf(r.Log, "expected error but got none")
-    } else {
-      log.Debug().Msgf("err: %v", err)
-    }
-  })
-  assert.Error(t, err)
+	require.NoError(t, err)
+	e2e.Retry(t, 5, 1*time.Second, func(r *e2e.R) {
+		_, err = m.Exec(e.Pod, "steadybit-extension-host", "tail", "-f", "/dev/null")
+		if err == nil {
+			r.Failed = true
+			_, _ = fmt.Fprintf(r.Log, "expected error but got none")
+		} else {
+			log.Debug().Msgf("err: %v", err)
+		}
+	})
+	assert.Error(t, err)
 }
 
 func testNetworkBlackhole(t *testing.T, m *e2e.Minikube, e *e2e.Extension) {
-  log.Info().Msg("Starting testNetworkBlackhole")
+	log.Info().Msg("Starting testNetworkBlackhole")
 	nginx := e2e.Nginx{Minikube: m}
 	err := nginx.Deploy("nginx-network-blackhole")
 	require.NoError(t, err, "failed to create pod")
@@ -354,7 +354,7 @@ func testNetworkBlackhole(t *testing.T, m *e2e.Minikube, e *e2e.Extension) {
 }
 
 func testNetworkDelay(t *testing.T, m *e2e.Minikube, e *e2e.Extension) {
-  log.Info().Msg("Starting testNetworkDelay")
+	log.Info().Msg("Starting testNetworkDelay")
 	netperf := e2e.Netperf{Minikube: m}
 	err := netperf.Deploy("delay")
 	defer func() { _ = netperf.Delete() }()
@@ -424,7 +424,7 @@ func testNetworkDelay(t *testing.T, m *e2e.Minikube, e *e2e.Extension) {
 }
 
 func testNetworkPackageLoss(t *testing.T, m *e2e.Minikube, e *e2e.Extension) {
-  log.Info().Msg("Starting testNetworkPackageLoss")
+	log.Info().Msg("Starting testNetworkPackageLoss")
 	iperf := e2e.Iperf{Minikube: m}
 	err := iperf.Deploy("loss")
 	defer func() { _ = iperf.Delete() }()
@@ -488,7 +488,7 @@ func testNetworkPackageLoss(t *testing.T, m *e2e.Minikube, e *e2e.Extension) {
 }
 
 func testNetworkPackageCorruption(t *testing.T, m *e2e.Minikube, e *e2e.Extension) {
-  log.Info().Msg("Starting testNetworkPackageCorruption")
+	log.Info().Msg("Starting testNetworkPackageCorruption")
 	iperf := e2e.Iperf{Minikube: m}
 	err := iperf.Deploy("corruption")
 	defer func() { _ = iperf.Delete() }()
@@ -553,8 +553,8 @@ func testNetworkPackageCorruption(t *testing.T, m *e2e.Minikube, e *e2e.Extensio
 }
 
 func testNetworkLimitBandwidth(t *testing.T, m *e2e.Minikube, e *e2e.Extension) {
-  t.Skip("Skipping testNetworkLimitBandwidth because it does not work on minikube, but was tested manually on a real cluster")
-  log.Info().Msg("Starting testNetworkLimitBandwidth")
+	t.Skip("Skipping testNetworkLimitBandwidth because it does not work on minikube, but was tested manually on a real cluster")
+	log.Info().Msg("Starting testNetworkLimitBandwidth")
 	iperf := e2e.Iperf{Minikube: m}
 	err := iperf.Deploy("bandwidth")
 	defer func() { _ = iperf.Delete() }()
@@ -573,8 +573,8 @@ func testNetworkLimitBandwidth(t *testing.T, m *e2e.Minikube, e *e2e.Extension) 
 			WantedLimit: true,
 		},
 		{
-			name: "should limit bandwidth only on port 5001 traffic",
-			port: []string{"5001"},
+			name:        "should limit bandwidth only on port 5001 traffic",
+			port:        []string{"5001"},
 			WantedLimit: true,
 		},
 		{
@@ -622,7 +622,7 @@ func testNetworkLimitBandwidth(t *testing.T, m *e2e.Minikube, e *e2e.Extension) 
 }
 
 func testNetworkBlockDns(t *testing.T, m *e2e.Minikube, e *e2e.Extension) {
-  log.Info().Msg("Starting testNetworkBlockDns")
+	log.Info().Msg("Starting testNetworkBlockDns")
 	nginx := e2e.Nginx{Minikube: m}
 	err := nginx.Deploy("nginx-network-block-dns")
 	require.NoError(t, err, "failed to create pod")

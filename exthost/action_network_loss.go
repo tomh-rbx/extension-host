@@ -67,7 +67,6 @@ func packageLoss() networkOptsProvider {
 		}
 		loss := extutil.ToUInt(request.Config["percentage"])
 
-
 		filter, err := mapToNetworkFilter(ctx, request.Config, getRestrictedEndpoints(request))
 		if err != nil {
 			return nil, err

@@ -4,14 +4,14 @@
 package network
 
 import (
-  "context"
-  "github.com/rs/zerolog/log"
-  "github.com/steadybit/extension-container/pkg/networkutils"
-  "io"
-  "os"
-  "os/exec"
-  "sync/atomic"
-  "syscall"
+	"context"
+	"github.com/rs/zerolog/log"
+	"github.com/steadybit/extension-container/pkg/networkutils"
+	"io"
+	"os"
+	"os/exec"
+	"sync/atomic"
+	"syscall"
 )
 
 var counter = atomic.Int32{}
@@ -27,26 +27,26 @@ func Apply(ctx context.Context, hostname string, opts networkutils.Opts) error {
 func generateAndRunCommands(ctx context.Context, opts networkutils.Opts, mode networkutils.Mode) error {
 	ipCommandsV4, err := opts.IpCommands(networkutils.FamilyV4, mode)
 	if err != nil {
-    log.Error().Msgf("failed to get ipCommandsV4: %v", err)
+		log.Error().Msgf("failed to get ipCommandsV4: %v", err)
 		return err
 	}
 
 	ipCommandsV6, err := opts.IpCommands(networkutils.FamilyV6, mode)
 	if err != nil {
-    log.Error().Msgf("failed to get ipCommandsV6: %v", err)
+		log.Error().Msgf("failed to get ipCommandsV6: %v", err)
 		return err
 	}
 
 	tcCommands, err := opts.TcCommands(mode)
 	if err != nil {
-    log.Error().Msgf("failed to get tcCommands: %v", err)
+		log.Error().Msgf("failed to get tcCommands: %v", err)
 		return err
 	}
 
 	if ipCommandsV4 != nil {
 		err = executeIpCommands(ctx, networkutils.FamilyV4, ipCommandsV4)
 		if err != nil {
-      log.Error().Msgf("failed to executeIpCommands: %v", err)
+			log.Error().Msgf("failed to executeIpCommands: %v", err)
 			return err
 		}
 	}
@@ -54,7 +54,7 @@ func generateAndRunCommands(ctx context.Context, opts networkutils.Opts, mode ne
 	if ipCommandsV6 != nil {
 		err = executeIpCommands(ctx, networkutils.FamilyV6, ipCommandsV6)
 		if err != nil {
-      log.Error().Msgf("failed to executeIpCommands: %v", err)
+			log.Error().Msgf("failed to executeIpCommands: %v", err)
 			return err
 		}
 	}
@@ -62,7 +62,7 @@ func generateAndRunCommands(ctx context.Context, opts networkutils.Opts, mode ne
 	if tcCommands != nil {
 		err = executeTcCommands(ctx, tcCommands)
 		if err != nil {
-      log.Error().Msgf("failed to executeTcCommands: %v", err)
+			log.Error().Msgf("failed to executeTcCommands: %v", err)
 			return err
 		}
 	}
@@ -119,7 +119,7 @@ func executeTcCommands(ctx context.Context, batch io.Reader) error {
 	}
 	err := cmd.Run()
 	if err != nil {
-   log.Error().Msgf("Error executeTcCommands: %v", err)
+		log.Error().Msgf("Error executeTcCommands: %v", err)
 		return err
 	}
 

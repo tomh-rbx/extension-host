@@ -1,8 +1,8 @@
 package timetravel
 
 import (
-  "errors"
-  "github.com/rs/zerolog/log"
+	"errors"
+	"github.com/rs/zerolog/log"
 	"syscall"
 	"time"
 )
@@ -10,7 +10,7 @@ import (
 func AdjustTime(offset time.Duration, negate bool) error {
 	tp := syscall.Timeval{}
 	err := syscall.Gettimeofday(&tp)
-  initialTime := tp.Sec
+	initialTime := tp.Sec
 	log.Info().Msgf("Current time: %d", tp.Sec)
 	if err != nil {
 		log.Err(err).Msg("Could not change time offset - Gettimeofday")
@@ -27,22 +27,22 @@ func AdjustTime(offset time.Duration, negate bool) error {
 		log.Err(err).Msg("Could not change time offset - Settimeofday")
 		return err
 	}
-  newTime := tp.Sec
+	newTime := tp.Sec
 	log.Info().Msgf("New time: %d", tp.Sec)
-  diff := newTime - initialTime
-  if diff < 0 {
-    diff = -diff
-  }
-  log.Info().Msgf("Time difference: %d", diff)
-  normalizedOffset := offset.Seconds()
-  if offset < 0 {
-    normalizedOffset = -normalizedOffset
-  }
-  min := normalizedOffset * 0.8
-  max := normalizedOffset * 1.2
-  if float64(diff) >= min && float64(diff) <= max {
-    return nil
-  } else {
-    return errors.New("time offset not applied")
-  }
+	diff := newTime - initialTime
+	if diff < 0 {
+		diff = -diff
+	}
+	log.Info().Msgf("Time difference: %d", diff)
+	normalizedOffset := offset.Seconds()
+	if offset < 0 {
+		normalizedOffset = -normalizedOffset
+	}
+	min := normalizedOffset * 0.8
+	max := normalizedOffset * 1.2
+	if float64(diff) >= min && float64(diff) <= max {
+		return nil
+	} else {
+		return errors.New("time offset not applied")
+	}
 }

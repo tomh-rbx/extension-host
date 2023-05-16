@@ -47,7 +47,6 @@ func blackhole() networkOptsProvider {
 			return nil, err
 		}
 
-
 		filter, err := mapToNetworkFilter(ctx, request.Config, getRestrictedEndpoints(request))
 		if err != nil {
 			return nil, err

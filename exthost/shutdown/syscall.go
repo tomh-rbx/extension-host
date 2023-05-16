@@ -8,13 +8,13 @@ import (
 )
 
 type Syscall interface {
-  Reboot() error
-  Shutdown() error
+	Reboot() error
+	Shutdown() error
 }
 type SyscallImpl struct{}
 
 func NewSyscall() Syscall {
-  return &SyscallImpl{}
+	return &SyscallImpl{}
 }
 
 func (s SyscallImpl) Reboot() error {

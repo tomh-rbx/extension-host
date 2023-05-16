@@ -5,18 +5,18 @@
 package main
 
 import (
-  "github.com/steadybit/action-kit/go/action_kit_api/v2"
-  "github.com/steadybit/action-kit/go/action_kit_sdk"
-  "github.com/steadybit/discovery-kit/go/discovery_kit_api"
-  "github.com/steadybit/event-kit/go/event_kit_api"
-  "github.com/steadybit/extension-host/config"
-  "github.com/steadybit/extension-host/exthost"
-  "github.com/steadybit/extension-host/exthost/common"
-  "github.com/steadybit/extension-host/exthost/resources"
-  "github.com/steadybit/extension-kit/extbuild"
-  "github.com/steadybit/extension-kit/exthealth"
-  "github.com/steadybit/extension-kit/exthttp"
-  "github.com/steadybit/extension-kit/extlogging"
+	"github.com/steadybit/action-kit/go/action_kit_api/v2"
+	"github.com/steadybit/action-kit/go/action_kit_sdk"
+	"github.com/steadybit/discovery-kit/go/discovery_kit_api"
+	"github.com/steadybit/event-kit/go/event_kit_api"
+	"github.com/steadybit/extension-host/config"
+	"github.com/steadybit/extension-host/exthost"
+	"github.com/steadybit/extension-host/exthost/common"
+	"github.com/steadybit/extension-host/exthost/resources"
+	"github.com/steadybit/extension-kit/extbuild"
+	"github.com/steadybit/extension-kit/exthealth"
+	"github.com/steadybit/extension-kit/exthttp"
+	"github.com/steadybit/extension-kit/extlogging"
 )
 
 func main() {
@@ -29,7 +29,7 @@ func main() {
 	//  - to set the log level to debug, set the environment variable STEADYBIT_LOG_LEVEL="debug"
 	extlogging.InitZeroLog()
 
-  resources.AdjustOOMScoreAdj()
+	resources.AdjustOOMScoreAdj()
 
 	// Build information is set at compile-time. This line writes the build information to the log.
 	// The information is mostly handy for debugging purposes.
