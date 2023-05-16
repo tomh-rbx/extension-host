@@ -382,6 +382,11 @@ func testNetworkDelay(t *testing.T, m *e2e.Minikube, e *e2e.Extension) {
 			port:        []string{"80"},
 			WantedDelay: false,
 		},
+		{
+			name:        "should delay only traffic for netperf",
+			ip:    []string{netperf.ServerIp},
+			WantedDelay: true,
+		},
 	}
 
 	unaffectedLatency, err := netperf.MeasureLatency()
@@ -451,6 +456,11 @@ func testNetworkPackageLoss(t *testing.T, m *e2e.Minikube, e *e2e.Extension) {
 			port:       []string{"80"},
 			WantedLoss: false,
 		},
+		{
+			name:       "should loose packages only traffic for iperf server",
+			ip:         []string{iperf.ServerIp},
+			WantedLoss: true,
+		},
 	}
 
 	for _, tt := range tests {
@@ -515,6 +525,11 @@ func testNetworkPackageCorruption(t *testing.T, m *e2e.Minikube, e *e2e.Extensio
 			name:             "should corrupt packages only on port 80 traffic",
 			port:             []string{"80"},
 			WantedCorruption: false,
+		},
+		{
+			name:             "should corrupt packages only traffic for iperf server",
+			ip:               []string{iperf.ServerIp},
+			WantedCorruption: true,
 		},
 	}
 
@@ -582,6 +597,11 @@ func testNetworkLimitBandwidth(t *testing.T, m *e2e.Minikube, e *e2e.Extension) 
 			port:        []string{"80"},
 			WantedLimit: false,
 		},
+		{
+			name:        "should limit bandwidth only traffic for iperf server",
+			ip:    []string{iperf.ServerIp},
+			WantedLimit: true,
+		},
 	}
 
 	unlimited, err := iperf.MeasureBandwidth()
@@ -647,6 +667,13 @@ func testNetworkBlockDns(t *testing.T, m *e2e.Minikube, e *e2e.Extension) {
 			dnsPort:          5353,
 			WantedReachable:  true,
 			WantedReachesUrl: true,
+		},
+		{
+			name:             "should block dns only traffic for steadybit.com",
+			dnsPort:          53,
+			hostname:         []string{"steadybit.com"},
+			WantedReachable:  true,
+			WantedReachesUrl: false,
 		},
 	}
 
