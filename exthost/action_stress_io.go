@@ -68,7 +68,7 @@ func (l *stressIOAction) Describe() action_kit_api.ActionDescription {
 				Name:         "workers",
 				Label:        "Workers",
 				Description:  extutil.Ptr("How many workers should continually write, read and remove temporary files?"),
-				Type:         "stressng-workers",
+				Type:         action_kit_api.StressngWorkers,
 				DefaultValue: extutil.Ptr("0"),
 				Required:     extutil.Ptr(true),
 				Order:        extutil.Ptr(1),

@@ -80,7 +80,7 @@ func (l *stressCPUAction) Describe() action_kit_api.ActionDescription {
 				Name:         "workers",
 				Label:        "Host CPUs",
 				Description:  extutil.Ptr("How many workers should be used to stress the CPU?"),
-				Type:         "stressng-workers",
+				Type:         action_kit_api.StressngWorkers,
 				DefaultValue: extutil.Ptr("0"),
 				Required:     extutil.Ptr(true),
 				Order:        extutil.Ptr(2),

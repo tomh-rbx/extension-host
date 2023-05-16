@@ -8,7 +8,7 @@ require (
 	github.com/kelseyhightower/envconfig v1.4.0
 	github.com/mitchellh/go-ps v1.0.0
 	github.com/rs/zerolog v1.29.1
-	github.com/steadybit/action-kit/go/action_kit_api/v2 v2.6.0
+	github.com/steadybit/action-kit/go/action_kit_api/v2 v2.6.1
 	github.com/steadybit/action-kit/go/action_kit_commons v1.0.0
 	github.com/steadybit/action-kit/go/action_kit_sdk v1.1.2
 	github.com/steadybit/action-kit/go/action_kit_test v1.0.0
@@ -16,8 +16,8 @@ require (
 	github.com/steadybit/event-kit/go/event_kit_api v1.1.0
 	github.com/steadybit/extension-kit v1.7.17
 	github.com/stretchr/testify v1.8.2
-	golang.org/x/exp v0.0.0-20230510235704-dd950f8aeaea
-	kernel.org/pub/linux/libs/security/libcap/cap v1.2.68
+	golang.org/x/exp v0.0.0-20230515195305-f3d0a9c9a5cc
+	kernel.org/pub/linux/libs/security/libcap/cap v1.2.69
 )
 
 require (
@@ -68,7 +68,7 @@ require (
 	k8s.io/klog/v2 v2.90.1 // indirect
 	k8s.io/kube-openapi v0.0.0-20230308215209-15aac26d736a // indirect
 	k8s.io/utils v0.0.0-20230220204549-a5ecb0141aa5 // indirect
-	kernel.org/pub/linux/libs/security/libcap/psx v1.2.68 // indirect
+	kernel.org/pub/linux/libs/security/libcap/psx v1.2.69 // indirect
 	sigs.k8s.io/json v0.0.0-20221116044647-bc3834ca7abd // indirect
 	sigs.k8s.io/structured-merge-diff/v4 v4.2.3 // indirect
 	sigs.k8s.io/yaml v1.3.0 // indirect
