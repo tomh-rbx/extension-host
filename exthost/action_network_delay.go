@@ -8,8 +8,8 @@ import (
 	"encoding/json"
 	"fmt"
 	"github.com/steadybit/action-kit/go/action_kit_api/v2"
-	"github.com/steadybit/action-kit/go/action_kit_sdk"
 	"github.com/steadybit/action-kit/go/action_kit_commons/networkutils"
+	"github.com/steadybit/action-kit/go/action_kit_sdk"
 	"github.com/steadybit/extension-kit/extbuild"
 	"github.com/steadybit/extension-kit/extutil"
 	"time"
@@ -60,7 +60,7 @@ func getNetworkDelayDescription() action_kit_api.ActionDescription {
 			action_kit_api.ActionParameter{
 				Name:        "networkInterface",
 				Label:       "Network Interface",
-				Description: extutil.Ptr("Target Network Interface which should be attacked."),
+				Description: extutil.Ptr("Target Network Interface which should be affected. All if none specified."),
 				Type:        action_kit_api.StringArray,
 				Required:    extutil.Ptr(false),
 				Order:       extutil.Ptr(104),
