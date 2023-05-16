@@ -15,7 +15,11 @@ import (
 	"runtime"
 )
 
-type shutdownAction struct{}
+type shutdownAction struct {
+	command shutdown.Command
+	sysrq   shutdown.Sysrq
+	syscall shutdown.Syscall
+}
 
 type ShutdownMethod uint64
 
@@ -35,7 +39,11 @@ var (
 )
 
 func NewShutdownAction() action_kit_sdk.Action[ActionState] {
-	return &shutdownAction{}
+	return &shutdownAction{
+		command: shutdown.NewCommand(),
+		sysrq:   shutdown.NewSysrq(),
+		syscall: shutdown.NewSyscall(),
+	}
 }
 
 func (l *shutdownAction) NewEmptyState() ActionState {
@@ -101,7 +109,7 @@ func (l *shutdownAction) Prepare(_ context.Context, state *ActionState, request 
 	reboot := extutil.ToBool(request.Config["reboot"])
 	state.Reboot = reboot
 
-	if shutdown.IsShutdownCommandExecutable() {
+	if l.command.IsShutdownCommandExecutable() {
 		state.ShutdownMethod = Command
 	} else {
 		if runtime.GOOS == "windows" {
@@ -126,7 +134,7 @@ func (l *shutdownAction) Start(_ context.Context, state *ActionState) (*action_k
 	if state.ShutdownMethod == Command {
 		if state.Reboot {
 			log.Info().Msg("Rebooting host via command")
-			err := shutdown.Reboot()
+			err := l.command.Reboot()
 			if err != nil {
 				return &action_kit_api.StartResult{
 					Error: &action_kit_api.ActionKitError{
@@ -137,7 +145,7 @@ func (l *shutdownAction) Start(_ context.Context, state *ActionState) (*action_k
 			}
 		} else {
 			log.Info().Msg("Shutting down host via command")
-			err := shutdown.Shutdown()
+			err := l.command.Shutdown()
 			if err != nil {
 				return &action_kit_api.StartResult{
 					Error: &action_kit_api.ActionKitError{
@@ -151,22 +159,22 @@ func (l *shutdownAction) Start(_ context.Context, state *ActionState) (*action_k
 		go func() {
 			if state.Reboot {
 				log.Info().Msg("Rebooting host via syscall")
-				err := shutdown.RebootSyscall()
+				err := l.syscall.Reboot()
 				if err != nil {
 					log.Error().Err(err).Msg("Rebooting host via syscall failed")
 					log.Info().Msg("Rebooting host via sysrq")
-					err := shutdown.RebootSysrq()
+					err := l.sysrq.Reboot()
 					if err != nil {
 						log.Error().Err(err).Msg("Rebooting host via sysrq failed")
 					}
 				}
 			} else {
 				log.Info().Msg("Shutting down host via syscall")
-				err := shutdown.ShutdownSyscall()
+				err := l.syscall.Shutdown()
 				if err != nil {
 					log.Error().Err(err).Msg("Shutting down host via syscall failed")
 					log.Info().Msg("Shutting down host via sysrq")
-					err := shutdown.ShutdownSysrq()
+					err := l.sysrq.Shutdown()
 					if err != nil {
 						log.Error().Err(err).Msg("Shutting down host via sysrq failed")
 					}

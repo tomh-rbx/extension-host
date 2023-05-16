@@ -5,7 +5,17 @@ import (
 	"github.com/steadybit/extension-host/exthost/common"
 )
 
-func RebootSysrq() error {
+type Sysrq interface {
+	Reboot() error
+	Shutdown() error
+}
+type SysrqImpl struct{}
+
+func NewSysrq() Sysrq {
+	return &SysrqImpl{}
+}
+
+func (s SysrqImpl) Reboot() error {
 	err := common.RunAsRoot("echo", "1", ">", "/proc/sys/kernel/sysrq")
 	if err != nil {
 		log.Err(err).Msg("Failed to set sysrq")
@@ -19,7 +29,7 @@ func RebootSysrq() error {
 	return err
 }
 
-func ShutdownSysrq() error {
+func (s SysrqImpl) Shutdown() error {
 	err := common.RunAsRoot("echo", "1", ">", "/proc/sys/kernel/sysrq")
 	if err != nil {
 		log.Err(err).Msg("Failed to set sysrq")
