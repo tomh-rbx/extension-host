@@ -5,15 +5,15 @@
 package exthost
 
 import (
-	"github.com/elastic/go-sysinfo"
-	"github.com/rs/zerolog/log"
-	"github.com/steadybit/discovery-kit/go/discovery_kit_api"
-	"github.com/steadybit/extension-host/exthost/common"
-	"github.com/steadybit/extension-kit/extbuild"
-	"github.com/steadybit/extension-kit/exthttp"
-	"github.com/steadybit/extension-kit/extutil"
-	"net/http"
-	"os"
+  "github.com/elastic/go-sysinfo"
+  "github.com/rs/zerolog/log"
+  "github.com/steadybit/action-kit/go/action_kit_commons/networkutils"
+  "github.com/steadybit/discovery-kit/go/discovery_kit_api"
+  "github.com/steadybit/extension-kit/extbuild"
+  "github.com/steadybit/extension-kit/exthttp"
+  "github.com/steadybit/extension-kit/extutil"
+  "net/http"
+  "os"
 )
 
 const discoveryBasePath = basePath + "/discovery"
@@ -147,7 +147,8 @@ func getDiscoveredTargets(w http.ResponseWriter, _ *http.Request, _ []byte) {
 func getHostTarget() []discovery_kit_api.Target {
 	targets := make([]discovery_kit_api.Target, 1)
 	hostname, _ := os.Hostname()
-	ip4s, nics := common.GetIP4sAndNICs()
+	ip4s := networkutils.GetOwnIPs()
+	nics := networkutils.GetOwnNetworkInterfaces()
 	host, err := sysinfo.Host()
 	var osFamily string
 	var osManufacturer string
