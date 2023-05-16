@@ -11,7 +11,7 @@ import (
 	"github.com/rs/zerolog/log"
 	"github.com/steadybit/action-kit/go/action_kit_api/v2"
 	"github.com/steadybit/action-kit/go/action_kit_sdk"
-	"github.com/steadybit/extension-container/pkg/networkutils"
+	"github.com/steadybit/action-kit/go/action_kit_commons/networkutils"
 	"github.com/steadybit/extension-host/exthost/common"
 	"github.com/steadybit/extension-host/exthost/network"
 	extension_kit "github.com/steadybit/extension-kit"

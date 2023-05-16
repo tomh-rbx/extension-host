@@ -6,7 +6,7 @@ package network
 import (
 	"context"
 	"github.com/rs/zerolog/log"
-	"github.com/steadybit/extension-container/pkg/networkutils"
+	"github.com/steadybit/action-kit/go/action_kit_commons/networkutils"
 	"io"
 	"os"
 	"os/exec"

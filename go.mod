@@ -9,11 +9,11 @@ require (
 	github.com/mitchellh/go-ps v1.0.0
 	github.com/rs/zerolog v1.29.1
 	github.com/steadybit/action-kit/go/action_kit_api/v2 v2.6.0
+	github.com/steadybit/action-kit/go/action_kit_commons v0.0.0-20230516094200-4dd54232dcf4
 	github.com/steadybit/action-kit/go/action_kit_sdk v1.1.2
 	github.com/steadybit/action-kit/go/action_kit_test v0.0.0-20230515145540-adeab2ac5d7a
 	github.com/steadybit/discovery-kit/go/discovery_kit_api v1.3.0
 	github.com/steadybit/event-kit/go/event_kit_api v1.1.0
-	github.com/steadybit/extension-container v0.0.0-20230515130311-38932d996a70
 	github.com/steadybit/extension-kit v1.7.17
 	github.com/stretchr/testify v1.8.2
 	golang.org/x/exp v0.0.0-20230510235704-dd950f8aeaea
