@@ -555,6 +555,9 @@ func testNetworkPackageCorruption(t *testing.T, m *e2e.Minikube, e *e2e.Extensio
 		}
 
 		t.Run(tt.name, func(t *testing.T) {
+      if runsInCi() {
+        time.Sleep(5 * time.Second)
+      }
 			action, err := e.RunAction(exthost.BaseActionID+".network_package_corruption", getTarget(m), config, executionContext)
 			defer func() { _ = action.Cancel() }()
 			require.NoError(t, err)
