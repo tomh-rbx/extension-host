@@ -14,6 +14,7 @@ import (
   "github.com/steadybit/extension-kit/extutil"
   "github.com/stretchr/testify/assert"
   "github.com/stretchr/testify/require"
+  "os"
   "strings"
   "testing"
   "time"
@@ -61,6 +62,10 @@ func getTarget(m *e2e.Minikube) *action_kit_api.Target {
 			"host.hostname": {m.Profile},
 		},
 	}
+}
+
+func runsInCi() bool {
+  return os.Getenv("CI") != ""
 }
 
 func TestWithMinikube(t *testing.T) {
@@ -477,6 +482,9 @@ func testNetworkPackageLoss(t *testing.T, m *e2e.Minikube, e *e2e.Extension) {
 		}
 
 		t.Run(tt.name, func(t *testing.T) {
+      if runsInCi() {
+        time.Sleep(5 * time.Second)
+      }
 			action, err := e.RunAction(exthost.BaseActionID+".network_package_loss", getTarget(m), config, executionContext)
 			defer func() { _ = action.Cancel() }()
 			require.NoError(t, err)
