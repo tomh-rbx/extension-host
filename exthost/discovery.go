@@ -5,16 +5,16 @@
 package exthost
 
 import (
-	"github.com/elastic/go-sysinfo"
-	"github.com/rs/zerolog/log"
-	"github.com/steadybit/action-kit/go/action_kit_commons/networkutils"
-	"github.com/steadybit/discovery-kit/go/discovery_kit_api"
-	"github.com/steadybit/extension-kit/extbuild"
-	"github.com/steadybit/extension-kit/exthttp"
-	"github.com/steadybit/extension-kit/extutil"
-	"net/http"
-	"os"
-	"regexp"
+  "github.com/elastic/go-sysinfo"
+  "github.com/google/uuid"
+  "github.com/rs/zerolog/log"
+  "github.com/steadybit/action-kit/go/action_kit_commons/networkutils"
+  "github.com/steadybit/discovery-kit/go/discovery_kit_api"
+  "github.com/steadybit/extension-kit/extbuild"
+  "github.com/steadybit/extension-kit/exthttp"
+  "github.com/steadybit/extension-kit/extutil"
+  "net/http"
+  "os"
 )
 
 const discoveryBasePath = basePath + "/discovery"
@@ -149,7 +149,7 @@ func getHostTarget() []discovery_kit_api.Target {
 	targets := make([]discovery_kit_api.Target, 1)
 	hostname, _ := os.Hostname()
 	ips := networkutils.GetOwnIPs()
-	ip4 := getFirstIP4(ips)
+	id := generateID(hostname)
 	nics := networkutils.GetOwnNetworkInterfaces()
 	host, err := sysinfo.Host()
 	var osFamily string
@@ -171,7 +171,7 @@ func getHostTarget() []discovery_kit_api.Target {
 
 	// ip adress of the host
 	targets[0] = discovery_kit_api.Target{
-		Id:         hostname + "-" + ip4,
+		Id:         id,
 		TargetType: TargetID,
 		Label:      hostname,
 		Attributes: map[string][]string{
@@ -196,16 +196,13 @@ func getHostTarget() []discovery_kit_api.Target {
 	return targets
 }
 
-func getFirstIP4(ips []string) string {
-	for _, ip := range ips {
-		match, err := regexp.Match(`\d+\.\d+\.\d+\.\d+`, []byte(ip))
-		if err != nil {
-			continue
-		}
-		if match {
-			return ip
-		}
-	}
-	return ""
 
+var id = ""
+func generateID(hostname string) string {
+  if id == "" {
+    id = hostname + "-" +uuid.New().String()
+    log.Info().Msg("Generated Target ID: " + id)
+  }
+  return id
 }
+
