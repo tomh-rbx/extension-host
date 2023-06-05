@@ -5,15 +5,16 @@
 package exthost
 
 import (
-  "github.com/elastic/go-sysinfo"
-  "github.com/rs/zerolog/log"
-  "github.com/steadybit/action-kit/go/action_kit_commons/networkutils"
-  "github.com/steadybit/discovery-kit/go/discovery_kit_api"
-  "github.com/steadybit/extension-kit/extbuild"
-  "github.com/steadybit/extension-kit/exthttp"
-  "github.com/steadybit/extension-kit/extutil"
-  "net/http"
-  "os"
+	"github.com/elastic/go-sysinfo"
+	"github.com/rs/zerolog/log"
+	"github.com/steadybit/action-kit/go/action_kit_commons/networkutils"
+	"github.com/steadybit/discovery-kit/go/discovery_kit_api"
+	"github.com/steadybit/extension-kit/extbuild"
+	"github.com/steadybit/extension-kit/exthttp"
+	"github.com/steadybit/extension-kit/extutil"
+	"net/http"
+	"os"
+	"regexp"
 )
 
 const discoveryBasePath = basePath + "/discovery"
@@ -147,7 +148,8 @@ func getDiscoveredTargets(w http.ResponseWriter, _ *http.Request, _ []byte) {
 func getHostTarget() []discovery_kit_api.Target {
 	targets := make([]discovery_kit_api.Target, 1)
 	hostname, _ := os.Hostname()
-	ip4s := networkutils.GetOwnIPs()
+	ips := networkutils.GetOwnIPs()
+	ip4 := getFirstIP4(ips)
 	nics := networkutils.GetOwnNetworkInterfaces()
 	host, err := sysinfo.Host()
 	var osFamily string
@@ -169,13 +171,13 @@ func getHostTarget() []discovery_kit_api.Target {
 
 	// ip adress of the host
 	targets[0] = discovery_kit_api.Target{
-		Id:         hostname,
+		Id:         hostname + "-" + ip4,
 		TargetType: TargetID,
 		Label:      hostname,
 		Attributes: map[string][]string{
 			"host.hostname":        {hostname},
 			"host.domainname":      {fqdn},
-			"host.ipv4":            ip4s,
+			"host.ipv4":            ips,
 			"host.nic":             nics,
 			"host.os.family":       {osFamily},
 			"host.os.manufacturer": {osManufacturer},
@@ -192,4 +194,18 @@ func getHostTarget() []discovery_kit_api.Target {
 	}
 
 	return targets
+}
+
+func getFirstIP4(ips []string) string {
+	for _, ip := range ips {
+		match, err := regexp.Match(`\d+\.\d+\.\d+\.\d+`, []byte(ip))
+		if err != nil {
+			continue
+		}
+		if match {
+			return ip
+		}
+	}
+	return ""
+
 }
