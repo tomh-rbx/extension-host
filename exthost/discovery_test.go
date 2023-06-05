@@ -20,6 +20,7 @@ func Test_getDiscoveredTargets(t *testing.T) {
 	assert.Len(t, targets, 1)
 	target := targets[0]
 	assert.NotEmpty(t, target.Id)
+	assert.Contains(t, target.Id, ".")
 	assert.NotEmpty(t, target.Label)
 	assert.NotEmpty(t, target.Attributes)
 	attributes := target.Attributes
