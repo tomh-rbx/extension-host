@@ -3,20 +3,20 @@ module github.com/steadybit/extension-host
 go 1.20
 
 require (
-	github.com/elastic/go-sysinfo v1.10.1
+	github.com/elastic/go-sysinfo v1.11.0
 	github.com/google/uuid v1.3.0
 	github.com/kelseyhightower/envconfig v1.4.0
 	github.com/mitchellh/go-ps v1.0.0
 	github.com/rs/zerolog v1.29.1
 	github.com/steadybit/action-kit/go/action_kit_api/v2 v2.6.1
-	github.com/steadybit/action-kit/go/action_kit_commons v1.0.0
+	github.com/steadybit/action-kit/go/action_kit_commons v1.0.1
 	github.com/steadybit/action-kit/go/action_kit_sdk v1.1.2
 	github.com/steadybit/action-kit/go/action_kit_test v1.0.0
 	github.com/steadybit/discovery-kit/go/discovery_kit_api v1.3.0
 	github.com/steadybit/event-kit/go/event_kit_api v1.1.0
-	github.com/steadybit/extension-kit v1.7.17
+	github.com/steadybit/extension-kit v1.7.19
 	github.com/stretchr/testify v1.8.2
-	golang.org/x/exp v0.0.0-20230515195305-f3d0a9c9a5cc
+	golang.org/x/exp v0.0.0-20230522175609-2e198f4a06a1
 	kernel.org/pub/linux/libs/security/libcap/cap v1.2.69
 )
 
@@ -40,14 +40,14 @@ require (
 	github.com/json-iterator/go v1.1.12 // indirect
 	github.com/mailru/easyjson v0.7.7 // indirect
 	github.com/mattn/go-colorable v0.1.13 // indirect
-	github.com/mattn/go-isatty v0.0.18 // indirect
+	github.com/mattn/go-isatty v0.0.19 // indirect
 	github.com/moby/spdystream v0.2.0 // indirect
 	github.com/modern-go/concurrent v0.0.0-20180306012644-bacd9c7ef1dd // indirect
 	github.com/modern-go/reflect2 v1.0.2 // indirect
 	github.com/munnerz/goautoneg v0.0.0-20191010083416-a7dc8b61c822 // indirect
 	github.com/pkg/errors v0.9.1 // indirect
 	github.com/pmezard/go-difflib v1.0.0 // indirect
-	github.com/prometheus/procfs v0.9.0 // indirect
+	github.com/prometheus/procfs v0.10.1 // indirect
 	github.com/spf13/pflag v1.0.5 // indirect
 	github.com/yalp/jsonpath v0.0.0-20180802001716-5cc68e5049a0 // indirect
 	golang.org/x/net v0.10.0 // indirect
