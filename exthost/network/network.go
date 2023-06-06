@@ -4,16 +4,15 @@
 package network
 
 import (
+	"bytes"
 	"context"
+	"fmt"
 	"github.com/rs/zerolog/log"
 	"github.com/steadybit/action-kit/go/action_kit_commons/networkutils"
 	"os"
 	"os/exec"
-	"sync/atomic"
 	"syscall"
 )
-
-var counter = atomic.Int32{}
 
 func Apply(ctx context.Context, hostname string, opts networkutils.Opts) error {
 	log.Info().
@@ -61,8 +60,7 @@ func generateAndRunCommands(ctx context.Context, opts networkutils.Opts, mode ne
 	if tcCommands != nil {
 		err = executeTcCommands(ctx, tcCommands)
 		if err != nil {
-			log.Error().Msgf("failed to executeTcCommands: %v", err)
-			return err
+			return networkutils.FilterTcBatchErrors(err, mode, tcCommands)
 		}
 	}
 
@@ -108,10 +106,11 @@ func executeTcCommands(ctx context.Context, cmds []string) error {
 	}
 
 	log.Debug().Strs("cmds", cmds).Msg("running tc commands")
+	var outb bytes.Buffer
 	cmd := exec.CommandContext(ctx, "tc", "-force", "-batch", "-")
 	cmd.Stdin = networkutils.ToReader(cmds)
-	cmd.Stdout = os.Stdout
-	cmd.Stderr = os.Stderr
+	cmd.Stdout = &outb
+	cmd.Stderr = &outb
 	cmd.SysProcAttr = &syscall.SysProcAttr{
 		Credential: &syscall.Credential{
 			Uid: 0,
@@ -120,8 +119,10 @@ func executeTcCommands(ctx context.Context, cmds []string) error {
 	}
 	err := cmd.Run()
 	if err != nil {
-		log.Error().Msgf("Error executeTcCommands: %v", err)
-		return err
+		if parsed := networkutils.ParseTcBatchError(bytes.NewReader(outb.Bytes())); parsed != nil {
+			return parsed
+		}
+		return fmt.Errorf("tc failed: %w, output: %s", err, outb.String())
 	}
 
 	return nil

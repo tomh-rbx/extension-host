@@ -4,20 +4,20 @@
 package e2e
 
 import (
-  "context"
-  "fmt"
-  "github.com/rs/zerolog/log"
-  "github.com/steadybit/action-kit/go/action_kit_api/v2"
-  "github.com/steadybit/action-kit/go/action_kit_test/e2e"
-  "github.com/steadybit/discovery-kit/go/discovery_kit_api"
-  "github.com/steadybit/extension-host/exthost"
-  "github.com/steadybit/extension-kit/extutil"
-  "github.com/stretchr/testify/assert"
-  "github.com/stretchr/testify/require"
-  "os"
-  "strings"
-  "testing"
-  "time"
+	"context"
+	"fmt"
+	"github.com/rs/zerolog/log"
+	"github.com/steadybit/action-kit/go/action_kit_api/v2"
+	"github.com/steadybit/action-kit/go/action_kit_test/e2e"
+	"github.com/steadybit/discovery-kit/go/discovery_kit_api"
+	"github.com/steadybit/extension-host/exthost"
+	"github.com/steadybit/extension-kit/extutil"
+	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
+	"os"
+	"strings"
+	"testing"
+	"time"
 )
 
 var (
@@ -65,7 +65,7 @@ func getTarget(m *e2e.Minikube) *action_kit_api.Target {
 }
 
 func runsInCi() bool {
-  return os.Getenv("CI") != ""
+	return os.Getenv("CI") != ""
 }
 
 func TestWithMinikube(t *testing.T) {
@@ -80,8 +80,7 @@ func TestWithMinikube(t *testing.T) {
 		},
 	}
 
-	mOpts := e2e.DefaultMiniKubeOpts
-	e2e.WithMinikube(t, mOpts, &extFactory, []e2e.WithMinikubeTestCase{
+	e2e.WithDefaultMinikube(t, &extFactory, []e2e.WithMinikubeTestCase{
 		{
 			Name: "target discovery",
 			Test: testDiscovery,
@@ -385,7 +384,7 @@ func testNetworkDelay(t *testing.T, m *e2e.Minikube, e *e2e.Extension) {
 		},
 		{
 			name:        "should delay only traffic for netperf",
-			ip:    []string{netperf.ServerIp},
+			ip:          []string{netperf.ServerIp},
 			WantedDelay: true,
 		},
 	}
@@ -482,9 +481,9 @@ func testNetworkPackageLoss(t *testing.T, m *e2e.Minikube, e *e2e.Extension) {
 		}
 
 		t.Run(tt.name, func(t *testing.T) {
-      if runsInCi() {
-        time.Sleep(5 * time.Second)
-      }
+			if runsInCi() {
+				time.Sleep(5 * time.Second)
+			}
 			action, err := e.RunAction(exthost.BaseActionID+".network_package_loss", getTarget(m), config, executionContext)
 			defer func() { _ = action.Cancel() }()
 			require.NoError(t, err)
@@ -555,9 +554,9 @@ func testNetworkPackageCorruption(t *testing.T, m *e2e.Minikube, e *e2e.Extensio
 		}
 
 		t.Run(tt.name, func(t *testing.T) {
-      if runsInCi() {
-        time.Sleep(5 * time.Second)
-      }
+			if runsInCi() {
+				time.Sleep(5 * time.Second)
+			}
 			action, err := e.RunAction(exthost.BaseActionID+".network_package_corruption", getTarget(m), config, executionContext)
 			defer func() { _ = action.Cancel() }()
 			require.NoError(t, err)
@@ -606,7 +605,7 @@ func testNetworkLimitBandwidth(t *testing.T, m *e2e.Minikube, e *e2e.Extension) 
 		},
 		{
 			name:        "should limit bandwidth only traffic for iperf server",
-			ip:    []string{iperf.ServerIp},
+			ip:          []string{iperf.ServerIp},
 			WantedLimit: true,
 		},
 	}
