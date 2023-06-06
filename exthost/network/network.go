@@ -7,7 +7,6 @@ import (
 	"context"
 	"github.com/rs/zerolog/log"
 	"github.com/steadybit/action-kit/go/action_kit_commons/networkutils"
-	"io"
 	"os"
 	"os/exec"
 	"sync/atomic"
@@ -79,13 +78,14 @@ func Revert(ctx context.Context, hostname string, opts networkutils.Opts) error 
 
 }
 
-func executeIpCommands(ctx context.Context, family networkutils.Family, batch io.Reader) error {
-	if batch == nil {
+func executeIpCommands(ctx context.Context, family networkutils.Family, cmds []string) error {
+	if len(cmds) == 0 {
 		return nil
 	}
 
+	log.Debug().Strs("cmds", cmds).Str("family", string(family)).Msg("running ip commands")
 	cmd := exec.CommandContext(ctx, "ip", "-family", string(family), "-force", "-batch", "-")
-	cmd.Stdin = batch
+	cmd.Stdin = networkutils.ToReader(cmds)
 	cmd.Stdout = os.Stdout
 	cmd.Stderr = os.Stderr
 	cmd.SysProcAttr = &syscall.SysProcAttr{
@@ -102,13 +102,14 @@ func executeIpCommands(ctx context.Context, family networkutils.Family, batch io
 	return nil
 }
 
-func executeTcCommands(ctx context.Context, batch io.Reader) error {
-	if batch == nil {
+func executeTcCommands(ctx context.Context, cmds []string) error {
+	if len(cmds) == 0 {
 		return nil
 	}
 
+	log.Debug().Strs("cmds", cmds).Msg("running tc commands")
 	cmd := exec.CommandContext(ctx, "tc", "-force", "-batch", "-")
-	cmd.Stdin = batch
+	cmd.Stdin = networkutils.ToReader(cmds)
 	cmd.Stdout = os.Stdout
 	cmd.Stderr = os.Stderr
 	cmd.SysProcAttr = &syscall.SysProcAttr{
