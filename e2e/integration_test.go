@@ -128,7 +128,11 @@ func TestWithMinikube(t *testing.T) {
 			Name: "network package corruption",
 			Test: testNetworkPackageCorruption,
 		},
-		{ // must be the last test, because it will shutdown the minikube host (minikube cannot be restarted)
+	})
+	e2e.WithDefaultMinikube(t, &extFactory, []e2e.WithMinikubeTestCase{
+		{
+			// must be the last test, because it will shutdown the minikube host (minikube cannot be restarted)
+			// own run, cause otherwise the shutdown will prevent the coverage collection from the tests above
 			Name: "shutdown host",
 			Test: testShutdownHost, // if you run this test locally, you will need to restart your docker machine
 		},
