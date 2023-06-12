@@ -59,4 +59,4 @@ run: tidy build
 ## container: build the container image
 .PHONY: container
 container:
-	docker buildx build -t extension-host:latest --output=type=docker .
+	docker buildx build --build-arg ADDITIONAL_BUILD_PARAMS="-cover" -t extension-host:latest --output=type=docker .
