@@ -22,6 +22,9 @@ func ResolveHostnames(ctx context.Context, ipOrHostnames ...string) ([]string, e
 
 	var sb strings.Builder
 	for _, hostname := range hostnames {
+		if len(hostname) == 0 {
+			continue
+		}
 		sb.WriteString(hostname)
 		sb.WriteString(" A\n")
 		sb.WriteString(hostname)
