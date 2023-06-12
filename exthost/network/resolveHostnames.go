@@ -14,7 +14,7 @@ import (
 )
 
 func ResolveHostnames(ctx context.Context, ipOrHostnames ...string) ([]string, error) {
-	hostnames, ips := classifyResolved(ipOrHostnames)
+	hostnames, ips := classify(ipOrHostnames)
 
 	if len(hostnames) == 0 {
 		return ips, nil
@@ -22,9 +22,6 @@ func ResolveHostnames(ctx context.Context, ipOrHostnames ...string) ([]string, e
 
 	var sb strings.Builder
 	for _, hostname := range hostnames {
-		if len(hostname) == 0 {
-			continue
-		}
 		sb.WriteString(hostname)
 		sb.WriteString(" A\n")
 		sb.WriteString(hostname)
@@ -51,8 +48,12 @@ func ResolveHostnames(ctx context.Context, ipOrHostnames ...string) ([]string, e
 	return ips, nil
 }
 
-func classifyResolved(ipOrHostnames []string) (unresolved, resolved []string) {
+func classify(ipOrHostnames []string) (unresolved, resolved []string) {
 	for _, ipOrHostnames := range ipOrHostnames {
+		if len(ipOrHostnames) == 0 {
+			continue
+		}
+
 		if ip := net.ParseIP(strings.TrimPrefix(strings.TrimSuffix(ipOrHostnames, "]"), "[")); ip == nil {
 			unresolved = append(unresolved, ipOrHostnames)
 		} else {
