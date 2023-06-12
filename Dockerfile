@@ -27,7 +27,6 @@ RUN go build \
     -X 'github.com/steadybit/extension-kit/extbuild.Version=${VERSION}' \
     -X 'github.com/steadybit/extension-kit/extbuild.Revision=${REVISION}'" \
     -o ./extension \
-    main.go \
     ${ADDITIONAL_BUILD_PARAMS}
 
 ##
