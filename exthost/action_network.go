@@ -4,19 +4,19 @@
 package exthost
 
 import (
-  "context"
-  "encoding/json"
-  "fmt"
-  "github.com/google/uuid"
-  "github.com/rs/zerolog/log"
-  "github.com/steadybit/action-kit/go/action_kit_api/v2"
-  "github.com/steadybit/action-kit/go/action_kit_commons/networkutils"
-  "github.com/steadybit/action-kit/go/action_kit_sdk"
-  "github.com/steadybit/extension-host/exthost/common"
-  "github.com/steadybit/extension-host/exthost/network"
-  extension_kit "github.com/steadybit/extension-kit"
-  "github.com/steadybit/extension-kit/extutil"
-  "net"
+	"context"
+	"encoding/json"
+	"fmt"
+	"github.com/google/uuid"
+	"github.com/rs/zerolog/log"
+	"github.com/steadybit/action-kit/go/action_kit_api/v2"
+	"github.com/steadybit/action-kit/go/action_kit_commons/networkutils"
+	"github.com/steadybit/action-kit/go/action_kit_sdk"
+	"github.com/steadybit/extension-host/exthost/common"
+	"github.com/steadybit/extension-host/exthost/network"
+	extension_kit "github.com/steadybit/extension-kit"
+	"github.com/steadybit/extension-kit/extutil"
+	"net"
 )
 
 type networkOptsProvider func(ctx context.Context, request action_kit_api.PrepareActionRequestBody) (networkutils.Opts, error)
@@ -157,6 +157,9 @@ func parsePortRanges(raw []string) ([]networkutils.PortRange, error) {
 	var ranges []networkutils.PortRange
 
 	for _, r := range raw {
+		if len(r) == 0 {
+			continue
+		}
 		parsed, err := networkutils.ParsePortRange(r)
 		if err != nil {
 			return nil, err
@@ -204,8 +207,8 @@ func mapToNetworkFilter(ctx context.Context, config map[string]interface{}, rest
 		excludes = append(excludes, networkutils.NewNetWithPortRanges([]net.IPNet{*cidr}, networkutils.PortRange{From: uint16(restrictedEndpoint.PortMin), To: uint16(restrictedEndpoint.PortMax)})...)
 	}
 
-  ownIps := networkutils.GetOwnIPs()
-  ownPort := common.GetOwnPort()
+	ownIps := networkutils.GetOwnIPs()
+	ownPort := common.GetOwnPort()
 	ownHealthPort := common.GetOwnHealthPort()
 	nets := networkutils.IpToNet(ownIps)
 
