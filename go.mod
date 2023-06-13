@@ -9,7 +9,7 @@ require (
 	github.com/mitchellh/go-ps v1.0.0
 	github.com/rs/zerolog v1.29.1
 	github.com/steadybit/action-kit/go/action_kit_api/v2 v2.6.1
-	github.com/steadybit/action-kit/go/action_kit_commons v1.0.3
+	github.com/steadybit/action-kit/go/action_kit_commons v1.0.4
 	github.com/steadybit/action-kit/go/action_kit_sdk v1.1.3
 	github.com/steadybit/action-kit/go/action_kit_test v1.0.4
 	github.com/steadybit/discovery-kit/go/discovery_kit_api v1.3.0
@@ -52,7 +52,7 @@ require (
 	github.com/yalp/jsonpath v0.0.0-20180802001716-5cc68e5049a0 // indirect
 	golang.org/x/net v0.10.0 // indirect
 	golang.org/x/oauth2 v0.6.0 // indirect
-	golang.org/x/sys v0.8.0 // indirect
+	golang.org/x/sys v0.9.0 // indirect
 	golang.org/x/term v0.8.0 // indirect
 	golang.org/x/text v0.9.0 // indirect
 	golang.org/x/time v0.3.0 // indirect
