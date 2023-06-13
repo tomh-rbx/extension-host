@@ -176,7 +176,7 @@ func mapToNetworkFilter(ctx context.Context, config map[string]interface{}, rest
 		extutil.ToStringArray(config["hostname"])...,
 	)
 
-	includeIps, err := network.ResolveHostnames(ctx, toResolve...)
+	includeIps, err := networkutils.Resolve(ctx, toResolve...)
 	if err != nil {
 		return networkutils.Filter{}, err
 	}

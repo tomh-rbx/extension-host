@@ -5,15 +5,15 @@
 package exthost
 
 import (
-  "github.com/elastic/go-sysinfo"
-  "github.com/rs/zerolog/log"
-  "github.com/steadybit/action-kit/go/action_kit_commons/networkutils"
-  "github.com/steadybit/discovery-kit/go/discovery_kit_api"
-  "github.com/steadybit/extension-kit/extbuild"
-  "github.com/steadybit/extension-kit/exthttp"
-  "github.com/steadybit/extension-kit/extutil"
-  "net/http"
-  "os"
+	"github.com/elastic/go-sysinfo"
+	"github.com/rs/zerolog/log"
+	"github.com/steadybit/action-kit/go/action_kit_commons/networkutils"
+	"github.com/steadybit/discovery-kit/go/discovery_kit_api"
+	"github.com/steadybit/extension-kit/extbuild"
+	"github.com/steadybit/extension-kit/exthttp"
+	"github.com/steadybit/extension-kit/extutil"
+	"net/http"
+	"os"
 )
 
 const discoveryBasePath = basePath + "/discovery"
@@ -145,51 +145,43 @@ func getDiscoveredTargets(w http.ResponseWriter, _ *http.Request, _ []byte) {
 }
 
 func getHostTarget() []discovery_kit_api.Target {
-	targets := make([]discovery_kit_api.Target, 1)
 	hostname, _ := os.Hostname()
-	ip4s := networkutils.GetOwnIPs()
-	nics := networkutils.GetOwnNetworkInterfaces()
-	host, err := sysinfo.Host()
-	var osFamily string
-	var osManufacturer string
-	var osVersion string
-
-	if err != nil {
-		log.Error().Err(err).Msg("Failed to get host info")
-	} else {
-		osFamily = host.Info().OS.Family
-		osManufacturer = host.Info().OS.Name
-		osVersion = host.Info().OS.Version
-	}
-	fqdn, err := host.FQDN()
-	if err != nil {
-		log.Trace().Err(err).Msg("Failed to get FQDN")
-		fqdn = host.Info().Hostname
+	var ownIps []string
+	for _, ip := range networkutils.GetOwnIPs() {
+		ownIps = append(ownIps, ip.String())
 	}
 
-	// ip adress of the host
-	targets[0] = discovery_kit_api.Target{
+	target := discovery_kit_api.Target{
 		Id:         hostname,
 		TargetType: TargetID,
 		Label:      hostname,
 		Attributes: map[string][]string{
-			"host.hostname":        {hostname},
-			"host.domainname":      {fqdn},
-			"host.ipv4":            ip4s,
-			"host.nic":             nics,
-			"host.os.family":       {osFamily},
-			"host.os.manufacturer": {osManufacturer},
-			"host.os.version":      {osVersion},
+			"host.hostname": {hostname},
+			"host.ipv4":     ownIps,
+			"host.nic":      networkutils.GetOwnNetworkInterfaces(),
 		},
 	}
-	environmentVariables := getEnvironmentVariables()
-	for key, value := range environmentVariables {
-		targets[0].Attributes["host.env."+key] = []string{value}
-	}
-	labels := getLabels()
-	for key, value := range labels {
-		targets[0].Attributes["label."+key] = []string{value}
+
+	if host, err := sysinfo.Host(); err == nil {
+		target.Attributes["host.os.family"] = []string{host.Info().OS.Family}
+		target.Attributes["host.os.manufacturer"] = []string{host.Info().OS.Name}
+		target.Attributes["host.os.version"] = []string{host.Info().OS.Version}
+
+		if fqdn, err := host.FQDN(); err == nil {
+			target.Attributes["host.domainname"] = []string{fqdn}
+		} else {
+			target.Attributes["host.domainname"] = []string{host.Info().Hostname}
+		}
+	} else {
+		log.Error().Err(err).Msg("Failed to get host info")
 	}
 
-	return targets
+	for key, value := range getEnvironmentVariables() {
+		target.Attributes["host.env."+key] = []string{value}
+	}
+	for key, value := range getLabels() {
+		target.Attributes["label."+key] = []string{value}
+	}
+
+	return []discovery_kit_api.Target{target}
 }
