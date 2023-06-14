@@ -116,7 +116,7 @@ func (l *shutdownAction) Prepare(_ context.Context, state *ActionState, request 
 			return &action_kit_api.PrepareResult{
 				Error: &action_kit_api.ActionKitError{
 					Title:  "Shutdown command not found",
-					Status: extutil.Ptr(action_kit_api.Failed),
+					Status: extutil.Ptr(action_kit_api.Errored),
 				},
 			}, nil
 		} else {
