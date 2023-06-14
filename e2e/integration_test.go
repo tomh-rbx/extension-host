@@ -211,7 +211,7 @@ func testTimeTravel(t *testing.T, m *e2e.Minikube, e *e2e.Extension) {
 }
 
 func getTimeDiffBetweenNowAndContainerTime(t *testing.T, m *e2e.Minikube, e *e2e.Extension, now time.Time) time.Duration {
-	out, err := m.Exec(e.Pod, "steadybit-extension-host", "date", "+%s")
+	out, err := m.PodExec(e.Pod, "steadybit-extension-host", "date", "+%s")
 	if err != nil {
 		t.Fatal(err)
 		return 0
@@ -254,7 +254,7 @@ func testStopProcess(t *testing.T, m *e2e.Minikube, e *e2e.Extension) {
 
 	e2e.AssertProcessNOTRunningInContainer(t, m, e.Pod, "steadybit-extension-host", "tail")
 	go func() {
-		_, _ = m.Exec(e.Pod, "steadybit-extension-host", "tail", "-f", "/dev/null")
+		_, _ = m.PodExec(e.Pod, "steadybit-extension-host", "tail", "-f", "/dev/null")
 	}()
 
 	e2e.AssertProcessRunningInContainer(t, m, e.Pod, "steadybit-extension-host", "tail", true)
@@ -273,7 +273,7 @@ func testShutdownHost(t *testing.T, m *e2e.Minikube, e *e2e.Extension) {
 	_, err := e.RunAction("com.github.steadybit.extension_host.shutdown", getTarget(m), config, nil)
 	require.NoError(t, err)
 	e2e.Retry(t, 5, 1*time.Second, func(r *e2e.R) {
-		_, err = m.Exec(e.Pod, "steadybit-extension-host", "tail", "-f", "/dev/null")
+		_, err = m.PodExec(e.Pod, "steadybit-extension-host", "tail", "-f", "/dev/null")
 		if err == nil {
 			r.Failed = true
 			_, _ = fmt.Fprintf(r.Log, "expected error but got none")
