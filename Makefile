@@ -60,3 +60,7 @@ run: tidy build
 .PHONY: container
 container:
 	docker buildx build --build-arg BUILD_WITH_COVERAGE="true" -t extension-host:latest --output=type=docker .
+
+.PHONY: linuxpkg
+linuxpkg:
+	goreleaser release --clean --snapshot --skip-sign
