@@ -4,7 +4,7 @@
 # Copyright 2023 steadybit GmbH. All rights reserved.
 #
 
-service_name="steadybit-host"
+service_name="steadybit-extension-host"
 # decide if we should use SystemD or init/upstart
 use_systemctl="True"
 if ! command -V systemctl >/dev/null 2>&1; then
