@@ -180,7 +180,7 @@ func getHostTarget() []discovery_kit_api.Target {
 		target.Attributes["host.env."+key] = []string{value}
 	}
 	for key, value := range getLabels() {
-		target.Attributes["label."+key] = []string{value}
+		target.Attributes["host.label."+key] = []string{value}
 	}
 
 	return []discovery_kit_api.Target{target}

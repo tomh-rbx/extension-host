@@ -30,7 +30,7 @@ func Test_getDiscoveredTargets(t *testing.T) {
 	assert.NotEmpty(t, attributes["host.os.family"])
 	assert.NotEmpty(t, attributes["host.os.manufacturer"])
 	assert.NotEmpty(t, attributes["host.os.version"])
-	assert.Equal(t, attributes["label.foo"], []string{"Bar"})
+	assert.Equal(t, attributes["host.label.foo"], []string{"Bar"})
 	assert.Equal(t, attributes["host.env.myenvvar"], []string{"MyEnvVarValue"})
 	assert.Equal(t, attributes["host.env.myenvvar2"], []string{"MyEnvVarValue2"})
 	assert.Equal(t, attributes["host.env.myenvvar3"], []string{"MyEnvVarValue3"})
