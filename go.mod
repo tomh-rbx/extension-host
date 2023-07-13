@@ -13,7 +13,7 @@ require (
 	github.com/steadybit/action-kit/go/action_kit_sdk v1.1.4
 	github.com/steadybit/action-kit/go/action_kit_test v1.0.7
 	github.com/steadybit/discovery-kit/go/discovery_kit_api v1.3.0
-	github.com/steadybit/extension-kit v1.8.0
+	github.com/steadybit/extension-kit v1.8.2
 	github.com/stretchr/testify v1.8.4
 	golang.org/x/exp v0.0.0-20230711153332-06a737ee72cb
 	kernel.org/pub/linux/libs/security/libcap/cap v1.2.69
