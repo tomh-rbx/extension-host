@@ -1,5 +1,9 @@
 # Changelog
 
+## v1.1.1
+
+ - turn the rpm dependency for kernel-extra-modules into a recommendation
+
 ## v1.1.0
 
  - prefix host labels with `host.`
