@@ -88,4 +88,5 @@ nfpms:
         - /usr/sbin/ip
         - /usr/bin/dig
         - /usr/sbin/capsh
-        - kernel-modules-extra
+        recommends:
+          - kernel-modules-extra
