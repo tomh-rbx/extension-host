@@ -56,8 +56,11 @@ Or you can run it manually:
 ```sh
 docker run \
   --rm \
-  -p 8085 \
+  -p 8085:8085 \
   --name steadybit-extension-host \
+  --privileged
+  --network=host
+  --pid=host
   ghcr.io/steadybit/extension-host:latest
 ```
 ### Linux Package

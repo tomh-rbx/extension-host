@@ -30,7 +30,7 @@ type StopProcessActionState struct {
 }
 
 type ExecutionRunData struct {
-	stopAction chan bool // stores the stop channels for each execution
+	stopAction chan struct{} // stores the stop channels for each execution
 }
 
 // Make sure action implements all required interfaces
@@ -38,7 +38,7 @@ var (
 	_ action_kit_sdk.Action[StopProcessActionState]         = (*stopProcessAction)(nil)
 	_ action_kit_sdk.ActionWithStop[StopProcessActionState] = (*stopProcessAction)(nil) // Optional, needed when the action needs a stop method
 
-	ExecutionRunDataMap = sync.Map{} //make(map[uuid.UUID]*ExecutionRunData)
+	executionRunDataMap = sync.Map{}
 )
 
 func NewStopProcessAction() action_kit_sdk.Action[StopProcessActionState] {
@@ -172,7 +172,7 @@ func (l *stopProcessAction) Prepare(_ context.Context, state *StopProcessActionS
 	return nil, nil
 }
 func loadExecutionRunData(executionID uuid.UUID) (*ExecutionRunData, error) {
-	erd, ok := ExecutionRunDataMap.Load(executionID)
+	erd, ok := executionRunDataMap.Load(executionID)
 	if !ok {
 		return nil, fmt.Errorf("failed to load execution run data")
 	}
@@ -181,8 +181,8 @@ func loadExecutionRunData(executionID uuid.UUID) (*ExecutionRunData, error) {
 }
 
 func initExecutionRunData(state *StopProcessActionState) {
-	ExecutionRunDataMap.Store(state.ExecutionID, &ExecutionRunData{
-		stopAction: make(chan bool),
+	executionRunDataMap.Store(state.ExecutionID, &ExecutionRunData{
+		stopAction: make(chan struct{}),
 	})
 }
 
@@ -199,17 +199,18 @@ func (l *stopProcessAction) Start(_ context.Context, state *StopProcessActionSta
 	}
 
 	go func(executionRunData *ExecutionRunData) {
-		//loop until deadline is reached
-		for time.Now().Before(state.Deadline) {
-			//check if stop was requested
+		ctx, cancel := context.WithDeadline(context.Background(), state.Deadline)
+		defer cancel()
+
+		for {
 			select {
+			case <-time.After(state.Delay):
+				stopProcess(state)
 			case <-executionRunData.stopAction:
 				return
-			default:
-				stopProcess(state)
-				time.Sleep(state.Delay)
+			case <-ctx.Done():
+				return
 			}
-
 		}
 	}(executionRunData)
 
@@ -238,7 +239,7 @@ func (l *stopProcessAction) Stop(_ context.Context, state *StopProcessActionStat
 		log.Debug().Err(err).Msg("Execution run data not found, stop was already called")
 		return nil, nil
 	}
-	executionRunData.stopAction <- true
-	ExecutionRunDataMap.Delete(state.ExecutionID)
+	executionRunData.stopAction <- struct{}{}
+	executionRunDataMap.Delete(state.ExecutionID)
 	return nil, nil
 }
