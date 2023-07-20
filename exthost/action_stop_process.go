@@ -18,39 +18,35 @@ import (
 	"time"
 )
 
-type stopProcessAction struct{}
-
-type StopProcessActionState struct {
-	ExecutionID  uuid.UUID
-	Delay        time.Duration
-	ProcessOrPid string
-	Graceful     bool
-	Deadline     time.Time
-	Duration     time.Duration
+type stopProcessAction struct {
+	processStoppers sync.Map
 }
 
-type ExecutionRunData struct {
-	stopAction chan struct{} // stores the stop channels for each execution
+type StopProcessActionState struct {
+	ExecutionID   uuid.UUID
+	Delay         time.Duration
+	ProcessFilter string //pid or executable name
+	Graceful      bool
+	Deadline      time.Time
+	Duration      time.Duration
 }
 
 // Make sure action implements all required interfaces
 var (
 	_ action_kit_sdk.Action[StopProcessActionState]         = (*stopProcessAction)(nil)
 	_ action_kit_sdk.ActionWithStop[StopProcessActionState] = (*stopProcessAction)(nil) // Optional, needed when the action needs a stop method
-
-	executionRunDataMap = sync.Map{}
 )
 
 func NewStopProcessAction() action_kit_sdk.Action[StopProcessActionState] {
 	return &stopProcessAction{}
 }
 
-func (l *stopProcessAction) NewEmptyState() StopProcessActionState {
+func (a *stopProcessAction) NewEmptyState() StopProcessActionState {
 	return StopProcessActionState{}
 }
 
 // Describe returns the action description for the platform with all required information.
-func (l *stopProcessAction) Describe() action_kit_api.ActionDescription {
+func (a *stopProcessAction) Describe() action_kit_api.ActionDescription {
 	return action_kit_api.ActionDescription{
 		Id:          stopProcessActionID,
 		Label:       "Stop Processes",
@@ -127,7 +123,7 @@ func (l *stopProcessAction) Describe() action_kit_api.ActionDescription {
 // It must not cause any harmful effects.
 // The passed in state is included in the subsequent calls to start/status/stop.
 // So the state should contain all information needed to execute the action and even more important: to be able to stop it.
-func (l *stopProcessAction) Prepare(_ context.Context, state *StopProcessActionState, request action_kit_api.PrepareActionRequestBody) (*action_kit_api.PrepareResult, error) {
+func (a *stopProcessAction) Prepare(_ context.Context, state *StopProcessActionState, request action_kit_api.PrepareActionRequestBody) (*action_kit_api.PrepareResult, error) {
 	_, err := CheckTargetHostname(request.Target.Attributes)
 	if err != nil {
 		return nil, err
@@ -141,7 +137,7 @@ func (l *stopProcessAction) Prepare(_ context.Context, state *StopProcessActionS
 			}),
 		}, nil
 	}
-	state.ProcessOrPid = processOrPid
+	state.ProcessFilter = processOrPid
 
 	parsedDuration := extutil.ToUInt64(request.Config["duration"])
 	if parsedDuration == 0 {
@@ -166,80 +162,69 @@ func (l *stopProcessAction) Prepare(_ context.Context, state *StopProcessActionS
 
 	graceful := extutil.ToBool(request.Config["graceful"])
 	state.Graceful = graceful
-
-	initExecutionRunData(state)
-
 	return nil, nil
-}
-func loadExecutionRunData(executionID uuid.UUID) (*ExecutionRunData, error) {
-	erd, ok := executionRunDataMap.Load(executionID)
-	if !ok {
-		return nil, fmt.Errorf("failed to load execution run data")
-	}
-	executionRunData := erd.(*ExecutionRunData)
-	return executionRunData, nil
-}
-
-func initExecutionRunData(state *StopProcessActionState) {
-	executionRunDataMap.Store(state.ExecutionID, &ExecutionRunData{
-		stopAction: make(chan struct{}),
-	})
 }
 
 // Start is called to start the action
 // You can mutate the state here.
 // You can use the result to return messages/errors/metrics or artifacts
-func (l *stopProcessAction) Start(_ context.Context, state *StopProcessActionState) (*action_kit_api.StartResult, error) {
-	state.Deadline = time.Now().Add(state.Duration)
+func (a *stopProcessAction) Start(_ context.Context, state *StopProcessActionState) (*action_kit_api.StartResult, error) {
+	stopper := newProcessStopper(state.ProcessFilter, state.Graceful, state.Delay, state.Duration)
 
-	executionRunData, err := loadExecutionRunData(state.ExecutionID)
-	if err != nil {
-		log.Error().Err(err).Msg("Failed to load execution run data")
-		return nil, err
-	}
+	a.processStoppers.Store(state.ExecutionID, stopper)
 
-	go func(executionRunData *ExecutionRunData) {
-		ctx, cancel := context.WithDeadline(context.Background(), state.Deadline)
-		defer cancel()
-
-		for {
-			select {
-			case <-time.After(state.Delay):
-				stopProcess(state)
-			case <-executionRunData.stopAction:
-				return
-			case <-ctx.Done():
-				return
-			}
-		}
-	}(executionRunData)
-
-	return nil, nil
-}
-
-func stopProcess(state *StopProcessActionState) {
-	pids := stopprocess.FindProcessIds(state.ProcessOrPid)
-	if len(pids) == 0 {
-		return
-	}
-	err := stopprocess.StopProcesses(pids, !state.Graceful)
-	if err != nil {
-		log.Error().Err(err).Msg("Failed to stop processes")
-		return
-	}
+	stopper.start()
+	return &action_kit_api.StartResult{
+		Messages: extutil.Ptr([]action_kit_api.Message{
+			{
+				Level:   extutil.Ptr(action_kit_api.Info),
+				Message: fmt.Sprintf("Starting stop processes %s", state.ProcessFilter),
+			},
+		}),
+	}, nil
 }
 
 // Stop is called to stop the action
 // It will be called even if the start method did not complete successfully.
 // It should be implemented in a immutable way, as the agent might to retries if the stop method timeouts.
 // You can use the result to return messages/errors/metrics or artifacts
-func (l *stopProcessAction) Stop(_ context.Context, state *StopProcessActionState) (*action_kit_api.StopResult, error) {
-	executionRunData, err := loadExecutionRunData(state.ExecutionID)
-	if err != nil {
-		log.Debug().Err(err).Msg("Execution run data not found, stop was already called")
-		return nil, nil
+func (a *stopProcessAction) Stop(_ context.Context, state *StopProcessActionState) (*action_kit_api.StopResult, error) {
+	stopper, ok := a.processStoppers.Load(state.ExecutionID)
+	if ok {
+		stopper.(*processStopper).stop()
+		a.processStoppers.Delete(state.ExecutionID)
+	} else {
+		log.Debug().Msg("Execution run data not found, stop was already called")
 	}
-	executionRunData.stopAction <- struct{}{}
-	executionRunDataMap.Delete(state.ExecutionID)
 	return nil, nil
+}
+
+type processStopper struct {
+	stop  func()
+	start func()
+}
+
+func newProcessStopper(processFilter string, graceful bool, delay, duration time.Duration) *processStopper {
+	ctx, cancel := context.WithTimeout(context.Background(), duration)
+
+	start := func() {
+		go func() {
+			for {
+				select {
+				case <-time.After(delay):
+					pids := stopprocess.FindProcessIds(processFilter)
+					log.Debug().Msgf("Found %d processes to stop", len(pids))
+					err := stopprocess.StopProcesses(pids, !graceful)
+					log.Error().Err(err).Msg("Failed to stop processes")
+				case <-ctx.Done():
+					return
+				}
+			}
+		}()
+	}
+
+	return &processStopper{
+		stop:  cancel,
+		start: start,
+	}
 }

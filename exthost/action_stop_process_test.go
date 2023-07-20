@@ -42,10 +42,10 @@ func TestActionStopProcess_Prepare(t *testing.T) {
 			},
 
 			wantedState: &StopProcessActionState{
-				ProcessOrPid: "tail",
-				Graceful:     true,
-				Duration:     10 * time.Second,
-				Delay:        1 * time.Second,
+				ProcessFilter: "tail",
+				Graceful:      true,
+				Duration:      10 * time.Second,
+				Delay:         1 * time.Second,
 			},
 		}, {
 			name: "Should return error too low duration",
@@ -87,7 +87,7 @@ func TestActionStopProcess_Prepare(t *testing.T) {
 			}
 			if tt.wantedState != nil {
 				assert.NoError(t, err)
-				assert.Equal(t, tt.wantedState.ProcessOrPid, state.ProcessOrPid)
+				assert.Equal(t, tt.wantedState.ProcessFilter, state.ProcessFilter)
 				assert.Equal(t, tt.wantedState.Graceful, state.Graceful)
 				assert.Equal(t, tt.wantedState.Delay, state.Delay)
 				deadline := now.Add(state.Duration * time.Second)

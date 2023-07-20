@@ -110,7 +110,7 @@ func getAttributeDescriptions() discovery_kit_api.AttributeDescriptions {
 					One:   "IPv4",
 					Other: "IPv4s",
 				},
-			}, {}, {
+			}, {
 				Attribute: "host.ipv6",
 				Label: discovery_kit_api.PluralLabel{
 					One:   "IPv6",

@@ -14,7 +14,6 @@ import (
 
 func StopProcesses(pid []int, force bool) error {
 	if len(pid) == 0 {
-		log.Error().Msg("No pid to stop")
 		return nil
 	}
 
@@ -46,14 +45,13 @@ func stopProcessWindows(pid int, force bool) error {
 	if force {
 		err := exec.Command("taskkill", "/f", "/pid", fmt.Sprintf("%d", pid)).Run()
 		if err != nil {
-			log.Error().Err(err).Int("pid", pid).Msg("Failed to kill process")
+			return fmt.Errorf("failed to force kill process via exec: %w", err)
 		}
-		return err
 	}
 
 	err := exec.Command("taskkill", "/pid", fmt.Sprintf("%d", pid)).Run()
 	if err != nil {
-		log.Error().Err(err).Int("pid", pid).Msg("Failed to send SIGTERM")
+		return fmt.Errorf("failed to kill process via exec: %w", err)
 	}
 	return err
 }
@@ -62,22 +60,22 @@ func stopProcessUnix(pid int, force bool) error {
 	if force {
 		err := syscall.Kill(pid, syscall.SIGKILL)
 		if err != nil {
-			log.Error().Err(err).Int("pid", pid).Msg("Failed to kill process via syscall")
+			log.Debug().Err(err).Int("pid", pid).Msg("Failed to send SIGKILL via syscall")
 			err = common.RunAsRoot("kill", "-9", fmt.Sprintf("%d", pid))
 		}
 		if err != nil {
-			log.Error().Err(err).Int("pid", pid).Msg("Failed to kill process via exec")
+			return fmt.Errorf("failed to send SIGKILL process via exec: %w", err)
 		}
 		return err
 	}
 
 	err := syscall.Kill(pid, syscall.SIGTERM)
 	if err != nil {
-		log.Error().Err(err).Int("pid", pid).Msg("Failed to send SIGTERM via syscall")
+		log.Error().Err(err).Int("pid", pid).Msg("failed to send SIGTERM via syscall")
 		err = common.RunAsRoot("kill", fmt.Sprintf("%d", pid))
 	}
 	if err != nil {
-		log.Error().Err(err).Int("pid", pid).Msg("Failed to send SIGTERM via exec")
+		return fmt.Errorf("failed to send SIGTERM via exec: %w", err)
 	}
 	return err
 }
