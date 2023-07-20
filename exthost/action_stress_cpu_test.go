@@ -60,7 +60,7 @@ func TestActionCPU_Prepare(t *testing.T) {
 				}),
 			},
 
-			wantedError: extutil.Ptr(extension_kit.ToError("Duration must be greater / equal than 1s", nil)),
+			wantedError: extension_kit.ToError("Duration must be greater / equal than 1s", nil),
 		},
 	}
 	action := NewStressCPUAction()
