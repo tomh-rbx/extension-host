@@ -8,9 +8,10 @@ Learn about the capabilities of this extension in our [Reliability Hub](https://
 
 ## Configuration
 
-| Environment Variable                  | Meaning                                                         | Required | Default |
-|---------------------------------------|-----------------------------------------------------------------|----------|---------|
-| `STEADYBIT_DISCOVERY_ENV_LIST`        | List of environment variables to be added to discovered targets | no       |         |
+| Environment Variable            | Meaning                                                                                                                                                                                                                       | Required | Default |
+|---------------------------------|-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|----------|---------|
+| `STEADYBIT_LABEL_<key>=<value>` | Environment variables starting with `STEADYBIT_LABEL_` will be added to discovered targets' attributes. <br>**Example:** `STEADYBIT_LABEL_TEAM=Fullfillment` adds to each discovered target the attribute `team=Fullfillment` | no       |         |
+| `STEADYBIT_DISCOVERY_ENV_LIST`  | List of environment variables to be evaluated and added to discovered targets' attributes. <br> **Example:** `STEADYBIT_DISCOVERY_ENV_LIST=STAGE` adds to each target the attribute `stage=<value of $STAGE>`                 | no       |         |
 
 The extension supports all environment variables provided by [steadybit/extension-kit](https://github.com/steadybit/extension-kit#environment-variables).
 
@@ -31,7 +32,6 @@ The capabilities needed by this extension are: (which are provided by the helm c
 - SETGID
 - AUDIT_WRITE
 
-
 ## Installation
 
 ### Using Helm in Kubernetes
@@ -49,7 +49,9 @@ helm upgrade steadybit-extension-host \
 ```
 
 ### Using Docker
-This extension is by default deployed using our [outpost.sh docker compose script](https://docs.steadybit.com/install-and-configure/install-outpost-agent-preview/install-as-docker-container).
+
+This extension is by default deployed using
+our [outpost.sh docker compose script](https://docs.steadybit.com/install-and-configure/install-outpost-agent-preview/install-as-docker-container).
 
 Or you can run it manually:
 
@@ -63,9 +65,11 @@ docker run \
   --pid=host
   ghcr.io/steadybit/extension-host:latest
 ```
+
 ### Linux Package
 
-Please use our [outpost-linux.sh script](https://docs.steadybit.com/install-and-configure/install-outpost-agent-preview/install-on-linux-hosts) to install the extension on your Linux machine.
+Please use our [outpost-linux.sh script](https://docs.steadybit.com/install-and-configure/install-outpost-agent-preview/install-on-linux-hosts) to install the
+extension on your Linux machine.
 The script will download the latest version of the extension and install it using the package manager.
 
 ## Register the extension
