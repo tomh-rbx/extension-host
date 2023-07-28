@@ -1,5 +1,9 @@
 # Changelog
 
+## v1.1.4
+
+- update dependencies
+
 ## v1.1.3
 
  - fix: stop process attack sometimes didn't stop
