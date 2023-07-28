@@ -143,6 +143,8 @@ github.com/steadybit/extension-kit v1.8.2 h1:g3JahmtXchPiOZ9mERqtCHmxEWgQ3GKvhhT
 github.com/steadybit/extension-kit v1.8.2/go.mod h1:rgMxJhheOSIMgTiqAHpzfjfc+fjMm5h6gzuMWCzBq4w=
 github.com/steadybit/extension-kit v1.8.3 h1:j03yIjAVKZo9dLYl0anh6/3TEneS1fEiJzoQLeyv6eU=
 github.com/steadybit/extension-kit v1.8.3/go.mod h1:3/g4FjU9EJcrHCuY6+vBETFdgQOKVt5Aa9hMXJ1r29U=
+github.com/steadybit/extension-kit v1.8.4 h1:o7AkZhqVyljd4Vc4jWSLAD7Bc2LskyThuoIf2IfpJ+Q=
+github.com/steadybit/extension-kit v1.8.4/go.mod h1:3/g4FjU9EJcrHCuY6+vBETFdgQOKVt5Aa9hMXJ1r29U=
 github.com/stoewer/go-strcase v1.2.0/go.mod h1:IBiWB2sKIp3wVVQ3Y035++gc+knqhUQag1KpM8ahLw8=
 github.com/stretchr/objx v0.1.0/go.mod h1:HFkY916IF+rwdDfMAkV7OtwuqBVzrE8GR6GFx+wExME=
 github.com/stretchr/objx v0.4.0/go.mod h1:YvHI0jy2hoMjB+UWwv71VJQ9isScKT/TqJzVSSt89Yw=
@@ -166,6 +168,8 @@ golang.org/x/exp v0.0.0-20230713183714-613f0c0eb8a1 h1:MGwJjxBy0HJshjDNfLsYO8xpp
 golang.org/x/exp v0.0.0-20230713183714-613f0c0eb8a1/go.mod h1:FXUEEKJgO7OQYeo8N01OfiKP8RXMtf6e8aTskBGqWdc=
 golang.org/x/exp v0.0.0-20230725093048-515e97ebf090 h1:Di6/M8l0O2lCLc6VVRWhgCiApHV8MnQurBnFSHsQtNY=
 golang.org/x/exp v0.0.0-20230725093048-515e97ebf090/go.mod h1:FXUEEKJgO7OQYeo8N01OfiKP8RXMtf6e8aTskBGqWdc=
+golang.org/x/exp v0.0.0-20230728194245-b0cb94b80691 h1:/yRP+0AN7mf5DkD3BAI6TOFnd51gEoDEb8o35jIFtgw=
+golang.org/x/exp v0.0.0-20230728194245-b0cb94b80691/go.mod h1:FXUEEKJgO7OQYeo8N01OfiKP8RXMtf6e8aTskBGqWdc=
 golang.org/x/lint v0.0.0-20181026193005-c67002cb31c3/go.mod h1:UVdnD1Gm6xHRNCYTkRU2/jEulfH38KcIWyp/GAMgvoE=
 golang.org/x/lint v0.0.0-20190227174305-5b3e6a55c961/go.mod h1:wehouNa3lNwaWXcvxsM5YxQ5yQlVC4a0KAMCusXpPoU=
 golang.org/x/lint v0.0.0-20190313153728-d0100b6bd8b3/go.mod h1:6SW0HCj/g11FgYtHlgUYUwCkIfeOF89ocIRzGO/8vkc=
