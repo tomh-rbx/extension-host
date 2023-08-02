@@ -234,13 +234,13 @@ func testDiscovery(t *testing.T, _ *e2e.Minikube, e *e2e.Extension) {
 	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 	defer cancel()
 
-	target, err := e2e.PollForTarget(ctx, e, "host", func(target discovery_kit_api.Target) bool {
+	target, err := e2e.PollForTarget(ctx, e, "com.steadybit.extension_host.host", func(target discovery_kit_api.Target) bool {
 		log.Debug().Msgf("targetHost: %v", target.Attributes["host.hostname"])
 		return e2e.HasAttribute(target, "host.hostname", "e2e-docker")
 	})
 
 	require.NoError(t, err)
-	assert.Equal(t, target.TargetType, "host")
+	assert.Equal(t, target.TargetType, "com.steadybit.extension_host.host")
 }
 
 func testStopProcess(t *testing.T, m *e2e.Minikube, e *e2e.Extension) {
