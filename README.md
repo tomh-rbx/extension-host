@@ -4,7 +4,7 @@
 
 This [Steadybit](https://www.steadybit.com/) extension provides a host discovery and various actions for host targets.
 
-Learn about the capabilities of this extension in our [Reliability Hub](https://hub.steadybit.com/extension/com.github.steadybit.extension_host).
+Learn about the capabilities of this extension in our [Reliability Hub](https://hub.steadybit.com/extension/com.steadybit.extension_host).
 
 ## Configuration
 
