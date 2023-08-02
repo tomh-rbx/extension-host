@@ -144,7 +144,7 @@ func testStressCpu(t *testing.T, m *e2e.Minikube, e *e2e.Extension) {
 		CpuLoad  int `json:"cpuLoad"`
 		Workers  int `json:"workers"`
 	}{Duration: 50000, Workers: 0, CpuLoad: 50}
-	exec, err := e.RunAction("com.github.steadybit.extension_host.stress-cpu", getTarget(m), config, nil)
+	exec, err := e.RunAction("com.steadybit.extension_host.stress-cpu", getTarget(m), config, nil)
 	require.NoError(t, err)
 
 	e2e.AssertProcessRunningInContainer(t, m, e.Pod, "steadybit-extension-host", "stress-ng", true)
@@ -158,7 +158,7 @@ func testStressMemory(t *testing.T, m *e2e.Minikube, e *e2e.Extension) {
 		Percentage int `json:"percentage"`
 	}{Duration: 50000, Percentage: 50}
 
-	exec, err := e.RunAction("com.github.steadybit.extension_host.stress-mem", getTarget(m), config, nil)
+	exec, err := e.RunAction("com.steadybit.extension_host.stress-mem", getTarget(m), config, nil)
 	require.NoError(t, err)
 	e2e.AssertProcessRunningInContainer(t, m, e.Pod, "steadybit-extension-host", "stress-ng", true)
 	require.NoError(t, exec.Cancel())
@@ -171,7 +171,7 @@ func testStressIo(t *testing.T, m *e2e.Minikube, e *e2e.Extension) {
 		Percentage int `json:"percentage"`
 		Workers    int `json:"workers"`
 	}{Duration: 50000, Workers: 1, Percentage: 50}
-	exec, err := e.RunAction("com.github.steadybit.extension_host.stress-io", getTarget(m), config, nil)
+	exec, err := e.RunAction("com.steadybit.extension_host.stress-io", getTarget(m), config, nil)
 	require.NoError(t, err)
 	e2e.AssertProcessRunningInContainer(t, m, e.Pod, "steadybit-extension-host", "stress-ng", true)
 	require.NoError(t, exec.Cancel())
@@ -190,7 +190,7 @@ func testTimeTravel(t *testing.T, m *e2e.Minikube, e *e2e.Extension) {
 	max := float64(duration) * 1.2
 
 	now := time.Now()
-	action, err := e.RunAction("com.github.steadybit.extension_host.timetravel", getTarget(m), config, nil)
+	action, err := e.RunAction("com.steadybit.extension_host.timetravel", getTarget(m), config, nil)
 
 	require.NoError(t, err)
 	defer func() { _ = action.Cancel() }()
@@ -259,7 +259,7 @@ func testStopProcess(t *testing.T, m *e2e.Minikube, e *e2e.Extension) {
 
 	e2e.AssertProcessRunningInContainer(t, m, e.Pod, "steadybit-extension-host", "tail", true)
 
-	exec, err := e.RunAction("com.github.steadybit.extension_host.stop-process", getTarget(m), config, nil)
+	exec, err := e.RunAction("com.steadybit.extension_host.stop-process", getTarget(m), config, nil)
 	require.NoError(t, err)
 	e2e.AssertProcessNOTRunningInContainer(t, m, e.Pod, "steadybit-extension-host", "tail")
 	require.NoError(t, exec.Cancel())
@@ -270,7 +270,7 @@ func testShutdownHost(t *testing.T, m *e2e.Minikube, e *e2e.Extension) {
 		Reboot bool `json:"reboot"`
 	}{Reboot: true}
 
-	_, err := e.RunAction("com.github.steadybit.extension_host.shutdown", getTarget(m), config, nil)
+	_, err := e.RunAction("com.steadybit.extension_host.shutdown", getTarget(m), config, nil)
 	require.NoError(t, err)
 	e2e.Retry(t, 5, 1*time.Second, func(r *e2e.R) {
 		_, err = m.PodExec(e.Pod, "steadybit-extension-host", "tail", "-f", "/dev/null")
