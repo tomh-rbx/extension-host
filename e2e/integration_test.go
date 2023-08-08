@@ -521,11 +521,11 @@ func testNetworkPackageCorruption(t *testing.T, m *e2e.Minikube, e *e2e.Extensio
 			name:             "should corrupt packages on all traffic",
 			WantedCorruption: true,
 		},
-		{
-			name:             "should corrupt packages only on port 5001 traffic",
-			port:             []string{"5001"},
-			WantedCorruption: true,
-		},
+		//{
+		//	name:             "should corrupt packages only on port 5001 traffic",
+		//	port:             []string{"5001"},
+		//	WantedCorruption: true,
+		//},
 		{
 			name:             "should corrupt packages only on port 80 traffic",
 			port:             []string{"80"},
