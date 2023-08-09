@@ -1,5 +1,9 @@
 # Changelog
 
+## v1.1.5
+
+- migration to new unified steadybit actionIds and targetTypes
+
 ## v1.1.4
 
 - update dependencies
