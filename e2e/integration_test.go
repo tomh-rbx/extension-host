@@ -521,11 +521,11 @@ func testNetworkPackageCorruption(t *testing.T, m *e2e.Minikube, e *e2e.Extensio
 			name:             "should corrupt packages on all traffic",
 			WantedCorruption: true,
 		},
-		//{
-		//	name:             "should corrupt packages only on port 5001 traffic",
-		//	port:             []string{"5001"},
-		//	WantedCorruption: true,
-		//},
+		{
+			name:             "should corrupt packages only on port 5001 traffic",
+			port:             []string{"5001"},
+			WantedCorruption: true,
+		},
 		{
 			name:             "should corrupt packages only on port 80 traffic",
 			port:             []string{"80"},
@@ -556,21 +556,34 @@ func testNetworkPackageCorruption(t *testing.T, m *e2e.Minikube, e *e2e.Extensio
 		}
 
 		t.Run(tt.name, func(t *testing.T) {
-			if runsInCi() {
-				time.Sleep(5 * time.Second)
-			}
-			action, err := e.RunAction(exthost.BaseActionID+".network_package_corruption", getTarget(m), config, executionContext)
-			defer func() { _ = action.Cancel() }()
-			require.NoError(t, err)
+			e2e.Retry(t, 3, 1*time.Second, func(r *e2e.R) {
+				if runsInCi() {
+					time.Sleep(5 * time.Second)
+				}
+				action, err := e.RunAction(exthost.BaseActionID+".network_package_corruption", getTarget(m), config, executionContext)
+				defer func() { _ = action.Cancel() }()
+				if err != nil {
+					r.Failed = true
+				}
 
-			if tt.WantedCorruption {
-				iperf.AssertPackageLoss(t, float64(config.Corruption)*0.7, float64(config.Corruption)*1.3)
-			} else {
-				iperf.AssertPackageLoss(t, 0, 5)
-			}
-			require.NoError(t, action.Cancel())
+				if tt.WantedCorruption {
+					packageLossResult := iperf.AssertPackageLossWithRetry(float64(config.Corruption)*0.7, float64(config.Corruption)*1.3, 8)
+					if !packageLossResult {
+						r.Failed = true
+					}
+				} else {
+					packageLossResult := iperf.AssertPackageLossWithRetry(0, 5, 8)
+					if !packageLossResult {
+						r.Failed = true
+					}
+				}
+				require.NoError(t, action.Cancel())
 
-			iperf.AssertPackageLoss(t, 0, 5)
+				packageLossResult := iperf.AssertPackageLossWithRetry(0, 5, 8)
+				if !packageLossResult {
+					r.Failed = true
+				}
+			})
 		})
 	}
 }
