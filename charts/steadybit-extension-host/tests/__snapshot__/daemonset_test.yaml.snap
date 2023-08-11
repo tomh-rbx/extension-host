@@ -1,4 +1,4 @@
-manifest should match snapshot using podAnnotations and Labels:
+manifest should match snapshot using podAnnotations, podLabels and resources:
   1: |
     apiVersion: apps/v1
     kind: DaemonSet
@@ -52,6 +52,13 @@ manifest should match snapshot using podAnnotations and Labels:
                 httpGet:
                   path: /health/readiness
                   port: 8081
+              resources:
+                limits:
+                  cpu: 100m
+                  memory: 128Mi
+                requests:
+                  cpu: 200m
+                  memory: 256Mi
               securityContext:
                 capabilities:
                   add:
@@ -138,6 +145,13 @@ manifest should match snapshot with TLS:
                 httpGet:
                   path: /health/readiness
                   port: 8081
+              resources:
+                limits:
+                  cpu: 200m
+                  memory: 128Mi
+                requests:
+                  cpu: 50m
+                  memory: 32Mi
               securityContext:
                 capabilities:
                   add:
@@ -227,6 +241,13 @@ manifest should match snapshot with different containerPorts:
                 httpGet:
                   path: /health/readiness
                   port: 9091
+              resources:
+                limits:
+                  cpu: 200m
+                  memory: 128Mi
+                requests:
+                  cpu: 50m
+                  memory: 32Mi
               securityContext:
                 capabilities:
                   add:
@@ -316,6 +337,13 @@ manifest should match snapshot with extra env vars:
                 httpGet:
                   path: /health/readiness
                   port: 8081
+              resources:
+                limits:
+                  cpu: 200m
+                  memory: 128Mi
+                requests:
+                  cpu: 50m
+                  memory: 32Mi
               securityContext:
                 capabilities:
                   add:
@@ -399,6 +427,13 @@ manifest should match snapshot with extra labels:
                 httpGet:
                   path: /health/readiness
                   port: 8081
+              resources:
+                limits:
+                  cpu: 200m
+                  memory: 128Mi
+                requests:
+                  cpu: 50m
+                  memory: 32Mi
               securityContext:
                 capabilities:
                   add:
@@ -487,6 +522,13 @@ manifest should match snapshot with mutual TLS:
                 httpGet:
                   path: /health/readiness
                   port: 8081
+              resources:
+                limits:
+                  cpu: 200m
+                  memory: 128Mi
+                requests:
+                  cpu: 50m
+                  memory: 32Mi
               securityContext:
                 capabilities:
                   add:
@@ -589,6 +631,13 @@ manifest should match snapshot with mutual TLS using containerPaths:
                 httpGet:
                   path: /health/readiness
                   port: 8081
+              resources:
+                limits:
+                  cpu: 200m
+                  memory: 128Mi
+                requests:
+                  cpu: 50m
+                  memory: 32Mi
               securityContext:
                 capabilities:
                   add:
@@ -671,6 +720,13 @@ manifest should match snapshot without TLS:
                 httpGet:
                   path: /health/readiness
                   port: 8081
+              resources:
+                limits:
+                  cpu: 200m
+                  memory: 128Mi
+                requests:
+                  cpu: 50m
+                  memory: 32Mi
               securityContext:
                 capabilities:
                   add:

@@ -4,12 +4,19 @@ tests:
   - it: manifest should match snapshot without TLS
     asserts:
       - matchSnapshot: { }
-  - it: manifest should match snapshot using podAnnotations and Labels
+  - it: manifest should match snapshot using podAnnotations, podLabels and resources
     set:
       podAnnotations:
         some-annotation: "some-annotation-value"
       podLabels:
         some-label: "some-label-value"
+      resources:
+        limits:
+          cpu: 100m
+          memory: 128Mi
+        requests:
+          cpu: 200m
+          memory: 256Mi
     asserts:
       - matchSnapshot: { }
   - it: manifest should match snapshot with TLS
