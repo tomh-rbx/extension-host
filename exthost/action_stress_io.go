@@ -7,7 +7,7 @@ package exthost
 import (
 	"context"
 	"fmt"
-	action_kit_api "github.com/steadybit/action-kit/go/action_kit_api/v2"
+	"github.com/steadybit/action-kit/go/action_kit_api/v2"
 	"github.com/steadybit/action-kit/go/action_kit_sdk"
 	"github.com/steadybit/extension-host/exthost/resources"
 	"github.com/steadybit/extension-kit/extbuild"
@@ -60,7 +60,7 @@ func (l *stressIOAction) Describe() action_kit_api.ActionDescription {
 		//   External: The agent takes care and calls stop then the time has passed. Requires a duration parameter. Use this when the duration is known in advance.
 		//   Internal: The action has to implement the status endpoint to signal when the action is done. Use this when the duration is not known in advance.
 		//   Instantaneous: The action is done immediately. Use this for actions that happen immediately, e.g. a reboot.
-		TimeControl: action_kit_api.External,
+		TimeControl: action_kit_api.TimeControlExternal,
 
 		// The parameters for the action
 		Parameters: []action_kit_api.ActionParameter{

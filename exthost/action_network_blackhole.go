@@ -8,8 +8,8 @@ import (
 	"encoding/json"
 	"fmt"
 	"github.com/steadybit/action-kit/go/action_kit_api/v2"
-	"github.com/steadybit/action-kit/go/action_kit_sdk"
 	"github.com/steadybit/action-kit/go/action_kit_commons/networkutils"
+	"github.com/steadybit/action-kit/go/action_kit_sdk"
 	"github.com/steadybit/extension-kit/extbuild"
 	"github.com/steadybit/extension-kit/extutil"
 )
@@ -35,7 +35,7 @@ func getNetworkBlackholeDescription() action_kit_api.ActionDescription {
 		},
 		Category:    extutil.Ptr("network"),
 		Kind:        action_kit_api.Attack,
-		TimeControl: action_kit_api.External,
+		TimeControl: action_kit_api.TimeControlExternal,
 		Parameters:  commonNetworkParameters,
 	}
 }
