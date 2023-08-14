@@ -86,6 +86,7 @@ manifest should match snapshot using podAnnotations, podLabels and resources:
           dnsPolicy: ClusterFirstWithHostNet
           hostNetwork: true
           hostPID: true
+          serviceAccountName: steadybit-extension-host
           volumes:
             - emptyDir: {}
               name: tmp-dir
@@ -186,6 +187,7 @@ manifest should match snapshot with TLS:
           dnsPolicy: ClusterFirstWithHostNet
           hostNetwork: true
           hostPID: true
+          serviceAccountName: steadybit-extension-host
           volumes:
             - emptyDir: {}
               name: tmp-dir
@@ -283,6 +285,7 @@ manifest should match snapshot with different containerPorts:
           dnsPolicy: ClusterFirstWithHostNet
           hostNetwork: true
           hostPID: true
+          serviceAccountName: steadybit-extension-host
           volumes:
             - emptyDir: {}
               name: tmp-dir
@@ -383,6 +386,7 @@ manifest should match snapshot with extra env vars:
           dnsPolicy: ClusterFirstWithHostNet
           hostNetwork: true
           hostPID: true
+          serviceAccountName: steadybit-extension-host
           volumes:
             - emptyDir: {}
               name: tmp-dir
@@ -478,6 +482,7 @@ manifest should match snapshot with extra labels:
           dnsPolicy: ClusterFirstWithHostNet
           hostNetwork: true
           hostPID: true
+          serviceAccountName: steadybit-extension-host
           volumes:
             - emptyDir: {}
               name: tmp-dir
@@ -583,6 +588,7 @@ manifest should match snapshot with mutual TLS:
           dnsPolicy: ClusterFirstWithHostNet
           hostNetwork: true
           hostPID: true
+          serviceAccountName: steadybit-extension-host
           volumes:
             - emptyDir: {}
               name: tmp-dir
@@ -690,6 +696,7 @@ manifest should match snapshot with mutual TLS using containerPaths:
           dnsPolicy: ClusterFirstWithHostNet
           hostNetwork: true
           hostPID: true
+          serviceAccountName: steadybit-extension-host
           volumes:
             - emptyDir: {}
               name: tmp-dir
@@ -783,6 +790,7 @@ manifest should match snapshot with update strategy:
           dnsPolicy: ClusterFirstWithHostNet
           hostNetwork: true
           hostPID: true
+          serviceAccountName: steadybit-extension-host
           volumes:
             - emptyDir: {}
               name: tmp-dir
@@ -876,6 +884,7 @@ manifest should match snapshot without TLS:
           dnsPolicy: ClusterFirstWithHostNet
           hostNetwork: true
           hostPID: true
+          serviceAccountName: steadybit-extension-host
           volumes:
             - emptyDir: {}
               name: tmp-dir
