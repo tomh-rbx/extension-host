@@ -12,7 +12,7 @@ import (
 	"github.com/steadybit/action-kit/go/action_kit_api/v2"
 	"github.com/steadybit/action-kit/go/action_kit_commons/networkutils"
 	"github.com/steadybit/action-kit/go/action_kit_sdk"
-	"github.com/steadybit/extension-host/exthost/common"
+	"github.com/steadybit/extension-host/config"
 	"github.com/steadybit/extension-host/exthost/network"
 	extension_kit "github.com/steadybit/extension-kit"
 	"github.com/steadybit/extension-kit/extutil"
@@ -170,10 +170,10 @@ func parsePortRanges(raw []string) ([]networkutils.PortRange, error) {
 	return ranges, nil
 }
 
-func mapToNetworkFilter(ctx context.Context, config map[string]interface{}, restrictedEndpoints []action_kit_api.RestrictedEndpoint) (networkutils.Filter, error) {
+func mapToNetworkFilter(ctx context.Context, actionConfig map[string]interface{}, restrictedEndpoints []action_kit_api.RestrictedEndpoint) (networkutils.Filter, error) {
 	toResolve := append(
-		extutil.ToStringArray(config["ip"]),
-		extutil.ToStringArray(config["hostname"])...,
+		extutil.ToStringArray(actionConfig["ip"]),
+		extutil.ToStringArray(actionConfig["hostname"])...,
 	)
 
 	includeIps, err := networkutils.Resolve(ctx, toResolve...)
@@ -186,7 +186,7 @@ func mapToNetworkFilter(ctx context.Context, config map[string]interface{}, rest
 		includeCidrs = networkutils.IpToNet(includeIps)
 	}
 
-	portRanges, err := parsePortRanges(extutil.ToStringArray(config["port"]))
+	portRanges, err := parsePortRanges(extutil.ToStringArray(actionConfig["port"]))
 	if err != nil {
 		return networkutils.Filter{}, err
 	}
@@ -208,8 +208,8 @@ func mapToNetworkFilter(ctx context.Context, config map[string]interface{}, rest
 	}
 
 	ownIps := networkutils.GetOwnIPs()
-	ownPort := common.GetOwnPort()
-	ownHealthPort := common.GetOwnHealthPort()
+	ownPort := config.Config.Port
+	ownHealthPort := config.Config.HealthPort
 	nets := networkutils.IpToNet(ownIps)
 
 	log.Debug().Msgf("Adding own ip %s to exclude list (Ports %d and %d)", ownIps, ownPort, ownHealthPort)
