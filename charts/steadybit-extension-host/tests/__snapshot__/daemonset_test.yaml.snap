@@ -60,6 +60,7 @@ manifest should match snapshot using podAnnotations, podLabels and resources:
                   cpu: 200m
                   memory: 256Mi
               securityContext:
+                allowPrivilegeEscalation: false
                 capabilities:
                   add:
                     - SYS_ADMIN
@@ -74,6 +75,8 @@ manifest should match snapshot using podAnnotations, podLabels and resources:
                     - SETUID
                     - SETGID
                     - AUDIT_WRITE
+                  drop:
+                    - ALL
                 readOnlyRootFilesystem: true
                 runAsGroup: 10000
                 runAsNonRoot: true
@@ -158,6 +161,7 @@ manifest should match snapshot with TLS:
                   cpu: 50m
                   memory: 32Mi
               securityContext:
+                allowPrivilegeEscalation: false
                 capabilities:
                   add:
                     - SYS_ADMIN
@@ -172,6 +176,8 @@ manifest should match snapshot with TLS:
                     - SETUID
                     - SETGID
                     - AUDIT_WRITE
+                  drop:
+                    - ALL
                 readOnlyRootFilesystem: true
                 runAsGroup: 10000
                 runAsNonRoot: true
@@ -259,6 +265,7 @@ manifest should match snapshot with different containerPorts:
                   cpu: 50m
                   memory: 32Mi
               securityContext:
+                allowPrivilegeEscalation: false
                 capabilities:
                   add:
                     - SYS_ADMIN
@@ -273,6 +280,8 @@ manifest should match snapshot with different containerPorts:
                     - SETUID
                     - SETGID
                     - AUDIT_WRITE
+                  drop:
+                    - ALL
                 readOnlyRootFilesystem: true
                 runAsGroup: 10000
                 runAsNonRoot: true
@@ -360,6 +369,7 @@ manifest should match snapshot with extra env vars:
                   cpu: 50m
                   memory: 32Mi
               securityContext:
+                allowPrivilegeEscalation: false
                 capabilities:
                   add:
                     - SYS_ADMIN
@@ -374,6 +384,8 @@ manifest should match snapshot with extra env vars:
                     - SETUID
                     - SETGID
                     - AUDIT_WRITE
+                  drop:
+                    - ALL
                 readOnlyRootFilesystem: true
                 runAsGroup: 10000
                 runAsNonRoot: true
@@ -456,6 +468,7 @@ manifest should match snapshot with extra labels:
                   cpu: 50m
                   memory: 32Mi
               securityContext:
+                allowPrivilegeEscalation: false
                 capabilities:
                   add:
                     - SYS_ADMIN
@@ -470,6 +483,8 @@ manifest should match snapshot with extra labels:
                     - SETUID
                     - SETGID
                     - AUDIT_WRITE
+                  drop:
+                    - ALL
                 readOnlyRootFilesystem: true
                 runAsGroup: 10000
                 runAsNonRoot: true
@@ -556,6 +571,7 @@ manifest should match snapshot with mutual TLS:
                   cpu: 50m
                   memory: 32Mi
               securityContext:
+                allowPrivilegeEscalation: false
                 capabilities:
                   add:
                     - SYS_ADMIN
@@ -570,6 +586,8 @@ manifest should match snapshot with mutual TLS:
                     - SETUID
                     - SETGID
                     - AUDIT_WRITE
+                  drop:
+                    - ALL
                 readOnlyRootFilesystem: true
                 runAsGroup: 10000
                 runAsNonRoot: true
@@ -670,6 +688,7 @@ manifest should match snapshot with mutual TLS using containerPaths:
                   cpu: 50m
                   memory: 32Mi
               securityContext:
+                allowPrivilegeEscalation: false
                 capabilities:
                   add:
                     - SYS_ADMIN
@@ -684,6 +703,8 @@ manifest should match snapshot with mutual TLS using containerPaths:
                     - SETUID
                     - SETGID
                     - AUDIT_WRITE
+                  drop:
+                    - ALL
                 readOnlyRootFilesystem: true
                 runAsGroup: 10000
                 runAsNonRoot: true
@@ -764,6 +785,7 @@ manifest should match snapshot with update strategy:
                   cpu: 50m
                   memory: 32Mi
               securityContext:
+                allowPrivilegeEscalation: false
                 capabilities:
                   add:
                     - SYS_ADMIN
@@ -778,6 +800,8 @@ manifest should match snapshot with update strategy:
                     - SETUID
                     - SETGID
                     - AUDIT_WRITE
+                  drop:
+                    - ALL
                 readOnlyRootFilesystem: true
                 runAsGroup: 10000
                 runAsNonRoot: true
@@ -858,6 +882,7 @@ manifest should match snapshot without TLS:
                   cpu: 50m
                   memory: 32Mi
               securityContext:
+                allowPrivilegeEscalation: false
                 capabilities:
                   add:
                     - SYS_ADMIN
@@ -872,6 +897,8 @@ manifest should match snapshot without TLS:
                     - SETUID
                     - SETGID
                     - AUDIT_WRITE
+                  drop:
+                    - ALL
                 readOnlyRootFilesystem: true
                 runAsGroup: 10000
                 runAsNonRoot: true
