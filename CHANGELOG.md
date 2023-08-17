@@ -1,9 +1,13 @@
 # Changelog
 
+## v1.1.9
+
+- avoid duplicate tc/ip rules
+
 ## v1.1.8
 
 - update dependencies
--
+
 ## v1.1.6
 
 - migration to new unified steadybit actionIds and targetTypes
