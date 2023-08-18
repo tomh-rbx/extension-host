@@ -1,5 +1,9 @@
 # Changelog
 
+## v1.1.10
+
+- Only generate exclude ip/tc rules for network interfaces that are up
+
 ## v1.1.9
 
 - avoid duplicate tc/ip rules
