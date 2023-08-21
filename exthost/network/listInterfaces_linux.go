@@ -10,31 +10,11 @@ import (
 	"fmt"
 	"github.com/rs/zerolog/log"
 	"os/exec"
-	"runtime"
 )
-
-type Interface struct {
-	Index    uint     `json:"ifindex"`
-	Name     string   `json:"ifname"`
-	LinkType string   `json:"link_type"`
-	Flags    []string `json:"flags"`
-}
-
-func (i *Interface) HasFlag(f string) bool {
-	for _, flag := range i.Flags {
-		if flag == f {
-			return true
-		}
-	}
-	return false
-}
 
 func ListInterfaces(ctx context.Context) ([]Interface, error) {
 	var outb, errb bytes.Buffer
 	var interfaces []Interface
-	if runtime.GOOS == "darwin" {
-		return listInterfacesMac(interfaces)
-	}
 
 	cmd := exec.CommandContext(ctx, "ip", "-json", "link", "show")
 	cmd.Stdout = &outb
