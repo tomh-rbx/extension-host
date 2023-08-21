@@ -16,7 +16,6 @@ require (
 	github.com/steadybit/extension-kit v1.8.5
 	github.com/stretchr/testify v1.8.4
 	golang.org/x/exp v0.0.0-20230817173708-d852ddb80c63
-	kernel.org/pub/linux/libs/security/libcap/cap v1.2.69
 )
 
 require (
@@ -90,7 +89,6 @@ require (
 	k8s.io/klog/v2 v2.100.1 // indirect
 	k8s.io/kube-openapi v0.0.0-20230811205723-7ac0aad8c58d // indirect
 	k8s.io/utils v0.0.0-20230726121419-3b25d923346b // indirect
-	kernel.org/pub/linux/libs/security/libcap/psx v1.2.69 // indirect
 	sigs.k8s.io/json v0.0.0-20221116044647-bc3834ca7abd // indirect
 	sigs.k8s.io/structured-merge-diff/v4 v4.3.0 // indirect
 	sigs.k8s.io/yaml v1.3.0 // indirect
