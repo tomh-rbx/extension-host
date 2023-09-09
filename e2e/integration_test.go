@@ -10,6 +10,7 @@ import (
 	"github.com/steadybit/action-kit/go/action_kit_api/v2"
 	"github.com/steadybit/action-kit/go/action_kit_test/e2e"
 	"github.com/steadybit/discovery-kit/go/discovery_kit_api"
+	"github.com/steadybit/discovery-kit/go/discovery_kit_test/validate"
 	"github.com/steadybit/extension-host/exthost"
 	"github.com/steadybit/extension-kit/extutil"
 	"github.com/stretchr/testify/assert"
@@ -81,6 +82,10 @@ func TestWithMinikube(t *testing.T) {
 	}
 
 	e2e.WithDefaultMinikube(t, &extFactory, []e2e.WithMinikubeTestCase{
+		{
+			Name: "validate discovery",
+			Test: validateDiscovery,
+		},
 		{
 			Name: "target discovery",
 			Test: testDiscovery,
@@ -227,6 +232,10 @@ func getTimeDiffBetweenNowAndContainerTime(t *testing.T, m *e2e.Minikube, e *e2e
 		diff = diff * -1
 	}
 	return diff
+}
+
+func validateDiscovery(t *testing.T, _ *e2e.Minikube, e *e2e.Extension) {
+	assert.NoError(t, validate.ValidateEndpointReferences("/", e.Client))
 }
 
 func testDiscovery(t *testing.T, _ *e2e.Minikube, e *e2e.Extension) {

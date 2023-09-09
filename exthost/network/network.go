@@ -60,7 +60,7 @@ func generateAndRunCommands(ctx context.Context, opts networkutils.Opts, mode ne
 	if tcCommands != nil {
 		err = executeTcCommands(ctx, tcCommands)
 		if err != nil {
-			return networkutils.FilterTcBatchErrors(err, mode, tcCommands)
+			return networkutils.FilterBatchErrors(err, mode, tcCommands)
 		}
 	}
 
@@ -119,7 +119,7 @@ func executeTcCommands(ctx context.Context, cmds []string) error {
 	}
 	err := cmd.Run()
 	if err != nil {
-		if parsed := networkutils.ParseTcBatchError(bytes.NewReader(outb.Bytes())); parsed != nil {
+		if parsed := networkutils.ParseBatchError(cmds, bytes.NewReader(outb.Bytes())); parsed != nil {
 			return parsed
 		}
 		return fmt.Errorf("tc failed: %w, output: %s", err, outb.String())

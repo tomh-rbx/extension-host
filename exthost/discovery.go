@@ -45,6 +45,7 @@ func GetDiscoveryList() discovery_kit_api.DiscoveryList {
 				Path:   discoveryBasePath + "/attribute-descriptions",
 			},
 		},
+		TargetEnrichmentRules: []discovery_kit_api.DescribingEndpointReference{},
 	}
 }
 
@@ -152,6 +153,16 @@ func getDiscoveredTargets(w http.ResponseWriter, _ *http.Request, _ []byte) {
 
 func getHostTarget() []discovery_kit_api.Target {
 	hostname, _ := os.Hostname()
+	target := discovery_kit_api.Target{
+		Id:         hostname,
+		TargetType: TargetID,
+		Label:      hostname,
+		Attributes: map[string][]string{
+			"host.hostname": {hostname},
+			"host.nic":      networkutils.GetOwnNetworkInterfaces(),
+		},
+	}
+
 	var ownIpV4s, ownIpV6s []string
 	for _, ip := range networkutils.GetOwnIPs() {
 		if ipv4 := ip.To4(); ipv4 != nil {
@@ -160,17 +171,11 @@ func getHostTarget() []discovery_kit_api.Target {
 			ownIpV6s = append(ownIpV6s, ipv6.String())
 		}
 	}
-
-	target := discovery_kit_api.Target{
-		Id:         hostname,
-		TargetType: TargetID,
-		Label:      hostname,
-		Attributes: map[string][]string{
-			"host.hostname": {hostname},
-			"host.ipv4":     ownIpV4s,
-			"host.ipv6":     ownIpV6s,
-			"host.nic":      networkutils.GetOwnNetworkInterfaces(),
-		},
+	if len(ownIpV4s) > 0 {
+		target.Attributes["host.ipv4"] = ownIpV4s
+	}
+	if len(ownIpV6s) > 0 {
+		target.Attributes["host.ipv6"] = ownIpV6s
 	}
 
 	if host, err := sysinfo.Host(); err == nil {
