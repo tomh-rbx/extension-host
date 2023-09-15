@@ -1,6 +1,6 @@
 apiVersion: v2
 name: steadybit-extension-host
-description: Steadybit scaffold extension Helm chart for Kubernetes.
+description: Steadybit host extension Helm chart for Kubernetes.
 version: 1.0.26
 appVersion: latest
 home: https://www.steadybit.com/
