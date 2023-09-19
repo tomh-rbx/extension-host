@@ -2,6 +2,7 @@ project_name: steadybit-extension-host
 before:
   hooks:
     - go mod download
+    - make licenses-report
 release:
   prerelease: "false"
 builds:
@@ -65,6 +66,8 @@ nfpms:
       - src: ./linuxpkg/config
         dst: /etc
         type: config
+      - src: ./licenses
+        dst: /opt/steadybit/extension-host/licenses
 
     scripts:
       preinstall: ./linuxpkg/scripts/preinstall.sh
