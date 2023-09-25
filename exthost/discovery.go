@@ -9,7 +9,9 @@ import (
 	"github.com/rs/zerolog/log"
 	"github.com/steadybit/action-kit/go/action_kit_commons/networkutils"
 	"github.com/steadybit/discovery-kit/go/discovery_kit_api"
-	"github.com/steadybit/extension-kit/extbuild"
+  "github.com/steadybit/discovery-kit/go/discovery_kit_commons"
+  "github.com/steadybit/extension-host/config"
+  "github.com/steadybit/extension-kit/extbuild"
 	"github.com/steadybit/extension-kit/exthttp"
 	"github.com/steadybit/extension-kit/extutil"
 	"net/http"
@@ -199,5 +201,6 @@ func getHostTarget() []discovery_kit_api.Target {
 		target.Attributes["host.label."+key] = []string{value}
 	}
 
-	return []discovery_kit_api.Target{target}
+  targets := []discovery_kit_api.Target{target}
+  return discovery_kit_commons.ApplyAttributeExcludes(targets, config.Config.DiscoveryAttributesExcludesHost)
 }

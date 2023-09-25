@@ -2,7 +2,8 @@ package exthost
 
 import (
 	"github.com/rs/zerolog/log"
-	"github.com/stretchr/testify/assert"
+  "github.com/steadybit/extension-host/config"
+  "github.com/stretchr/testify/assert"
 	"os"
 	"testing"
 )
@@ -14,6 +15,7 @@ func Test_getDiscoveredTargets(t *testing.T) {
 	os.Setenv("MyEnvVar", "MyEnvVarValue")
 	os.Setenv("MyEnvVar2", "MyEnvVarValue2")
 	os.Setenv("MyEnvVar3", "MyEnvVarValue3")
+  config.Config.DiscoveryAttributesExcludesHost = []string{"host.nic"}
 	targets := getHostTarget()
 	log.Info().Msgf("targets: %+v", targets)
 	assert.NotNil(t, targets)
@@ -26,7 +28,7 @@ func Test_getDiscoveredTargets(t *testing.T) {
 	assert.NotEmpty(t, attributes["host.hostname"])
 	assert.NotEmpty(t, attributes["host.domainname"])
 	assert.NotEmpty(t, attributes["host.ipv4"])
-	assert.NotEmpty(t, attributes["host.nic"])
+	assert.NotContains(t, attributes, "host.nic")
 	assert.NotEmpty(t, attributes["host.os.family"])
 	assert.NotEmpty(t, attributes["host.os.manufacturer"])
 	assert.NotEmpty(t, attributes["host.os.version"])

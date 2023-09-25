@@ -76,6 +76,7 @@ func TestWithMinikube(t *testing.T) {
 		ExtraArgs: func(m *e2e.Minikube) []string {
 			return []string{
 				"--set", fmt.Sprintf("container.runtime=%s", m.Runtime),
+				"--set", "discovery.attributes.excludes.host={host.nic}",
 				//"--set", "logging.level=debug",
 			}
 		},
@@ -250,6 +251,7 @@ func testDiscovery(t *testing.T, _ *e2e.Minikube, e *e2e.Extension) {
 
 	require.NoError(t, err)
 	assert.Equal(t, target.TargetType, "com.steadybit.extension_host.host")
+  assert.NotContains(t, target.Attributes, "host.nic")
 }
 
 func testStopProcess(t *testing.T, m *e2e.Minikube, e *e2e.Extension) {
