@@ -1,5 +1,10 @@
 # Changelog
 
+
+## v1.1.11
+
+- Possibility to exclude attributes from discovery
+
 ## v1.1.10
 
 - Only generate exclude ip/tc rules for network interfaces that are up
