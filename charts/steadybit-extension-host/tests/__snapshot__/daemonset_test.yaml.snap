@@ -725,6 +725,203 @@ manifest should match snapshot with mutual TLS using containerPaths:
         rollingUpdate:
           maxUnavailable: 1
         type: RollingUpdate
+manifest should match snapshot with podSecurityContext:
+  1: |
+    apiVersion: apps/v1
+    kind: DaemonSet
+    metadata:
+      labels:
+        steadybit.com/discovery-disabled: "true"
+      name: RELEASE-NAME-steadybit-extension-host
+      namespace: NAMESPACE
+    spec:
+      selector:
+        matchLabels:
+          app: steadybit-extension-host
+          app.kubernetes.io/name: steadybit-extension-host
+      template:
+        metadata:
+          annotations:
+            container.apparmor.security.beta.kubernetes.io/steadybit-extension-host: unconfined
+            steadybit.com/extension-auto-discovery: |
+              {"extensions":[{"port":8085,"protocol":"http","types":["ACTION","DISCOVERY"]}]}
+          labels:
+            app: steadybit-extension-host
+            app.kubernetes.io/name: steadybit-extension-host
+            steadybit.com/discovery-disabled: "true"
+            steadybit.com/extension: "true"
+        spec:
+          containers:
+            - env:
+                - name: STEADYBIT_EXTENSION_PORT
+                  value: "8085"
+                - name: STEADYBIT_EXTENSION_HEALTH_PORT
+                  value: "8081"
+                - name: STEADYBIT_LOG_LEVEL
+                  value: INFO
+                - name: STEADYBIT_LOG_FORMAT
+                  value: text
+              image: ghcr.io/steadybit/extension-host:latest
+              imagePullPolicy: Always
+              livenessProbe:
+                httpGet:
+                  path: /health/liveness
+                  port: 8081
+              name: steadybit-extension-host
+              ports:
+                - containerPort: 8085
+                  name: http
+                - containerPort: 8081
+                  name: health
+              readinessProbe:
+                httpGet:
+                  path: /health/readiness
+                  port: 8081
+              resources:
+                limits:
+                  cpu: 200m
+                  memory: 128Mi
+                requests:
+                  cpu: 50m
+                  memory: 32Mi
+              securityContext:
+                allowPrivilegeEscalation: false
+                capabilities:
+                  add:
+                    - SYS_ADMIN
+                    - SYS_RESOURCE
+                    - SYS_BOOT
+                    - NET_RAW
+                    - SYS_TIME
+                    - SYS_PTRACE
+                    - KILL
+                    - NET_ADMIN
+                    - DAC_OVERRIDE
+                    - SETUID
+                    - SETGID
+                    - AUDIT_WRITE
+                  drop:
+                    - ALL
+                readOnlyRootFilesystem: true
+                runAsGroup: 10000
+                runAsNonRoot: true
+                runAsUser: 10000
+                seccompProfile:
+                  type: Unconfined
+              volumeMounts:
+                - mountPath: /tmp
+                  name: tmp-dir
+          dnsPolicy: ClusterFirstWithHostNet
+          hostNetwork: true
+          hostPID: true
+          securityContext:
+            runAsUser: 2222
+          serviceAccountName: steadybit-extension-host
+          volumes:
+            - emptyDir: {}
+              name: tmp-dir
+      updateStrategy:
+        rollingUpdate:
+          maxUnavailable: 1
+        type: RollingUpdate
+manifest should match snapshot with priority class:
+  1: |
+    apiVersion: apps/v1
+    kind: DaemonSet
+    metadata:
+      labels:
+        steadybit.com/discovery-disabled: "true"
+      name: RELEASE-NAME-steadybit-extension-host
+      namespace: NAMESPACE
+    spec:
+      selector:
+        matchLabels:
+          app: steadybit-extension-host
+          app.kubernetes.io/name: steadybit-extension-host
+      template:
+        metadata:
+          annotations:
+            container.apparmor.security.beta.kubernetes.io/steadybit-extension-host: unconfined
+            steadybit.com/extension-auto-discovery: |
+              {"extensions":[{"port":8085,"protocol":"http","types":["ACTION","DISCOVERY"]}]}
+          labels:
+            app: steadybit-extension-host
+            app.kubernetes.io/name: steadybit-extension-host
+            steadybit.com/discovery-disabled: "true"
+            steadybit.com/extension: "true"
+        spec:
+          containers:
+            - env:
+                - name: STEADYBIT_EXTENSION_PORT
+                  value: "8085"
+                - name: STEADYBIT_EXTENSION_HEALTH_PORT
+                  value: "8081"
+                - name: STEADYBIT_LOG_LEVEL
+                  value: INFO
+                - name: STEADYBIT_LOG_FORMAT
+                  value: text
+              image: ghcr.io/steadybit/extension-host:latest
+              imagePullPolicy: Always
+              livenessProbe:
+                httpGet:
+                  path: /health/liveness
+                  port: 8081
+              name: steadybit-extension-host
+              ports:
+                - containerPort: 8085
+                  name: http
+                - containerPort: 8081
+                  name: health
+              readinessProbe:
+                httpGet:
+                  path: /health/readiness
+                  port: 8081
+              resources:
+                limits:
+                  cpu: 200m
+                  memory: 128Mi
+                requests:
+                  cpu: 50m
+                  memory: 32Mi
+              securityContext:
+                allowPrivilegeEscalation: false
+                capabilities:
+                  add:
+                    - SYS_ADMIN
+                    - SYS_RESOURCE
+                    - SYS_BOOT
+                    - NET_RAW
+                    - SYS_TIME
+                    - SYS_PTRACE
+                    - KILL
+                    - NET_ADMIN
+                    - DAC_OVERRIDE
+                    - SETUID
+                    - SETGID
+                    - AUDIT_WRITE
+                  drop:
+                    - ALL
+                readOnlyRootFilesystem: true
+                runAsGroup: 10000
+                runAsNonRoot: true
+                runAsUser: 10000
+                seccompProfile:
+                  type: Unconfined
+              volumeMounts:
+                - mountPath: /tmp
+                  name: tmp-dir
+          dnsPolicy: ClusterFirstWithHostNet
+          hostNetwork: true
+          hostPID: true
+          priorityClassName: my-priority-class
+          serviceAccountName: steadybit-extension-host
+          volumes:
+            - emptyDir: {}
+              name: tmp-dir
+      updateStrategy:
+        rollingUpdate:
+          maxUnavailable: 1
+        type: RollingUpdate
 manifest should match snapshot with update strategy:
   1: |
     apiVersion: apps/v1
