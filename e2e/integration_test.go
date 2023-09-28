@@ -251,7 +251,7 @@ func testDiscovery(t *testing.T, _ *e2e.Minikube, e *e2e.Extension) {
 
 	require.NoError(t, err)
 	assert.Equal(t, target.TargetType, "com.steadybit.extension_host.host")
-  assert.NotContains(t, target.Attributes, "host.nic")
+	assert.NotContains(t, target.Attributes, "host.nic")
 }
 
 func testStopProcess(t *testing.T, m *e2e.Minikube, e *e2e.Extension) {

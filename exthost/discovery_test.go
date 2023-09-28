@@ -2,8 +2,8 @@ package exthost
 
 import (
 	"github.com/rs/zerolog/log"
-  "github.com/steadybit/extension-host/config"
-  "github.com/stretchr/testify/assert"
+	"github.com/steadybit/extension-host/config"
+	"github.com/stretchr/testify/assert"
 	"os"
 	"testing"
 )
@@ -15,7 +15,7 @@ func Test_getDiscoveredTargets(t *testing.T) {
 	os.Setenv("MyEnvVar", "MyEnvVarValue")
 	os.Setenv("MyEnvVar2", "MyEnvVarValue2")
 	os.Setenv("MyEnvVar3", "MyEnvVarValue3")
-  config.Config.DiscoveryAttributesExcludesHost = []string{"host.nic"}
+	config.Config.DiscoveryAttributesExcludesHost = []string{"host.nic"}
 	targets := getHostTarget()
 	log.Info().Msgf("targets: %+v", targets)
 	assert.NotNil(t, targets)

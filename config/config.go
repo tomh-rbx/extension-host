@@ -13,8 +13,8 @@ import (
 // through environment variables. Learn more through the documentation of the envconfig package.
 // https://github.com/kelseyhightower/envconfig
 type Specification struct {
-	Port                            uint16 `json:"port" split_words:"true" required:"false" default:"8085"`
-	HealthPort                      uint16 `json:"healthPort" split_words:"true" required:"false" default:"8081"`
+	Port                            uint16   `json:"port" split_words:"true" required:"false" default:"8085"`
+	HealthPort                      uint16   `json:"healthPort" split_words:"true" required:"false" default:"8081"`
 	DiscoveryAttributesExcludesHost []string `json:"discoveryAttributesExcludesHost" split_words:"true" required:"false"`
 }
 
