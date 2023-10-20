@@ -14,10 +14,6 @@ RUN echo 'deb [trusted=yes] https://repo.goreleaser.com/apt/ /' > /etc/apt/sourc
     && apt-get -qq update \
     && apt-get -qq install -y --no-install-recommends build-essential libcap2-bin goreleaser
 
-COPY go.mod ./
-COPY go.sum ./
-RUN go mod download
-
 COPY . .
 
 RUN goreleaser build --snapshot="${BUILD_SNAPSHOT}" --single-target -o extension \
