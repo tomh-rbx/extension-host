@@ -3,8 +3,9 @@
 ##
 ## Build
 ##
-FROM golang:1.20-bookworm AS build
+FROM --platform=$BUILDPLATFORM golang:1.20-bookworm AS build
 
+ARG TARGETOS TARGETARCH
 ARG BUILD_WITH_COVERAGE
 ARG BUILD_SNAPSHOT=true
 
@@ -16,7 +17,7 @@ RUN echo 'deb [trusted=yes] https://repo.goreleaser.com/apt/ /' > /etc/apt/sourc
 
 COPY . .
 
-RUN goreleaser build --snapshot="${BUILD_SNAPSHOT}" --single-target -o extension \
+RUN GOOS=$TARGETOS GOARCH=$TARGETARCH goreleaser build --snapshot="${BUILD_SNAPSHOT}" --single-target -o extension \
     && setcap "cap_sys_boot,cap_sys_time,cap_setuid,cap_setgid,cap_net_raw,cap_net_admin,cap_sys_admin,cap_dac_override+eip" ./extension
 
 
