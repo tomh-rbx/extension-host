@@ -174,8 +174,9 @@ github.com/mattn/go-colorable v0.1.13 h1:fFA4WZxdEF4tXPZVKMLwD8oUnCTTo08duU7wxec
 github.com/mattn/go-colorable v0.1.13/go.mod h1:7S9/ev0klgBDR4GtXTXX8a3vIGJpMovkB8vQcUbaXHg=
 github.com/mattn/go-isatty v0.0.14/go.mod h1:7GGIvUiUoEMVVmxf/4nioHXj79iQHKdU27kJ6hsGG94=
 github.com/mattn/go-isatty v0.0.16/go.mod h1:kYGgaQfpe5nmfYZH+SKPsOc2e4SrIfOl2e/yFXSvRLM=
-github.com/mattn/go-isatty v0.0.19 h1:JITubQf0MOLdlGRuRq+jtsDlekdYPia9ZFsB8h/APPA=
 github.com/mattn/go-isatty v0.0.19/go.mod h1:W+V8PltTTMOvKvAeJH7IuucS94S2C6jfK/D7dTCTo3Y=
+github.com/mattn/go-isatty v0.0.20 h1:xfD0iDuEKnDkl03q4limB+vH+GxLEtL/jb4xVJSWWEY=
+github.com/mattn/go-isatty v0.0.20/go.mod h1:W+V8PltTTMOvKvAeJH7IuucS94S2C6jfK/D7dTCTo3Y=
 github.com/microcosm-cc/bluemonday v1.0.25 h1:4NEwSfiJ+Wva0VxN5B8OwMicaJvD8r9tlJWm9rtloEg=
 github.com/microcosm-cc/bluemonday v1.0.25/go.mod h1:ZIOjCQp1OrzBBPIJmfX4qDYFuhU02nx4bn030ixfHLE=
 github.com/mitchellh/go-ps v1.0.0 h1:i6ampVEEF4wQFF+bkYfwYgY+F/uYJDktmvLPf7qIgjc=
@@ -228,8 +229,8 @@ github.com/spf13/pflag v1.0.5/go.mod h1:McXfInJRrz4CZXVZOBLb0bTZqETkiAhM9Iw0y3An
 github.com/spkg/bom v0.0.0-20160624110644-59b7046e48ad/go.mod h1:qLr4V1qq6nMqFKkMo8ZTx3f+BZEkzsRUY10Xsm2mwU0=
 github.com/steadybit/action-kit/go/action_kit_api/v2 v2.7.3 h1:IJjaEM7pE++wT1T8kZEQ4Q1tjinl6n3dmbBcomS8L2Q=
 github.com/steadybit/action-kit/go/action_kit_api/v2 v2.7.3/go.mod h1:BfFV+JOMe24695cTWvN/7Iuhc3izy6G1qt0vUzeksWg=
-github.com/steadybit/action-kit/go/action_kit_commons v1.0.8 h1:p+jSvQv2ODzGr41Eiua8ty3woFU45KRg2ESpKKeGwRc=
-github.com/steadybit/action-kit/go/action_kit_commons v1.0.8/go.mod h1:HKAKZ4X51196gdth71gJbqecDjA4W1kR3sib2xTgypk=
+github.com/steadybit/action-kit/go/action_kit_commons v1.0.9 h1:lwdB88l5WUt9Q6PCb70uzCrTXtkpz6vHW5UVMUa9ZH8=
+github.com/steadybit/action-kit/go/action_kit_commons v1.0.9/go.mod h1:cuv0SmFkaC0jeF/NYRox7yXIERL10xOngGPlMpX7Um0=
 github.com/steadybit/action-kit/go/action_kit_sdk v1.1.8 h1:kcpEVZw0iv5bIE7GNmjC54XRKxUlwPkDsvfMGeudIrQ=
 github.com/steadybit/action-kit/go/action_kit_sdk v1.1.8/go.mod h1:h2E1gRdpIhWvfQy5XsRIfQi3AujlpdcXxt3tNU9829U=
 github.com/steadybit/action-kit/go/action_kit_test v1.0.9 h1:XnYdsJOE+YCFFGzyTOPsdi4XgUyV7tg+tEmq8T4rwVI=
