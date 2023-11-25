@@ -1,6 +1,7 @@
 package exthost
 
 import (
+	"context"
 	"github.com/rs/zerolog/log"
 	"github.com/steadybit/extension-host/config"
 	"github.com/stretchr/testify/assert"
@@ -8,15 +9,15 @@ import (
 	"testing"
 )
 
-func Test_getDiscoveredTargets(t *testing.T) {
+func Test_DiscoverTargets(t *testing.T) {
 	//given
-	os.Setenv("steadybit_label_Foo", "Bar")
-	os.Setenv("STEADYBIT_DISCOVERY_ENV_LIST", "MyEnvVar,MyEnvVar2;MyEnvVar3")
-	os.Setenv("MyEnvVar", "MyEnvVarValue")
-	os.Setenv("MyEnvVar2", "MyEnvVarValue2")
-	os.Setenv("MyEnvVar3", "MyEnvVarValue3")
+	_ = os.Setenv("steadybit_label_Foo", "Bar")
+	_ = os.Setenv("STEADYBIT_DISCOVERY_ENV_LIST", "MyEnvVar,MyEnvVar2;MyEnvVar3")
+	_ = os.Setenv("MyEnvVar", "MyEnvVarValue")
+	_ = os.Setenv("MyEnvVar2", "MyEnvVarValue2")
+	_ = os.Setenv("MyEnvVar3", "MyEnvVarValue3")
 	config.Config.DiscoveryAttributesExcludesHost = []string{"host.nic"}
-	targets := getHostTarget()
+	targets, _ := (&hostDiscovery{}).DiscoverTargets(context.Background())
 	log.Info().Msgf("targets: %+v", targets)
 	assert.NotNil(t, targets)
 	assert.Len(t, targets, 1)

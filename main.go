@@ -9,6 +9,7 @@ import (
 	"github.com/steadybit/action-kit/go/action_kit_api/v2"
 	"github.com/steadybit/action-kit/go/action_kit_sdk"
 	"github.com/steadybit/discovery-kit/go/discovery_kit_api"
+	"github.com/steadybit/discovery-kit/go/discovery_kit_sdk"
 	"github.com/steadybit/extension-host/config"
 	"github.com/steadybit/extension-host/exthost"
 	"github.com/steadybit/extension-host/exthost/resources"
@@ -54,7 +55,7 @@ func main() {
 	// This is a section you will most likely want to change: The registration of HTTP handlers
 	// for your extension. You might want to change these because the names do not fit, or because
 	// you do not have a need for all of them.
-	exthost.RegisterDiscoveryHandlers()
+	discovery_kit_sdk.Register(exthost.NewHostDiscovery())
 	action_kit_sdk.RegisterAction(exthost.NewStressCPUAction())
 	action_kit_sdk.RegisterAction(exthost.NewStressMemoryAction())
 	action_kit_sdk.RegisterAction(exthost.NewStressIOAction())
@@ -99,6 +100,6 @@ func getExtensionList() ExtensionListResponse {
 
 		// See this document to learn more about the discovery list:
 		// https://github.com/steadybit/discovery-kit/blob/main/docs/discovery-api.md#index-response
-		DiscoveryList: exthost.GetDiscoveryList(),
+		DiscoveryList: discovery_kit_sdk.GetDiscoveryList(),
 	}
 }
