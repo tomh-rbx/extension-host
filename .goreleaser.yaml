@@ -5,6 +5,11 @@ before:
     - make licenses-report
 release:
   prerelease: "false"
+
+git:
+  ignore_tags:
+    - steadybit-extension-host-*
+
 builds:
   - binary: extension-host
     env:
