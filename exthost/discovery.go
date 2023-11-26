@@ -5,65 +5,47 @@
 package exthost
 
 import (
+	"context"
 	"github.com/elastic/go-sysinfo"
 	"github.com/rs/zerolog/log"
 	"github.com/steadybit/action-kit/go/action_kit_commons/networkutils"
 	"github.com/steadybit/discovery-kit/go/discovery_kit_api"
 	"github.com/steadybit/discovery-kit/go/discovery_kit_commons"
+	"github.com/steadybit/discovery-kit/go/discovery_kit_sdk"
 	"github.com/steadybit/extension-host/config"
 	"github.com/steadybit/extension-kit/extbuild"
-	"github.com/steadybit/extension-kit/exthttp"
 	"github.com/steadybit/extension-kit/extutil"
-	"net/http"
 	"os"
+	"time"
 )
 
-const discoveryBasePath = basePath + "/discovery"
-
-func RegisterDiscoveryHandlers() {
-	exthttp.RegisterHttpHandler(discoveryBasePath, exthttp.GetterAsHandler(getDiscoveryDescription))
-	exthttp.RegisterHttpHandler(discoveryBasePath+"/target-description", exthttp.GetterAsHandler(getTargetDescription))
-	exthttp.RegisterHttpHandler(discoveryBasePath+"/attribute-descriptions", exthttp.GetterAsHandler(getAttributeDescriptions))
-	exthttp.RegisterHttpHandler(discoveryBasePath+"/discovered-targets", getDiscoveredTargets)
+type hostDiscovery struct {
 }
 
-func GetDiscoveryList() discovery_kit_api.DiscoveryList {
-	return discovery_kit_api.DiscoveryList{
-		Discoveries: []discovery_kit_api.DescribingEndpointReference{
-			{
-				Method: "GET",
-				Path:   discoveryBasePath,
-			},
-		},
-		TargetTypes: []discovery_kit_api.DescribingEndpointReference{
-			{
-				Method: "GET",
-				Path:   discoveryBasePath + "/target-description",
-			},
-		},
-		TargetAttributes: []discovery_kit_api.DescribingEndpointReference{
-			{
-				Method: "GET",
-				Path:   discoveryBasePath + "/attribute-descriptions",
-			},
-		},
-		TargetEnrichmentRules: []discovery_kit_api.DescribingEndpointReference{},
-	}
+var (
+	_ discovery_kit_sdk.TargetDescriber    = (*hostDiscovery)(nil)
+	_ discovery_kit_sdk.AttributeDescriber = (*hostDiscovery)(nil)
+)
+
+func NewHostDiscovery() discovery_kit_sdk.TargetDiscovery {
+	discovery := &hostDiscovery{}
+	return discovery_kit_sdk.NewCachedTargetDiscovery(discovery,
+		discovery_kit_sdk.WithRefreshTargetsNow(),
+		discovery_kit_sdk.WithRefreshTargetsInterval(context.Background(), 30*time.Second),
+	)
 }
 
-func getDiscoveryDescription() discovery_kit_api.DiscoveryDescription {
+func (d *hostDiscovery) Describe() discovery_kit_api.DiscoveryDescription {
 	return discovery_kit_api.DiscoveryDescription{
 		Id:         TargetID,
 		RestrictTo: extutil.Ptr(discovery_kit_api.LEADER),
 		Discover: discovery_kit_api.DescribingEndpointReferenceWithCallInterval{
-			Method:       "GET",
-			Path:         discoveryBasePath + "/discovered-targets",
-			CallInterval: extutil.Ptr("1m"),
+			CallInterval: extutil.Ptr("30s"),
 		},
 	}
 }
 
-func getTargetDescription() discovery_kit_api.TargetDescription {
+func (d *hostDiscovery) DescribeTarget() discovery_kit_api.TargetDescription {
 	return discovery_kit_api.TargetDescription{
 		Id:      TargetID,
 		Version: extbuild.GetSemverVersionStringOrUnknown(),
@@ -92,68 +74,61 @@ func getTargetDescription() discovery_kit_api.TargetDescription {
 	}
 }
 
-func getAttributeDescriptions() discovery_kit_api.AttributeDescriptions {
-	return discovery_kit_api.AttributeDescriptions{
-		Attributes: []discovery_kit_api.AttributeDescription{
-			{
-				Attribute: "host.hostname",
-				Label: discovery_kit_api.PluralLabel{
-					One:   "Hostname",
-					Other: "Hostnames",
-				},
-			}, {
-				Attribute: "host.domainname",
-				Label: discovery_kit_api.PluralLabel{
-					One:   "Domainname",
-					Other: "Domainnames",
-				},
-			}, {
-				Attribute: "host.ipv4",
-				Label: discovery_kit_api.PluralLabel{
-					One:   "IPv4",
-					Other: "IPv4s",
-				},
-			}, {
-				Attribute: "host.ipv6",
-				Label: discovery_kit_api.PluralLabel{
-					One:   "IPv6",
-					Other: "IPv6s",
-				},
-			}, {
-				Attribute: "host.nic",
-				Label: discovery_kit_api.PluralLabel{
-					One:   "NIC",
-					Other: "NICs",
-				},
-			}, {
-				Attribute: "host.os.family",
-				Label: discovery_kit_api.PluralLabel{
-					One:   "OS Family",
-					Other: "OS Families",
-				},
-			}, {
-				Attribute: "host.os.manufacturer",
-				Label: discovery_kit_api.PluralLabel{
-					One:   "OS Manufacturer",
-					Other: "OS Manufacturers",
-				},
-			}, {
-				Attribute: "host.os.version",
-				Label: discovery_kit_api.PluralLabel{
-					One:   "OS Version",
-					Other: "OS Versions",
-				},
+func (d *hostDiscovery) DescribeAttributes() []discovery_kit_api.AttributeDescription {
+	return []discovery_kit_api.AttributeDescription{
+		{
+			Attribute: "host.hostname",
+			Label: discovery_kit_api.PluralLabel{
+				One:   "Hostname",
+				Other: "Hostnames",
+			},
+		}, {
+			Attribute: "host.domainname",
+			Label: discovery_kit_api.PluralLabel{
+				One:   "Domainname",
+				Other: "Domainnames",
+			},
+		}, {
+			Attribute: "host.ipv4",
+			Label: discovery_kit_api.PluralLabel{
+				One:   "IPv4",
+				Other: "IPv4s",
+			},
+		}, {
+			Attribute: "host.ipv6",
+			Label: discovery_kit_api.PluralLabel{
+				One:   "IPv6",
+				Other: "IPv6s",
+			},
+		}, {
+			Attribute: "host.nic",
+			Label: discovery_kit_api.PluralLabel{
+				One:   "NIC",
+				Other: "NICs",
+			},
+		}, {
+			Attribute: "host.os.family",
+			Label: discovery_kit_api.PluralLabel{
+				One:   "OS Family",
+				Other: "OS Families",
+			},
+		}, {
+			Attribute: "host.os.manufacturer",
+			Label: discovery_kit_api.PluralLabel{
+				One:   "OS Manufacturer",
+				Other: "OS Manufacturers",
+			},
+		}, {
+			Attribute: "host.os.version",
+			Label: discovery_kit_api.PluralLabel{
+				One:   "OS Version",
+				Other: "OS Versions",
 			},
 		},
 	}
 }
 
-func getDiscoveredTargets(w http.ResponseWriter, _ *http.Request, _ []byte) {
-	targets := getHostTarget()
-	exthttp.WriteBody(w, discovery_kit_api.DiscoveredTargets{Targets: targets})
-}
-
-func getHostTarget() []discovery_kit_api.Target {
+func (d *hostDiscovery) DiscoverTargets(_ context.Context) ([]discovery_kit_api.Target, error) {
 	hostname, _ := os.Hostname()
 	target := discovery_kit_api.Target{
 		Id:         hostname,
@@ -202,5 +177,5 @@ func getHostTarget() []discovery_kit_api.Target {
 	}
 
 	targets := []discovery_kit_api.Target{target}
-	return discovery_kit_commons.ApplyAttributeExcludes(targets, config.Config.DiscoveryAttributesExcludesHost)
+	return discovery_kit_commons.ApplyAttributeExcludes(targets, config.Config.DiscoveryAttributesExcludesHost), nil
 }
