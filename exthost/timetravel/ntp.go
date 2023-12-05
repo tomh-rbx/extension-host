@@ -1,33 +1,33 @@
 package timetravel
 
 import (
-	"github.com/rs/zerolog/log"
-	"github.com/steadybit/extension-host/exthost/common"
+	"context"
+	"github.com/steadybit/action-kit/go/action_kit_commons/network"
+	"github.com/steadybit/action-kit/go/action_kit_commons/runc"
 )
 
-func AdjustNtpTrafficRules(allowNtpTraffic bool) error {
-	if allowNtpTraffic {
-		err := common.ExecuteIpTablesCommand("-A", "OUTPUT", "-p", "udp", "--dport", "123", "-j", "ACCEPT")
-		if err != nil {
-			log.Error().Err(err).Msg("Failed to execute iptables command")
-			return err
-		}
-		err = common.ExecuteIpTablesCommand("-A", "OUTPUT", "-p", "udp", "--sport", "123", "-j", "ACCEPT")
-		if err != nil {
-			log.Error().Err(err).Msg("Failed to execute iptables command")
-			return err
-		}
-	} else {
-		err := common.ExecuteIpTablesCommand("-A", "OUTPUT", "-p", "udp", "--dport", "123", "-j", "DROP")
-		if err != nil {
-			log.Error().Err(err).Msg("Failed to execute iptables command")
-			return err
-		}
-		err = common.ExecuteIpTablesCommand("-A", "OUTPUT", "-p", "udp", "--sport", "123", "-j", "DROP")
-		if err != nil {
-			log.Error().Err(err).Msg("Failed to execute iptables command")
-			return err
-		}
+func AdjustNtpTrafficRules(ctx context.Context, r runc.Runc, allowNtpTraffic bool) error {
+	initProcess, err := runc.ReadLinuxProcessInfo(ctx, 1)
+	if err != nil {
+		return err
 	}
-	return nil
+
+	sidecar := network.SidecarOpts{
+		TargetProcess: initProcess,
+		IdSuffix:      "host",
+		ImagePath:     "/",
+	}
+
+	opts := &network.BlackholeOpts{
+		IpProto: network.IpProtoUdp,
+		Filter: network.Filter{
+			Include: network.NewNetWithPortRanges(network.NetAny, network.PortRange{From: 123, To: 123}),
+		},
+	}
+
+	if allowNtpTraffic {
+		return network.Revert(ctx, r, sidecar, opts)
+	} else {
+		return network.Apply(ctx, r, sidecar, opts)
+	}
 }

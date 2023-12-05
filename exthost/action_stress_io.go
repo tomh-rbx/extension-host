@@ -5,38 +5,35 @@
 package exthost
 
 import (
-	"context"
+	"errors"
 	"fmt"
 	"github.com/steadybit/action-kit/go/action_kit_api/v2"
+	"github.com/steadybit/action-kit/go/action_kit_commons/runc"
+	"github.com/steadybit/action-kit/go/action_kit_commons/stress"
 	"github.com/steadybit/action-kit/go/action_kit_sdk"
-	"github.com/steadybit/extension-host/exthost/resources"
 	"github.com/steadybit/extension-kit/extbuild"
 	"github.com/steadybit/extension-kit/extutil"
-	"strconv"
+	"time"
 )
 
-type stressIOAction struct{}
+type Mode string
 
-// Make sure action implements all required interfaces
-var (
-	_ action_kit_sdk.Action[resources.StressActionState]         = (*stressIOAction)(nil)
-	_ action_kit_sdk.ActionWithStop[resources.StressActionState] = (*stressIOAction)(nil) // Optional, needed when the action needs a stop method
+const (
+	ModeReadWriteAndFlush Mode = "read_write_and_flush"
+	ModeReadWrite         Mode = "read_write"
+	ModeFlush             Mode = "flush"
 )
 
-func NewStressIOAction() action_kit_sdk.Action[resources.StressActionState] {
-	return &stressIOAction{}
-}
-
-func (l *stressIOAction) NewEmptyState() resources.StressActionState {
-	return resources.StressActionState{}
+func NewStressIoAction(r runc.Runc) action_kit_sdk.Action[StressActionState] {
+	return newStressAction(r, getStressIoDescription, stressIo)
 }
 
 // Describe returns the action description for the platform with all required information.
-func (l *stressIOAction) Describe() action_kit_api.ActionDescription {
+func getStressIoDescription() action_kit_api.ActionDescription {
 	return action_kit_api.ActionDescription{
 		Id:          fmt.Sprintf("%s.stress-io", BaseActionID),
 		Label:       "Stress IO",
-		Description: "Generate read/write operation on hard disks.",
+		Description: "Stresses IO on the host using read/write/flush operations for the given duration.",
 		Version:     extbuild.GetSemverVersionStringOrUnknown(),
 		Icon:        extutil.Ptr(stressIOIcon),
 		TargetSelection: extutil.Ptr(action_kit_api.TargetSelection{
@@ -65,13 +62,38 @@ func (l *stressIOAction) Describe() action_kit_api.ActionDescription {
 		// The parameters for the action
 		Parameters: []action_kit_api.ActionParameter{
 			{
+				Name:         "mode",
+				Label:        "Mode",
+				Description:  extutil.Ptr("How should the IO be stressed?"),
+				Type:         action_kit_api.String,
+				DefaultValue: extutil.Ptr(string(ModeReadWriteAndFlush)),
+				Required:     extutil.Ptr(true),
+				Order:        extutil.Ptr(0),
+				MinValue:     extutil.Ptr(1),
+				MaxValue:     extutil.Ptr(100),
+				Options: &[]action_kit_api.ParameterOption{
+					action_kit_api.ExplicitParameterOption{
+						Label: "read/write and flush",
+						Value: string(ModeReadWriteAndFlush),
+					},
+					action_kit_api.ExplicitParameterOption{
+						Label: "read/write only",
+						Value: string(ModeReadWrite),
+					},
+					action_kit_api.ExplicitParameterOption{
+						Label: "flush only",
+						Value: string(ModeFlush),
+					},
+				},
+			},
+			{
 				Name:         "workers",
 				Label:        "Workers",
 				Description:  extutil.Ptr("How many workers should continually write, read and remove temporary files?"),
 				Type:         action_kit_api.StressngWorkers,
 				DefaultValue: extutil.Ptr("0"),
 				Required:     extutil.Ptr(true),
-				Order:        extutil.Ptr(1),
+				Order:        extutil.Ptr(01),
 			},
 			{
 				Name:         "duration",
@@ -82,62 +104,55 @@ func (l *stressIOAction) Describe() action_kit_api.ActionDescription {
 				Required:     extutil.Ptr(true),
 				Order:        extutil.Ptr(2),
 			},
+			{
+				Name:         "path",
+				Label:        "Path",
+				Description:  extutil.Ptr("Path where the IO should be inflicted"),
+				Type:         action_kit_api.String,
+				DefaultValue: extutil.Ptr("/"),
+				Required:     extutil.Ptr(true),
+				Order:        extutil.Ptr(3),
+			},
+			{
+				Name:         "mbytes_per_worker",
+				Label:        "MBytes to write",
+				Description:  extutil.Ptr("How many megabytes should be written per stress operation?"),
+				Type:         action_kit_api.Integer,
+				DefaultValue: extutil.Ptr("1024"),
+				Required:     extutil.Ptr(true),
+				Order:        extutil.Ptr(3),
+				MinValue:     extutil.Ptr(1),
+			},
 		},
 		Stop: extutil.Ptr(action_kit_api.MutatingEndpointReference{}),
 	}
 }
 
-// Prepare is called before the action is started.
-// It can be used to validate the parameters and prepare the action.
-// It must not cause any harmful effects.
-// The passed in state is included in the subsequent calls to start/status/stop.
-// So the state should contain all information needed to execute the action and even more important: to be able to stop it.
-func (l *stressIOAction) Prepare(_ context.Context, state *resources.StressActionState, request action_kit_api.PrepareActionRequestBody) (*action_kit_api.PrepareResult, error) {
-	_, err := CheckTargetHostname(request.Target.Attributes)
-	if err != nil {
-		return nil, err
-	}
-	durationConfig := extutil.ToUInt64(request.Config["duration"])
-	if durationConfig < 1000 {
-		return &action_kit_api.PrepareResult{
-			Error: extutil.Ptr(action_kit_api.ActionKitError{
-				Title:  "Duration must be greater / equal than 1s",
-				Status: extutil.Ptr(action_kit_api.Errored),
-			}),
-		}, nil
-	}
-	duration := durationConfig / 1000
-	workers := extutil.ToUInt(request.Config["workers"])
-
-	state.StressNGArgs = []string{
-		"--io", strconv.Itoa(int(workers)),
-		"--timeout", strconv.Itoa(int(duration)),
-		"--aggressive",
+func stressIo(request action_kit_api.PrepareActionRequestBody) (stress.Opts, error) {
+	workers := extutil.ToInt(request.Config["workers"])
+	mode := extutil.ToString(request.Config["mode"])
+	if mode == "" {
+		mode = string(ModeReadWriteAndFlush)
 	}
 
-	if !resources.IsStressNgInstalled() {
-		return &action_kit_api.PrepareResult{
-			Error: extutil.Ptr(action_kit_api.ActionKitError{
-				Title:  "Stress-ng is not installed!",
-				Status: extutil.Ptr(action_kit_api.Errored),
-			}),
-		}, nil
+	duration := time.Duration(extutil.ToInt64(request.Config["duration"])) * time.Millisecond
+	if duration < 1*time.Second {
+		return stress.Opts{}, errors.New("duration must be greater / equal than 1s")
 	}
 
-	return nil, nil
-}
+	opts := stress.Opts{
+		TempPath: extutil.ToString(request.Config["path"]),
+		Timeout:  duration,
+	}
 
-// Start is called to start the action
-// You can mutate the state here.
-// You can use the result to return messages/errors/metrics or artifacts
-func (l *stressMemoryAction) Start(_ context.Context, state *resources.StressActionState) (*action_kit_api.StartResult, error) {
-	return resources.Start(state)
-}
+	if mode == string(ModeReadWriteAndFlush) || mode == string(ModeReadWrite) {
+		opts.HddWorkers = &workers
+		opts.HddBytes = fmt.Sprintf("%dm", extutil.ToInt64(request.Config["mbytes_per_worker"]))
+	}
 
-// Stop is called to stop the action
-// It will be called even if the start method did not complete successfully.
-// It should be implemented in a immutable way, as the agent might to retries if the stop method timeouts.
-// You can use the result to return messages/errors/metrics or artifacts
-func (l *stressMemoryAction) Stop(_ context.Context, state *resources.StressActionState) (*action_kit_api.StopResult, error) {
-	return resources.Stop(state)
+	if mode == string(ModeReadWriteAndFlush) || mode == string(ModeFlush) {
+		opts.IoWorkers = &workers
+	}
+
+	return opts, nil
 }

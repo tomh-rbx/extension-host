@@ -6,7 +6,9 @@ package main
 
 import (
 	"github.com/rs/zerolog"
+	"github.com/rs/zerolog/log"
 	"github.com/steadybit/action-kit/go/action_kit_api/v2"
+	"github.com/steadybit/action-kit/go/action_kit_commons/runc"
 	"github.com/steadybit/action-kit/go/action_kit_sdk"
 	"github.com/steadybit/discovery-kit/go/discovery_kit_api"
 	"github.com/steadybit/discovery-kit/go/discovery_kit_sdk"
@@ -52,24 +54,28 @@ func main() {
 	// by the Steadybit agent to obtain the extension's capabilities.
 	exthttp.RegisterHttpHandler("/", exthttp.GetterAsHandler(getExtensionList))
 
+	r := runc.NewRunc(runc.ConfigFromEnvironment())
+	log.Info().Interface("cfg", runc.ConfigFromEnvironment())
+
 	// This is a section you will most likely want to change: The registration of HTTP handlers
 	// for your extension. You might want to change these because the names do not fit, or because
 	// you do not have a need for all of them.
 	discovery_kit_sdk.Register(exthost.NewHostDiscovery())
-	action_kit_sdk.RegisterAction(exthost.NewStressCPUAction())
-	action_kit_sdk.RegisterAction(exthost.NewStressMemoryAction())
-	action_kit_sdk.RegisterAction(exthost.NewStressIOAction())
-	action_kit_sdk.RegisterAction(exthost.NewTimetravelAction())
+	action_kit_sdk.RegisterAction(exthost.NewStressCpuAction(r))
+	action_kit_sdk.RegisterAction(exthost.NewStressMemoryAction(r))
+	action_kit_sdk.RegisterAction(exthost.NewStressIoAction(r))
+	action_kit_sdk.RegisterAction(exthost.NewTimetravelAction(r))
 	action_kit_sdk.RegisterAction(exthost.NewStopProcessAction())
 	action_kit_sdk.RegisterAction(exthost.NewShutdownAction())
-	action_kit_sdk.RegisterAction(exthost.NewNetworkBlackholeContainerAction())
-	action_kit_sdk.RegisterAction(exthost.NewNetworkLimitBandwidthContainerAction())
-	action_kit_sdk.RegisterAction(exthost.NewNetworkCorruptPackagesContainerAction())
-	action_kit_sdk.RegisterAction(exthost.NewNetworkDelayContainerAction())
-	action_kit_sdk.RegisterAction(exthost.NewNetworkBlockDnsContainerAction())
-	action_kit_sdk.RegisterAction(exthost.NewNetworkPackageLossContainerAction())
+	action_kit_sdk.RegisterAction(exthost.NewNetworkBlackholeContainerAction(r))
+	action_kit_sdk.RegisterAction(exthost.NewNetworkLimitBandwidthContainerAction(r))
+	action_kit_sdk.RegisterAction(exthost.NewNetworkCorruptPackagesContainerAction(r))
+	action_kit_sdk.RegisterAction(exthost.NewNetworkDelayContainerAction(r))
+	action_kit_sdk.RegisterAction(exthost.NewNetworkBlockDnsContainerAction(r))
+	action_kit_sdk.RegisterAction(exthost.NewNetworkPackageLossContainerAction(r))
+	action_kit_sdk.RegisterAction(exthost.NewFillDiskContainerAction(r))
 
-	//This will install a signal handlder, that will stop active actions when receiving a SIGURS1, SIGTERM or SIGINT
+	//This will install a signal handler, that will stop active actions when receiving a SIGURS1, SIGTERM or SIGINT
 	action_kit_sdk.InstallSignalHandler()
 
 	action_kit_sdk.RegisterCoverageEndpoints()
