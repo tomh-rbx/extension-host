@@ -33,6 +33,20 @@ tidy:
 	go mod tidy -v
 
 ## audit: run quality control checks
+.PHONY: prepare_audit
+prepare_audit:
+	echo Enable KVM group perms
+	echo 'KERNEL=="kvm", GROUP="kvm", MODE="0666", OPTIONS+="static_node=kvm"' | sudo tee /etc/udev/rules.d/99-kvm4all.rules
+	sudo udevadm control --reload-rules
+	sudo udevadm trigger --name-match=kvm
+	sudo apt-get update
+	sudo apt-get install -y libvirt-clients libvirt-daemon-system libvirt-daemon virtinst bridge-utils qemu qemu-system-x86
+	sudo usermod -a -G kvm,libvirt $USER
+	minikube config set WantUpdateNotification false
+	minikube config set cpus max
+	minikube config set memory 8g
+
+## audit: run quality control checks
 .PHONY: audit
 audit:
 	go vet ./...
