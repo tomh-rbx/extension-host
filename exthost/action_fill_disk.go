@@ -36,7 +36,7 @@ type FillDiskActionState struct {
 var _ action_kit_sdk.Action[FillDiskActionState] = (*fillDiskAction)(nil)
 var _ action_kit_sdk.ActionWithStop[FillDiskActionState] = (*fillDiskAction)(nil)
 
-func NewFillDiskContainerAction(r runc.Runc) action_kit_sdk.Action[FillDiskActionState] {
+func NewFillDiskHostAction(r runc.Runc) action_kit_sdk.Action[FillDiskActionState] {
 	return &fillDiskAction{
 		runc: r,
 	}
@@ -50,7 +50,7 @@ func (a *fillDiskAction) Describe() action_kit_api.ActionDescription {
 	return action_kit_api.ActionDescription{
 		Id:          ID,
 		Label:       "Fill Disk",
-		Description: "Fills the disk in the container for the given duration.",
+		Description: "Fills the disk of the host for the given duration.",
 		Version:     extbuild.GetSemverVersionStringOrUnknown(),
 		Icon:        extutil.Ptr(fillDiskIcon),
 		TargetSelection: &action_kit_api.TargetSelection{
@@ -216,7 +216,7 @@ func (a *fillDiskAction) Start(ctx context.Context, state *FillDiskActionState) 
 	copiedOpts := state.FillDiskOpts
 	diskFill, err := diskfill.New(ctx, a.runc, state.Sidecar, copiedOpts)
 	if err != nil {
-		return nil, extension_kit.ToError("Failed to prepare fill disk in container", err)
+		return nil, extension_kit.ToError("Failed to prepare fill disk on host", err)
 	}
 
 	a.diskfills.Store(state.ExecutionId, diskFill)
@@ -243,7 +243,7 @@ func (a *fillDiskAction) Stop(ctx context.Context, state *FillDiskActionState) (
 
 	messages := make([]action_kit_api.Message, 0)
 
-	stopped, err := a.stopFillDiskContainer(state.ExecutionId)
+	stopped, err := a.stopFillDiskHost(state.ExecutionId)
 	if stopped {
 		messages = append(messages, action_kit_api.Message{
 			Level:   extutil.Ptr(action_kit_api.Info),
@@ -268,10 +268,10 @@ func (a *fillDiskAction) fillDiskExited(executionId uuid.UUID) (bool, error) {
 	return s.(*diskfill.DiskFill).Exited()
 }
 
-func (a *fillDiskAction) stopFillDiskContainer(executionId uuid.UUID) (bool, error) {
+func (a *fillDiskAction) stopFillDiskHost(executionId uuid.UUID) (bool, error) {
 	s, ok := a.diskfills.LoadAndDelete(executionId)
 	if !ok {
-		return false, errors.New("no diskfill container found")
+		return false, errors.New("no diskfill host found")
 	}
 	err := s.(*diskfill.DiskFill).Stop()
 	return err == nil, err
