@@ -18,7 +18,6 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	"math"
-	"os"
 	"os/exec"
 	"strconv"
 	"strings"
@@ -946,26 +945,7 @@ func requireAllSidecarsCleanedUp(t *testing.T, m *e2e.Minikube, e *e2e.Extension
 }
 
 func getMinikubeOptions() e2e.MinikubeOpts {
-	var runtimes []e2e.Runtime
-	if rawRuntimes, _ := os.LookupEnv("E2E_RUNTIMES"); rawRuntimes != "" {
-		runtimes = []e2e.Runtime{}
-	OUTER:
-		for _, rawRuntime := range strings.Split(rawRuntimes, ",") {
-			lower := strings.ToLower(strings.TrimSpace(rawRuntime))
-			for _, runtime := range e2e.AllRuntimes {
-				if lower == string(runtime) {
-					runtimes = append(runtimes, runtime)
-					continue OUTER
-				}
-			}
-			log.Info().Msgf("Ignoring unknown runtime %s", rawRuntime)
-		}
-	} else {
-		runtimes = e2e.AllRuntimes
-	}
-
-	mOpts := e2e.DefaultMinikubeOpts().WithRuntimes(runtimes...)
-
+	mOpts := e2e.DefaultMinikubeOpts().WithRuntimes(e2e.RuntimeDocker)
 	if exec.Command("kvm-ok").Run() != nil {
 		log.Info().Msg("KVM is not available, using docker driver")
 		mOpts = mOpts.WithDriver("docker")
