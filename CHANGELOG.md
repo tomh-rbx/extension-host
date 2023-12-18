@@ -2,6 +2,8 @@
 
 ## v1.2.0
 
+> Update to the latest helm chart steadybit-extension-host-1.0.33 needed!
+
 - add flush, read_write, read_write_and_flush mode to stress io
 - fill disk attack
 - fix stress memory and stress cpu constrained by the cgroup of the extension container
