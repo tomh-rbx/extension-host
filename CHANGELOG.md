@@ -1,5 +1,9 @@
 # Changelog
 
+## 1.2.1
+
+- Fix: don't apply ipv6 rules if kernel module was disabled
+
 ## v1.2.0
 
 > Update to the latest helm chart steadybit-extension-host-1.0.33 needed!
