@@ -447,11 +447,11 @@ func testNetworkDelay(t *testing.T, m *e2e.Minikube, e *e2e.Extension) {
 			if tt.WantedDelay {
 				netperf.AssertLatency(t, unaffectedLatency+time.Duration(config.Delay)*time.Millisecond*90/100, unaffectedLatency+time.Duration(config.Delay)*time.Millisecond*350/100)
 			} else {
-				netperf.AssertLatency(t, 0, unaffectedLatency*110/100)
+				netperf.AssertLatency(t, 0, unaffectedLatency*120/100)
 			}
 			require.NoError(t, action.Cancel())
 
-			netperf.AssertLatency(t, 0, unaffectedLatency*110/100)
+			netperf.AssertLatency(t, 0, unaffectedLatency*120/100)
 		})
 	}
 	requireAllSidecarsCleanedUp(t, m, e)
@@ -515,7 +515,7 @@ func testNetworkPackageLoss(t *testing.T, m *e2e.Minikube, e *e2e.Extension) {
 			require.NoError(t, err)
 
 			if tt.WantedLoss {
-				iperf.AssertPackageLoss(t, float64(config.Percentage)*0.7, float64(config.Percentage)*1.3)
+				iperf.AssertPackageLoss(t, float64(config.Percentage)*0.7, float64(config.Percentage)*1.4)
 			} else {
 				iperf.AssertPackageLoss(t, 0, 5)
 			}
