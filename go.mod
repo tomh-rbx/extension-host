@@ -20,7 +20,7 @@ require (
 	github.com/steadybit/extension-kit v1.8.11
 	github.com/stretchr/testify v1.8.4
 	golang.org/x/exp v0.0.0-20231219180239-dc181d75b848
-	golang.org/x/sync v0.5.0
+	golang.org/x/sync v0.6.0
 )
 
 require (
