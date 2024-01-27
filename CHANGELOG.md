@@ -1,5 +1,9 @@
 # Changelog
 
+## 1.2.2
+
+- Update dependencies
+
 ## 1.2.1
 
 - Fix: don't apply ipv6 rules if kernel module was disabled
