@@ -37,8 +37,7 @@ func NewHostDiscovery() discovery_kit_sdk.TargetDiscovery {
 
 func (d *hostDiscovery) Describe() discovery_kit_api.DiscoveryDescription {
 	return discovery_kit_api.DiscoveryDescription{
-		Id:         TargetID,
-		RestrictTo: extutil.Ptr(discovery_kit_api.LEADER),
+		Id: TargetID,
 		Discover: discovery_kit_api.DescribingEndpointReferenceWithCallInterval{
 			CallInterval: extutil.Ptr("30s"),
 		},
