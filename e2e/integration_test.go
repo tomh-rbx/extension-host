@@ -103,6 +103,10 @@ func TestWithMinikube(t *testing.T) {
 			Test: testStressIo,
 		},
 		{
+			Name: "stress combine cpu and memory on same container",
+			Test: testStressCombined,
+		},
+		{
 			Name: "time travel",
 			Test: testTimeTravel,
 		},
@@ -152,7 +156,7 @@ func testStressCpu(t *testing.T, m *e2e.Minikube, e *e2e.Extension) {
 		CpuLoad  int `json:"cpuLoad"`
 		Workers  int `json:"workers"`
 	}{Duration: 50000, Workers: 0, CpuLoad: 50}
-	exec, err := e.RunAction("com.steadybit.extension_host.stress-cpu", getTarget(m), config, nil)
+	exec, err := e.RunAction(exthost.BaseActionID+".stress-cpu", getTarget(m), config, nil)
 	require.NoError(t, err)
 
 	e2e.AssertProcessRunningInContainer(t, m, e.Pod, "steadybit-extension-host", "stress-ng", true)
@@ -167,7 +171,7 @@ func testStressMemory(t *testing.T, m *e2e.Minikube, e *e2e.Extension) {
 		Percentage int `json:"percentage"`
 	}{Duration: 50000, Percentage: 50}
 
-	exec, err := e.RunAction("com.steadybit.extension_host.stress-mem", getTarget(m), config, nil)
+	exec, err := e.RunAction(exthost.BaseActionID+".stress-mem", getTarget(m), config, nil)
 	require.NoError(t, err)
 	e2e.AssertProcessRunningInContainer(t, m, e.Pod, "steadybit-extension-host", "stress-ng", true)
 	require.NoError(t, exec.Cancel())
@@ -187,7 +191,7 @@ func testStressIo(t *testing.T, m *e2e.Minikube, e *e2e.Extension) {
 				Mode            string `json:"mode"`
 			}{Duration: 20000, Workers: 1, MbytesPerWorker: 50, Path: "/stressng", Mode: mode}
 
-			action, err := e.RunAction("com.steadybit.extension_host.stress-io", getTarget(m), config, executionContext)
+			action, err := e.RunAction(exthost.BaseActionID+".stress-io", getTarget(m), config, executionContext)
 			defer func() { _ = action.Cancel() }()
 			require.NoError(t, err)
 
@@ -215,7 +219,7 @@ func testTimeTravel(t *testing.T, m *e2e.Minikube, e *e2e.Extension) {
 		DisableNtp: true,
 	}
 
-	action, err := e.RunAction("com.steadybit.extension_host.timetravel", getTarget(m), config, nil)
+	action, err := e.RunAction(exthost.BaseActionID+".timetravel", getTarget(m), config, nil)
 	defer func() { _ = action.Cancel() }()
 	require.NoError(t, err)
 
@@ -256,13 +260,13 @@ func testDiscovery(t *testing.T, _ *e2e.Minikube, e *e2e.Extension) {
 	ctx, cancel := context.WithTimeout(context.Background(), 60*time.Second)
 	defer cancel()
 
-	target, err := e2e.PollForTarget(ctx, e, "com.steadybit.extension_host.host", func(target discovery_kit_api.Target) bool {
+	target, err := e2e.PollForTarget(ctx, e, exthost.BaseActionID+".host", func(target discovery_kit_api.Target) bool {
 		log.Debug().Msgf("targetHost: %v", target.Attributes["host.hostname"])
 		return e2e.HasAttribute(target, "host.hostname", "e2e-docker")
 	})
 
 	require.NoError(t, err)
-	assert.Equal(t, target.TargetType, "com.steadybit.extension_host.host")
+	assert.Equal(t, target.TargetType, exthost.BaseActionID+".host")
 	assert.NotContains(t, target.Attributes, "host.nic")
 }
 
@@ -282,7 +286,7 @@ func testStopProcess(t *testing.T, m *e2e.Minikube, e *e2e.Extension) {
 
 	e2e.AssertProcessRunningInContainer(t, m, e.Pod, "steadybit-extension-host", "tail", true)
 
-	exec, err := e.RunAction("com.steadybit.extension_host.stop-process", getTarget(m), config, nil)
+	exec, err := e.RunAction(exthost.BaseActionID+".stop-process", getTarget(m), config, nil)
 	require.NoError(t, err)
 	e2e.AssertProcessNOTRunningInContainer(t, m, e.Pod, "steadybit-extension-host", "tail")
 	require.NoError(t, exec.Cancel())
@@ -295,7 +299,7 @@ func testShutdownHost(t *testing.T, m *e2e.Minikube, e *e2e.Extension) {
 		Reboot bool `json:"reboot"`
 	}{Reboot: true}
 
-	_, err := e.RunAction("com.steadybit.extension_host.shutdown", getTarget(m), config, nil)
+	_, err := e.RunAction(exthost.BaseActionID+".shutdown", getTarget(m), config, nil)
 	require.NoError(t, err)
 	e2e.Retry(t, 5, 1*time.Second, func(r *e2e.R) {
 		_, err = m.PodExec(e.Pod, "steadybit-extension-host", "tail", "-f", "/dev/null")
@@ -895,6 +899,35 @@ func testFillDisk(t *testing.T, m *e2e.Minikube, e *e2e.Extension) {
 			assert.Contains(t, string(out), "No such file or directory")
 		})
 	}
+	requireAllSidecarsCleanedUp(t, m, e)
+}
+
+func testStressCombined(t *testing.T, m *e2e.Minikube, e *e2e.Extension) {
+	memConfig := struct {
+		Duration      int  `json:"duration"`
+		Percentage    int  `json:"percentage"`
+		FailOnOomKill bool `json:"failOnOomKill"`
+	}{Duration: 10_000, Percentage: 1}
+	memAction, err := e.RunAction(fmt.Sprintf("%s.stress-mem", exthost.BaseActionID), getTarget(m), memConfig, executionContext)
+	defer func() { _ = memAction.Cancel() }()
+	require.NoError(t, err)
+
+	cpuConfig := struct {
+		Duration int `json:"duration"`
+		CpuLoad  int `json:"cpuLoad"`
+		Workers  int `json:"workers"`
+	}{Duration: 10_000, Workers: 0, CpuLoad: 50}
+	cpuAction, err := e.RunAction(fmt.Sprintf("%s.stress-cpu", exthost.BaseActionID), getTarget(m), cpuConfig, executionContext)
+	defer func() { _ = cpuAction.Cancel() }()
+	require.NoError(t, err)
+
+	e2e.AssertProcessRunningInContainer(t, m, e.Pod, "steadybit-extension-host", "stress-ng", true)
+
+	require.NoError(t, memAction.Wait())
+	require.NoError(t, cpuAction.Wait())
+
+	e2e.AssertProcessNOTRunningInContainer(t, m, e.Pod, "steadybit-extension-host", "stress-ng")
+
 	requireAllSidecarsCleanedUp(t, m, e)
 }
 
