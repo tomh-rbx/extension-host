@@ -95,7 +95,7 @@ func (a *networkAction) Prepare(ctx context.Context, state *NetworkActionState, 
 
 	initProcess, err := runc.ReadLinuxProcessInfo(ctx, 1)
 	if err != nil {
-		return nil, extension_kit.ToError("Failed to prepare network settings.", err)
+		return nil, extension_kit.ToError("Failed to read root process infos.", err)
 	}
 	state.Sidecar = network.SidecarOpts{
 		TargetProcess: initProcess,
