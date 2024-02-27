@@ -1,5 +1,10 @@
 # Changelog
 
+## 1.2.8
+
+- Automatically set the `GOMEMLIMIT` (90% of cgroup limit) and `GOMAXPROCS`
+- Disallow running multiple tc configurations at the same time
+
 ## 1.2.7
 
 - Update dependencies
