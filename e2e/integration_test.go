@@ -139,6 +139,10 @@ func TestWithMinikube(t *testing.T) {
 			Test: testNetworkPackageCorruption,
 		},
 		{
+			Name: "network delay and bandwidth on the same container should error",
+			Test: testNetworkDelayAndBandwidthOnSameContainer,
+		},
+		{
 			Name: "fill disk",
 			Test: testFillDisk,
 		},
@@ -156,11 +160,11 @@ func testStressCpu(t *testing.T, m *e2e.Minikube, e *e2e.Extension) {
 		CpuLoad  int `json:"cpuLoad"`
 		Workers  int `json:"workers"`
 	}{Duration: 50000, Workers: 0, CpuLoad: 50}
-	exec, err := e.RunAction(exthost.BaseActionID+".stress-cpu", getTarget(m), config, nil)
+	action, err := e.RunAction(exthost.BaseActionID+".stress-cpu", getTarget(m), config, nil)
 	require.NoError(t, err)
 
 	e2e.AssertProcessRunningInContainer(t, m, e.Pod, "steadybit-extension-host", "stress-ng", true)
-	require.NoError(t, exec.Cancel())
+	require.NoError(t, action.Cancel())
 	requireAllSidecarsCleanedUp(t, m, e)
 }
 
@@ -171,10 +175,10 @@ func testStressMemory(t *testing.T, m *e2e.Minikube, e *e2e.Extension) {
 		Percentage int `json:"percentage"`
 	}{Duration: 50000, Percentage: 50}
 
-	exec, err := e.RunAction(exthost.BaseActionID+".stress-mem", getTarget(m), config, nil)
+	action, err := e.RunAction(exthost.BaseActionID+".stress-mem", getTarget(m), config, nil)
 	require.NoError(t, err)
 	e2e.AssertProcessRunningInContainer(t, m, e.Pod, "steadybit-extension-host", "stress-ng", true)
-	require.NoError(t, exec.Cancel())
+	require.NoError(t, action.Cancel())
 }
 
 func testStressIo(t *testing.T, m *e2e.Minikube, e *e2e.Extension) {
@@ -286,10 +290,10 @@ func testStopProcess(t *testing.T, m *e2e.Minikube, e *e2e.Extension) {
 
 	e2e.AssertProcessRunningInContainer(t, m, e.Pod, "steadybit-extension-host", "tail", true)
 
-	exec, err := e.RunAction(exthost.BaseActionID+".stop-process", getTarget(m), config, nil)
+	action, err := e.RunAction(exthost.BaseActionID+".stop-process", getTarget(m), config, nil)
 	require.NoError(t, err)
 	e2e.AssertProcessNOTRunningInContainer(t, m, e.Pod, "steadybit-extension-host", "tail")
-	require.NoError(t, exec.Cancel())
+	require.NoError(t, action.Cancel())
 }
 func testShutdownHost(t *testing.T, m *e2e.Minikube, e *e2e.Extension) {
 	t.Skip("Deactivated cause otherwise the shutdown will prevent the coverage collection from the tests above must be the last test, because it will shutdown the minikube host (minikube cannot be restarted")
@@ -505,7 +509,7 @@ func testNetworkPackageLoss(t *testing.T, m *e2e.Minikube, e *e2e.Extension) {
 			Port         []string `json:"port"`
 			NetInterface []string `json:"networkInterface"`
 		}{
-			Duration:     20000,
+			Duration:     50000,
 			Percentage:   10,
 			Ip:           tt.ip,
 			Hostname:     tt.hostname,
@@ -961,6 +965,32 @@ func assertFileHasSize(t *testing.T, m *e2e.Minikube, filepath string, wantedSiz
 			}
 		}
 	}
+}
+
+func testNetworkDelayAndBandwidthOnSameContainer(t *testing.T, m *e2e.Minikube, e *e2e.Extension) {
+	configDelay := struct {
+		Duration int `json:"duration"`
+		Delay    int `json:"networkDelay"`
+	}{
+		Duration: 10000,
+		Delay:    200,
+	}
+	actionDelay, err := e.RunAction(fmt.Sprintf("%s.network_delay", exthost.BaseActionID), getTarget(m), configDelay, executionContext)
+	defer func() { _ = actionDelay.Cancel() }()
+	require.NoError(t, err)
+
+	configLimit := struct {
+		Duration  int    `json:"duration"`
+		Bandwidth string `json:"bandwidth"`
+	}{
+		Duration:  10000,
+		Bandwidth: "200mbit",
+	}
+	actionLimit, err2 := e.RunAction(fmt.Sprintf("%s.network_bandwidth", exthost.BaseActionID), getTarget(m), configLimit, executionContext)
+	defer func() { _ = actionLimit.Cancel() }()
+	require.ErrorContains(t, err2, "running multiple tc configs at the same time on the same namespace is not supported")
+
+	requireAllSidecarsCleanedUp(t, m, e)
 }
 
 func runInMinikube(m *e2e.Minikube, arg ...string) ([]byte, error) {
