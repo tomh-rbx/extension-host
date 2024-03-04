@@ -1,5 +1,10 @@
 # Changelog
 
+
+## 1.2.9
+
+- Update dependencies
+
 ## 1.2.8
 
 - Automatically set the `GOMEMLIMIT` (90% of cgroup limit) and `GOMAXPROCS`
