@@ -1,6 +1,10 @@
 # Changelog
 
 
+## 1.2.10
+
+- Added hint if kernel modules are missing for tc
+
 ## 1.2.9
 
 - Update dependencies
