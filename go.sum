@@ -177,8 +177,8 @@ github.com/steadybit/action-kit/go/action_kit_api/v2 v2.9.0 h1:8whTfgk0UpNVj/d0h
 github.com/steadybit/action-kit/go/action_kit_api/v2 v2.9.0/go.mod h1:VvrWrWS4lFAmtlYW06wY1G8+L9gbw/Tq0HDceSN21M8=
 github.com/steadybit/action-kit/go/action_kit_commons v1.1.8 h1:pz9aXv06oCR/816tZdwFbMQuxz+9zoQHnLuytJ14PwQ=
 github.com/steadybit/action-kit/go/action_kit_commons v1.1.8/go.mod h1:HefIbhxMakD1i4i+utOBbRBp0CCqG6ICD8qQPFveHws=
-github.com/steadybit/action-kit/go/action_kit_sdk v1.1.8 h1:kcpEVZw0iv5bIE7GNmjC54XRKxUlwPkDsvfMGeudIrQ=
-github.com/steadybit/action-kit/go/action_kit_sdk v1.1.8/go.mod h1:h2E1gRdpIhWvfQy5XsRIfQi3AujlpdcXxt3tNU9829U=
+github.com/steadybit/action-kit/go/action_kit_sdk v1.1.9 h1:EZCQA7FWxyWpA6du9Kt/5PMAZ2JXn9s1twWHuh8DMQo=
+github.com/steadybit/action-kit/go/action_kit_sdk v1.1.9/go.mod h1:doeEvG/3OQSd3Xvb4UvWpnwmY3VT+Pf9f6NfxV5i2rU=
 github.com/steadybit/action-kit/go/action_kit_test v1.2.9 h1:oeX0Oz2RudPIkGC1OJ6nX30QAaGMKyCMwq//xBoclkw=
 github.com/steadybit/action-kit/go/action_kit_test v1.2.9/go.mod h1:JUI0Rp9RE3GMx1TRlI4odwUZ9fRtgrSgneHImrws+3A=
 github.com/steadybit/discovery-kit/go/discovery_kit_api v1.5.2 h1:xWhV5djzK/M+vEF0hZ23Am1Kv6CLIAYgaKzDKk/4eH8=
@@ -189,8 +189,8 @@ github.com/steadybit/discovery-kit/go/discovery_kit_sdk v1.0.6 h1:hg6LrdJBbBaTvo
 github.com/steadybit/discovery-kit/go/discovery_kit_sdk v1.0.6/go.mod h1:/jBVCRn/yzvpt1XsqANbD6nORhEqh3K8PcPeEdS1r6Y=
 github.com/steadybit/discovery-kit/go/discovery_kit_test v1.1.2 h1:IrTUwb69FDwOt/8OvY1Lvhv+qGNmy+Eu53HEjmsj0TA=
 github.com/steadybit/discovery-kit/go/discovery_kit_test v1.1.2/go.mod h1:tr4oRjpqr2WOKwO4auJR+/m+YKA2EAUuvvpbz1faUxw=
-github.com/steadybit/extension-kit v1.8.11 h1:7X76rOpC8DXiS6R83rr70eLO09sDu0DHOzSmGEIBCeo=
-github.com/steadybit/extension-kit v1.8.11/go.mod h1:vT1jG8WMZuImhNDCoLX19ckmCuPOmX/HXd2YegTcP/Y=
+github.com/steadybit/extension-kit v1.8.12 h1:9Hkz+dZ7tyEQaNDPP36cfLNoalJa7rIqkPtqTrStYNU=
+github.com/steadybit/extension-kit v1.8.12/go.mod h1:bIpmvvwlAOw9T8E2EhNZyOT3cjA67MjxbHhyN/RMOn8=
 github.com/stretchr/objx v0.1.0/go.mod h1:HFkY916IF+rwdDfMAkV7OtwuqBVzrE8GR6GFx+wExME=
 github.com/stretchr/objx v0.4.0/go.mod h1:YvHI0jy2hoMjB+UWwv71VJQ9isScKT/TqJzVSSt89Yw=
 github.com/stretchr/objx v0.5.0/go.mod h1:Yh+to48EsGEfYuaHDzXPcE3xhTkx73EhmCGUpEOglKo=
@@ -301,8 +301,8 @@ google.golang.org/appengine v1.6.8 h1:IhEN5q69dyKagZPYMSdIjS2HqprW324FRQZJcGqPAs
 google.golang.org/appengine v1.6.8/go.mod h1:1jJ3jBArFh5pcgW8gCtRJnepW8FzD1V44FJffLiz/Ds=
 google.golang.org/protobuf v1.26.0-rc.1/go.mod h1:jlhhOSvTdKEhbULTjvd4ARK9grFBp09yW+WbY/TyQbw=
 google.golang.org/protobuf v1.26.0/go.mod h1:9q0QmTI4eRPtz6boOQmLYwt+qCgq0jsYwAQnmE0givc=
-google.golang.org/protobuf v1.32.0 h1:pPC6BG5ex8PDFnkbrGU3EixyhKcQ2aDuBS36lqK/C7I=
-google.golang.org/protobuf v1.32.0/go.mod h1:c6P6GXX6sHbq/GpV6MGZEdwhWPcYBgnhAHhKbcUYpos=
+google.golang.org/protobuf v1.33.0 h1:uNO2rsAINq/JlFpSdYEKIZ0uKD/R9cpdv0T+yoGwGmI=
+google.golang.org/protobuf v1.33.0/go.mod h1:c6P6GXX6sHbq/GpV6MGZEdwhWPcYBgnhAHhKbcUYpos=
 gopkg.in/check.v1 v0.0.0-20161208181325-20d25e280405/go.mod h1:Co6ibVJAznAaIkqp8huTwlJQCZ016jof/cbN4VW5Yz0=
 gopkg.in/check.v1 v1.0.0-20201130134442-10cb98267c6c h1:Hei/4ADfdWqJk1ZMxUNpqntNwaWcugrBjAiHlqqRiVk=
 gopkg.in/check.v1 v1.0.0-20201130134442-10cb98267c6c/go.mod h1:JHkPIbrfpd72SG/EVd6muEfDQjcINNoR0C8j2r3qZ4Q=
