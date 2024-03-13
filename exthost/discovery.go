@@ -127,7 +127,7 @@ func (d *hostDiscovery) DescribeAttributes() []discovery_kit_api.AttributeDescri
 	}
 }
 
-func (d *hostDiscovery) DiscoverTargets(_ context.Context) ([]discovery_kit_api.Target, error) {
+func (d *hostDiscovery) DiscoverTargets(ctx context.Context) ([]discovery_kit_api.Target, error) {
 	hostname, _ := os.Hostname()
 	target := discovery_kit_api.Target{
 		Id:         hostname,
@@ -159,7 +159,7 @@ func (d *hostDiscovery) DiscoverTargets(_ context.Context) ([]discovery_kit_api.
 		target.Attributes["host.os.manufacturer"] = []string{host.Info().OS.Name}
 		target.Attributes["host.os.version"] = []string{host.Info().OS.Version}
 
-		if fqdn, err := host.FQDN(); err == nil {
+		if fqdn, err := host.FQDNWithContext(ctx); err == nil {
 			target.Attributes["host.domainname"] = []string{fqdn}
 		} else {
 			target.Attributes["host.domainname"] = []string{host.Info().Hostname}
