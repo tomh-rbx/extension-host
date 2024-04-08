@@ -5,4 +5,5 @@
 /gpg.key
 /dist
 /licenses
+/snyk.sarif
 extension-host
