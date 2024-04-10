@@ -1,51 +1,51 @@
 # Changelog
 
-## 1.2.12
+## v1.2.12
 
 - Update dependencies
 
-## 1.2.11
+## v1.2.11
 
 - Update dependencies
 
-## 1.2.10
+## v1.2.10
 
 - Added hint if kernel modules are missing for tc
 
-## 1.2.9
+## v1.2.9
 
 - Update dependencies
 
-## 1.2.8
+## v1.2.8
 
 - Automatically set the `GOMEMLIMIT` (90% of cgroup limit) and `GOMAXPROCS`
 - Disallow running multiple tc configurations at the same time
 
-## 1.2.7
+## v1.2.7
 
 - Update dependencies
 
-## 1.2.6
+## v1.2.6
 
 - Update dependencies
 
-## 1.2.5
+## v1.2.5
 
 - Update dependencies
 
-## 1.2.4
+## v1.2.4
 
 - Update dependencies
 
-## 1.2.3
+## v1.2.3
 
 - Update dependencies
 
-## 1.2.2
+## v1.2.2
 
 - Update dependencies
 
-## 1.2.1
+## v1.2.1
 
 - Fix: don't apply ipv6 rules if kernel module was disabled
 
