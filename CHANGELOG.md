@@ -3,6 +3,7 @@
 ## v1.2.13 (next)
 
 - Update dependencies (go 1.22)
+- Added noop mode for diskfill attack to avoid errors when the disk is already full enough
 
 ## v1.2.12
 

@@ -786,6 +786,7 @@ func testFillDisk(t *testing.T, m *e2e.Minikube, e *e2e.Extension) {
 		method         diskfill.Method
 		wantedFileSize func(m *e2e.Minikube) int
 		wantedDelta    int
+		wantedLog      *string
 	}
 	testCases := []testCase{
 		{
@@ -869,6 +870,18 @@ func testFillDisk(t *testing.T, m *e2e.Minikube, e *e2e.Extension) {
 			},
 			wantedDelta: 512,
 		},
+		{
+			name:      "fill disk with noop because disk is already full (fallocate)",
+			mode:      diskfill.Percentage,
+			size:      5,
+			blockSize: 5,
+			method:    diskfill.AtOnce,
+			wantedFileSize: func(_ *e2e.Minikube) int {
+				return 4 * 1024 // 4GB
+			},
+			wantedDelta: -1,
+			wantedLog:   extutil.Ptr("disk is already filled up to"),
+		},
 	}
 
 	for _, testCase := range testCases {
@@ -890,7 +903,14 @@ func testFillDisk(t *testing.T, m *e2e.Minikube, e *e2e.Extension) {
 				e2e.AssertProcessRunningInContainer(t, m, e.Pod, "steadybit-extension-host", "dd", true)
 			}
 
-			assertFileHasSize(t, m, "/filldisk/disk-fill", wantedFileSize, testCase.wantedDelta)
+			if testCase.wantedDelta != -1 {
+				assertFileHasSize(t, m, "/filldisk/disk-fill", wantedFileSize, testCase.wantedDelta)
+			}
+
+			if testCase.wantedLog != nil {
+				e2e.AssertLogContains(t, m, e.Pod, *testCase.wantedLog)
+			}
+
 			require.NoError(t, action.Cancel())
 
 			if testCase.method == diskfill.OverTime {
