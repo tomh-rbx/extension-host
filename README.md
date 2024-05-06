@@ -47,7 +47,7 @@ helm upgrade steadybit-extension-host \
     --wait \
     --timeout 5m0s \
     --create-namespace \
-    --namespace steadybit-extension \
+    --namespace steadybit-agent \
     steadybit-extension-host/steadybit-extension-host
 ```
 
