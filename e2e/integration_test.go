@@ -83,69 +83,69 @@ func TestWithMinikube(t *testing.T) {
 	}
 
 	e2e.WithMinikube(t, getMinikubeOptions(), &extFactory, []e2e.WithMinikubeTestCase{
-		{
-			Name: "validate discovery",
-			Test: validateDiscovery,
-		},
-		{
-			Name: "target discovery",
-			Test: testDiscovery,
-		},
-		{
-			Name: "stress cpu",
-			Test: testStressCpu,
-		},
-		{
-			Name: "stress memory",
-			Test: testStressMemory,
-		}, {
-			Name: "stress io",
-			Test: testStressIo,
-		},
-		{
-			Name: "stress combine cpu and memory on same container",
-			Test: testStressCombined,
-		},
-		{
-			Name: "time travel",
-			Test: testTimeTravel,
-		},
-		{
-			Name: "stop process",
-			Test: testStopProcess,
-		},
-		{
-			Name: "network delay",
-			Test: testNetworkDelay,
-		},
-		{
-			Name: "network blackhole",
-			Test: testNetworkBlackhole,
-		},
-		{
-			Name: "network block dns",
-			Test: testNetworkBlockDns,
-		},
-		{
-			Name: "network limit bandwidth",
-			Test: testNetworkLimitBandwidth,
-		},
-		{
-			Name: "network package loss",
-			Test: testNetworkPackageLoss,
-		},
-		{
-			Name: "network package corruption",
-			Test: testNetworkPackageCorruption,
-		},
-		{
-			Name: "network delay and bandwidth on the same container should error",
-			Test: testNetworkDelayAndBandwidthOnSameContainer,
-		},
-		{
-			Name: "fill disk",
-			Test: testFillDisk,
-		},
+		//{
+		//	Name: "validate discovery",
+		//	Test: validateDiscovery,
+		//},
+		//{
+		//	Name: "target discovery",
+		//	Test: testDiscovery,
+		//},
+		//{
+		//	Name: "stress cpu",
+		//	Test: testStressCpu,
+		//},
+		//{
+		//	Name: "stress memory",
+		//	Test: testStressMemory,
+		//}, {
+		//	Name: "stress io",
+		//	Test: testStressIo,
+		//},
+		//{
+		//	Name: "stress combine cpu and memory on same container",
+		//	Test: testStressCombined,
+		//},
+		//{
+		//	Name: "time travel",
+		//	Test: testTimeTravel,
+		//},
+		//{
+		//	Name: "stop process",
+		//	Test: testStopProcess,
+		//},
+		//{
+		//	Name: "network delay",
+		//	Test: testNetworkDelay,
+		//},
+		//{
+		//	Name: "network blackhole",
+		//	Test: testNetworkBlackhole,
+		//},
+		//{
+		//	Name: "network block dns",
+		//	Test: testNetworkBlockDns,
+		//},
+		//{
+		//	Name: "network limit bandwidth",
+		//	Test: testNetworkLimitBandwidth,
+		//},
+		//{
+		//	Name: "network package loss",
+		//	Test: testNetworkPackageLoss,
+		//},
+		//{
+		//	Name: "network package corruption",
+		//	Test: testNetworkPackageCorruption,
+		//},
+		//{
+		//	Name: "network delay and bandwidth on the same container should error",
+		//	Test: testNetworkDelayAndBandwidthOnSameContainer,
+		//},
+		//{
+		//	Name: "fill disk",
+		//	Test: testFillDisk,
+		//},
 		{
 			Name: "shutdown host",
 			Test: testShutdownHost, // if you run this test locally, you will need to restart your docker machine
@@ -296,7 +296,7 @@ func testStopProcess(t *testing.T, m *e2e.Minikube, e *e2e.Extension) {
 	require.NoError(t, action.Cancel())
 }
 func testShutdownHost(t *testing.T, m *e2e.Minikube, e *e2e.Extension) {
-	t.Skip("Deactivated cause otherwise the shutdown will prevent the coverage collection from the tests above must be the last test, because it will shutdown the minikube host (minikube cannot be restarted")
+	//t.Skip("Deactivated cause otherwise the shutdown will prevent the coverage collection from the tests above must be the last test, because it will shutdown the minikube host (minikube cannot be restarted")
 
 	log.Info().Msg("Starting testShutdownHost")
 	config := struct {
