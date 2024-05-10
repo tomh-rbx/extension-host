@@ -136,10 +136,12 @@ func (l *shutdownAction) Start(_ context.Context, state *ActionState) (*action_k
 			log.Info().Msg("Rebooting host via command")
 			err := l.command.Reboot()
 			if err != nil {
+				log.Err(err).Msg("Rebooting host via command failed")
 				return &action_kit_api.StartResult{
 					Error: &action_kit_api.ActionKitError{
 						Title:  "Reboot failed",
 						Status: extutil.Ptr(action_kit_api.Failed),
+						Detail: extutil.Ptr(err.Error()),
 					},
 				}, nil
 			}
@@ -147,10 +149,12 @@ func (l *shutdownAction) Start(_ context.Context, state *ActionState) (*action_k
 			log.Info().Msg("Shutting down host via command")
 			err := l.command.Shutdown()
 			if err != nil {
+				log.Err(err).Msg("Shutting down host via command failed")
 				return &action_kit_api.StartResult{
 					Error: &action_kit_api.ActionKitError{
 						Title:  "Shutdown failed",
 						Status: extutil.Ptr(action_kit_api.Failed),
+						Detail: extutil.Ptr(err.Error()),
 					},
 				}, nil
 			}
