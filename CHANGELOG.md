@@ -1,6 +1,6 @@
 # Changelog
 
-## v1.2.13 (next)
+## v1.2.13
 
 - Update dependencies (go 1.22)
 - Added noop mode for diskfill attack to avoid errors when the disk is already full enough
