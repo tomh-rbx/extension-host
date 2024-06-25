@@ -1,6 +1,6 @@
 # Changelog
 
-## v1.2.15 (next)
+## v1.2.15
 
 - added fallback attributes for availability zone of AWS to show one of AWS, GCP or Azure
 
