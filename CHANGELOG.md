@@ -2,7 +2,7 @@
 
 ## v1.2.17
 
-- fix: Race condition in network attacks reporting attack for namespace still active, when it isn't
+- fix: Don't use the priomap defaults for network attacks, this might lead to unexpected behavior when TOS is set in packets
 
 ## v1.2.16
 
