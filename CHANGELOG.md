@@ -1,5 +1,9 @@
 # Changelog
 
+## v1.2.19
+
+- chore: update dependencies
+
 ## v1.2.17
 
 - fix: Don't use the priomap defaults for network attacks, this might lead to unexpected behavior when TOS is set in packets
