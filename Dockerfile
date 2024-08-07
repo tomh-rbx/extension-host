@@ -36,7 +36,6 @@ ARG TARGETARCH
 
 ENV STEADYBIT_EXTENSION_RUNC_ROOT="/run/steadybit/runc"
 ENV STEADYBIT_EXTENSION_RUNC_NSMOUNT_PATH="/nsmount"
-ENV STEADYBIT_EXTENSION_MEMFILL_PATH="/memfill"
 
 RUN groupadd --gid $USER_GID $USERNAME \
     && useradd --uid $USER_UID --gid $USER_GID -m $USERNAME
@@ -53,7 +52,6 @@ USER $USERNAME
 WORKDIR /
 
 COPY --from=build /app/dist/nsmount.${TARGETARCH} /nsmount
-COPY --from=build /app/dist/memfill.${TARGETARCH} /memfill
 COPY --from=build /app/extension /extension
 COPY --from=build /app/licenses /licenses
 

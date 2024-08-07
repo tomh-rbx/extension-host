@@ -16,6 +16,7 @@ import (
 	"golang.org/x/sync/syncmap"
 	"os"
 	"os/exec"
+	"runtime/trace"
 	"strings"
 	"time"
 )
@@ -130,6 +131,11 @@ func (a *stressAction) Start(ctx context.Context, state *StressActionState) (*ac
 }
 
 func (a *stressAction) Status(ctx context.Context, state *StressActionState) (*action_kit_api.StatusResult, error) {
+	ctx, task := trace.NewTask(ctx, "action_stress.Status")
+	defer task.End()
+	trace.Log(ctx, "actionId", a.description.Id)
+	trace.Log(ctx, "executionId", state.ExecutionId.String())
+
 	exited, err := a.stressExited(state.ExecutionId)
 	if !exited {
 		return &action_kit_api.StatusResult{Completed: false}, nil
@@ -180,7 +186,12 @@ func (a *stressAction) Status(ctx context.Context, state *StressActionState) (*a
 	}, nil
 }
 
-func (a *stressAction) Stop(_ context.Context, state *StressActionState) (*action_kit_api.StopResult, error) {
+func (a *stressAction) Stop(ctx context.Context, state *StressActionState) (*action_kit_api.StopResult, error) {
+	ctx, task := trace.NewTask(ctx, "action_stress.Stop")
+	defer task.End()
+	trace.Log(ctx, "actionId", a.description.Id)
+	trace.Log(ctx, "executionId", state.ExecutionId.String())
+
 	messages := make([]action_kit_api.Message, 0)
 
 	stopped := a.stopStressHost(state.ExecutionId)

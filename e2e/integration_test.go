@@ -155,9 +155,6 @@ func TestWithMinikube(t *testing.T) {
 		{
 			Name: "shutdown host",
 			Test: testShutdownHost, // if you run this test locally, you will need to restart your docker machine
-		}, {
-			Name: "fill memory",
-			Test: testFillMemory,
 		},
 	})
 }
@@ -178,59 +175,16 @@ func testStressCpu(t *testing.T, m *e2e.Minikube, e *e2e.Extension) {
 }
 
 func testStressMemory(t *testing.T, m *e2e.Minikube, e *e2e.Extension) {
-	tests := []struct {
-		name          string
-		failOnOomKill bool
-		performKill   bool
-		wantedErr     *string
-	}{
-		{
-			name:          "should perform successfully",
-			failOnOomKill: false,
-			performKill:   false,
-			wantedErr:     nil,
-		}, {
-			name:          "should fail on oom kill",
-			failOnOomKill: true,
-			performKill:   true,
-			wantedErr:     extutil.Ptr("exit status 137"),
-		}, {
-			name:          "should not fail on oom kill",
-			failOnOomKill: false,
-			performKill:   true,
-			wantedErr:     nil,
-		},
-	}
+	log.Info().Msg("Starting testStressMemory")
+	config := struct {
+		Duration   int `json:"duration"`
+		Percentage int `json:"percentage"`
+	}{Duration: 50000, Percentage: 50}
 
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			config := struct {
-				Duration      int  `json:"duration"`
-				Percentage    int  `json:"percentage"`
-				FailOnOomKill bool `json:"failOnOomKill"`
-			}{Duration: 100000, Percentage: 1, FailOnOomKill: tt.failOnOomKill}
-
-			action, err := e.RunAction(fmt.Sprintf("%s.stress-mem", exthost.BaseActionID), getTarget(m), config, executionContext)
-			defer func() { _ = action.Cancel() }()
-			require.NoError(t, err)
-
-			e2e.AssertProcessRunningInContainer(t, m, e.Pod, "steadybit-extension-host", "stress-ng", true)
-
-			if tt.performKill {
-				println("performing kill")
-				require.NoError(t, m.SshExec("sudo pkill -9 stress-ng").Run())
-			}
-
-			if tt.wantedErr == nil {
-				require.NoError(t, action.Cancel())
-			} else {
-				err := action.Wait()
-				require.ErrorContains(t, err, *tt.wantedErr)
-			}
-			e2e.AssertProcessNOTRunningInContainer(t, m, e.Pod, "steadybit-extension-host", "stress-ng")
-		})
-	}
-	requireAllSidecarsCleanedUp(t, m, e)
+	action, err := e.RunAction(exthost.BaseActionID+".stress-mem", getTarget(m), config, nil)
+	require.NoError(t, err)
+	e2e.AssertProcessRunningInContainer(t, m, e.Pod, "steadybit-extension-host", "stress-ng", true)
+	require.NoError(t, action.Cancel())
 }
 
 func testStressIo(t *testing.T, m *e2e.Minikube, e *e2e.Extension) {
@@ -347,7 +301,6 @@ func testStopProcess(t *testing.T, m *e2e.Minikube, e *e2e.Extension) {
 	e2e.AssertProcessNOTRunningInContainer(t, m, e.Pod, "steadybit-extension-host", "tail")
 	require.NoError(t, action.Cancel())
 }
-
 func testShutdownHost(t *testing.T, m *e2e.Minikube, e *e2e.Extension) {
 	t.Skip("Deactivated cause otherwise the shutdown will prevent the coverage collection from the tests above must be the last test, because it will shutdown the minikube host (minikube cannot be restarted")
 
@@ -1074,64 +1027,6 @@ func testNetworkDelayAndBandwidthOnSameContainer(t *testing.T, m *e2e.Minikube, 
 	defer func() { _ = actionLimit.Cancel() }()
 	require.ErrorContains(t, err2, "running multiple network attacks at the same time on the same network namespace is not supported")
 
-	requireAllSidecarsCleanedUp(t, m, e)
-}
-
-func testFillMemory(t *testing.T, m *e2e.Minikube, e *e2e.Extension) {
-	tests := []struct {
-		name          string
-		failOnOomKill bool
-		performKill   bool
-		wantedErr     *string
-	}{
-		{
-			name:          "should perform successfully",
-			failOnOomKill: false,
-			performKill:   false,
-			wantedErr:     nil,
-		}, {
-			name:          "should fail on oom kill",
-			failOnOomKill: true,
-			performKill:   true,
-			wantedErr:     extutil.Ptr("exit status 137"),
-		}, {
-			name:          "should not fail on oom kill",
-			failOnOomKill: false,
-			performKill:   true,
-			wantedErr:     nil,
-		},
-	}
-
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			config := struct {
-				Duration      int    `json:"duration"`
-				Size          int    `json:"size"`
-				Unit          string `json:"unit"`
-				Mode          string `json:"mode"`
-				FailOnOomKill bool   `json:"failOnOomKill"`
-			}{Duration: 10000, Size: 80, Unit: "%", Mode: "usage", FailOnOomKill: tt.failOnOomKill}
-
-			action, err := e.RunAction(fmt.Sprintf("%s.fill_mem", exthost.BaseActionID), getTarget(m), config, executionContext)
-			defer func() { _ = action.Cancel() }()
-			require.NoError(t, err)
-
-			e2e.AssertProcessRunningInContainer(t, m, e.Pod, "steadybit-extension-host", "memfill", true)
-
-			if tt.performKill {
-				println("performing kill")
-				require.NoError(t, m.SshExec("sudo pkill -9 memfill").Run())
-			}
-
-			if tt.wantedErr == nil {
-				require.NoError(t, action.Cancel())
-			} else {
-				err := action.Wait()
-				require.ErrorContains(t, err, *tt.wantedErr)
-			}
-			e2e.AssertProcessNOTRunningInContainer(t, m, e.Pod, "steadybit-extension-host", "memfill")
-		})
-	}
 	requireAllSidecarsCleanedUp(t, m, e)
 }
 
