@@ -1,5 +1,10 @@
 # Changelog
 
+## v1.2.20 (next)
+
+- fixed ip rule v6 support check
+- chore: update dependencies
+
 ## v1.2.19
 
 - chore: update dependencies
