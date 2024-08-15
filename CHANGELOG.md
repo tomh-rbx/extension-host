@@ -1,6 +1,6 @@
 # Changelog
 
-## v1.2.20 (next)
+## v1.2.20
 
 - fixed ip rule v6 support check
 - chore: update dependencies
