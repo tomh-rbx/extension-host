@@ -1,8 +1,9 @@
 # Changelog
 
-## v1.2.21 (next release)
+## v1.2.21
 
 - feat: change default value for "jitter" in "Network Delay" attack to false
+- feat: add memfill attack
 
 ## v1.2.20
 
