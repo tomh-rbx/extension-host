@@ -37,9 +37,30 @@ The capabilities needed by this extension are: (which are provided by the helm c
 
 ## Installation
 
-### Using Helm in Kubernetes
+### Kubernetes
 
-```sh
+Detailed information about agent and extension installation in kubernetes can also be found in
+our [documentation](https://docs.steadybit.com/install-and-configure/install-agent/install-on-kubernetes).
+
+#### Recommended (via agent helm chart)
+
+All extensions provide a helm chart that is also integrated in the
+[helm-chart](https://github.com/steadybit/helm-charts/tree/main/charts/steadybit-agent) of the agent.
+
+The extension is installed by default when you install the agent.
+
+You can provide additional values to configure this extension.
+
+Additional configuration options can be found in
+the [helm-chart](https://github.com/steadybit/extension-host/blob/main/charts/steadybit-extension-host/values.yaml) of the
+extension.
+
+#### Alternative (via own helm chart)
+
+If you need more control, you can install the extension via its
+dedicated [helm-chart](https://github.com/steadybit/extension-host/blob/main/charts/steadybit-extension-host).
+
+```bash
 helm repo add steadybit-extension-host https://steadybit.github.io/extension-host
 helm repo update
 helm upgrade steadybit-extension-host \
@@ -51,38 +72,24 @@ helm upgrade steadybit-extension-host \
     steadybit-extension-host/steadybit-extension-host
 ```
 
-### Using Docker
-
-This extension is by default deployed using
-our [agent.sh docker compose script](https://docs.steadybit.com/install-and-configure/install-agent/install-as-docker-container).
-
-Or you can run it manually:
-
-```sh
-docker run \
-  --rm \
-  -p 8085:8085 \
-  --name steadybit-extension-host \
-  --privileged
-  --network=host
-  --pid=host
-  ghcr.io/steadybit/extension-host:latest
-```
-
 ### Linux Package
 
-Please use our [agent-linux.sh script](https://docs.steadybit.com/install-and-configure/install-agent/install-on-linux-hosts) to install the
-extension on your Linux machine.
-The script will download the latest version of the extension and install it using the package manager.
+Please use
+our [agent-linux.sh script](https://docs.steadybit.com/install-and-configure/install-agent/install-on-linux-hosts)
+to install the extension on your Linux machine. The script will download the latest version of the extension and install
+it using the package manager.
 
-## Register the extension
+After installing, configure the extension by editing `/etc/steadybit/extension-host` and then restart the service.
 
-Make sure to register the extension at the steadybit platform. Please refer to
-the [documentation](https://docs.steadybit.com/integrate-with-steadybit/extensions/extension-installation) for more information.
+## Extension registration
+
+Make sure that the extension is registered with the agent. In most cases this is done automatically. Please refer to
+the [documentation](https://docs.steadybit.com/install-and-configure/install-agent/extension-discovery) for more
+information about extension registration and how to verify.
 
 ## Troubleshooting
 
-When the host is using cgorups v2 and the cgroup filesystem is mounted using the `nsdelegate` option will prevent that the action running processces in other cgroups (e.g. stress cpu/memory, disk fill) will fail.
+When the host is using cgroups v2 and the cgroup filesystem is mounted using the `nsdelegate` option will prevent that the action running processces in other cgroups (e.g. stress cpu/memory, disk fill) will fail.
 In that case you need to remount the cgroup filesystem without the `nsdelegate` option.
 
 ```sh
