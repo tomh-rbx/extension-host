@@ -6,7 +6,7 @@ toolchain go1.22.2
 
 require (
 	github.com/KimMachineGun/automemlimit v0.6.1
-	github.com/elastic/go-sysinfo v1.14.1
+	github.com/elastic/go-sysinfo v1.14.2
 	github.com/google/uuid v1.6.0
 	github.com/kelseyhightower/envconfig v1.4.0
 	github.com/mitchellh/go-ps v1.0.0
@@ -75,7 +75,7 @@ require (
 	github.com/zmwangx/debounce v1.0.0 // indirect
 	golang.org/x/net v0.28.0 // indirect
 	golang.org/x/oauth2 v0.13.0 // indirect
-	golang.org/x/sys v0.24.0 // indirect
+	golang.org/x/sys v0.25.0 // indirect
 	golang.org/x/term v0.23.0 // indirect
 	golang.org/x/text v0.17.0 // indirect
 	golang.org/x/time v0.6.0 // indirect
