@@ -35,6 +35,7 @@ func getNetworkLimitBandwidthDescription() action_kit_api.ActionDescription {
 			TargetType:         targetID,
 			SelectionTemplates: &targetSelectionTemplates,
 		},
+		Technology:  extutil.Ptr("Host"),
 		Category:    extutil.Ptr("network"),
 		Kind:        action_kit_api.Attack,
 		TimeControl: action_kit_api.TimeControlExternal,

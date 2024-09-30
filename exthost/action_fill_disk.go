@@ -56,6 +56,7 @@ func (a *fillDiskAction) Describe() action_kit_api.ActionDescription {
 			TargetType:         targetID,
 			SelectionTemplates: &targetSelectionTemplates,
 		},
+		Technology:  extutil.Ptr("Host"),
 		Category:    extutil.Ptr("Resource"),
 		Kind:        action_kit_api.Attack,
 		TimeControl: action_kit_api.TimeControlExternal,
