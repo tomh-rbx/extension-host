@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: MIT
-// SPDX-FileCopyrightText: 2023 Steadybit GmbH
+// SPDX-FileCopyrightText: 2024 Steadybit GmbH
 
 package exthost
 
@@ -195,7 +195,6 @@ func (a *fillDiskAction) Prepare(ctx context.Context, state *FillDiskActionState
 	state.Sidecar = diskfill.SidecarOpts{
 		TargetProcess: initProcess,
 		IdSuffix:      "host",
-		ImagePath:     "/",
 	}
 	state.FillDiskOpts = opts
 	state.ExecutionId = request.ExecutionId
@@ -234,7 +233,7 @@ func (a *fillDiskAction) Start(ctx context.Context, state *FillDiskActionState) 
 	}, nil
 }
 
-func (a *fillDiskAction) Stop(ctx context.Context, state *FillDiskActionState) (*action_kit_api.StopResult, error) {
+func (a *fillDiskAction) Stop(_ context.Context, state *FillDiskActionState) (*action_kit_api.StopResult, error) {
 	messages := make([]action_kit_api.Message, 0)
 
 	stopped, err := a.stopFillDiskHost(state.ExecutionId)

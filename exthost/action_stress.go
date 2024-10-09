@@ -1,3 +1,6 @@
+// SPDX-License-Identifier: MIT
+// SPDX-FileCopyrightText: 2024 Steadybit GmbH
+
 package exthost
 
 import (
@@ -98,7 +101,6 @@ func (a *stressAction) Prepare(ctx context.Context, state *StressActionState, re
 	state.Sidecar = stress.SidecarOpts{
 		TargetProcess: initProcess,
 		IdSuffix:      "host",
-		ImagePath:     "/",
 	}
 	state.ExecutionId = request.ExecutionId
 	if !extutil.ToBool(request.Config["failOnOomKill"]) {
@@ -129,7 +131,7 @@ func (a *stressAction) Start(ctx context.Context, state *StressActionState) (*ac
 	}, nil
 }
 
-func (a *stressAction) Status(ctx context.Context, state *StressActionState) (*action_kit_api.StatusResult, error) {
+func (a *stressAction) Status(_ context.Context, state *StressActionState) (*action_kit_api.StatusResult, error) {
 	exited, err := a.stressExited(state.ExecutionId)
 	if !exited {
 		return &action_kit_api.StatusResult{Completed: false}, nil

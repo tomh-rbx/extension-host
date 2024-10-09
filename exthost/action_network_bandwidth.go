@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: MIT
-// SPDX-FileCopyrightText: 2023 Steadybit GmbH
+// SPDX-FileCopyrightText: 2024 Steadybit GmbH
 
 package exthost
 
@@ -77,7 +77,7 @@ func limitBandwidth(r runc.Runc) networkOptsProvider {
 
 		interfaces := extutil.ToStringArray(request.Config["networkInterface"])
 		if len(interfaces) == 0 {
-			interfaces, err = readNetworkInterfaces(ctx, r, sidecar)
+			interfaces, err = network.ListNonLoopbackInterfaceNames(ctx, r, sidecar)
 			if err != nil {
 				return nil, err
 			}

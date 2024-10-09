@@ -1,3 +1,6 @@
+// SPDX-License-Identifier: MIT
+// SPDX-FileCopyrightText: 2024 Steadybit GmbH
+
 package timetravel
 
 import (
@@ -15,7 +18,6 @@ func AdjustNtpTrafficRules(ctx context.Context, r runc.Runc, allowNtpTraffic boo
 	sidecar := network.SidecarOpts{
 		TargetProcess: initProcess,
 		IdSuffix:      "host",
-		ImagePath:     "/",
 	}
 
 	opts := &network.BlackholeOpts{
