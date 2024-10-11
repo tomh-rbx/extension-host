@@ -64,15 +64,15 @@ func getNetworkBlockDnsDescription() action_kit_api.ActionDescription {
 }
 
 func blockDns() networkOptsProvider {
-	return func(ctx context.Context, sidecar network.SidecarOpts, request action_kit_api.PrepareActionRequestBody) (network.Opts, error) {
+	return func(ctx context.Context, sidecar network.SidecarOpts, request action_kit_api.PrepareActionRequestBody) (network.Opts, action_kit_api.Messages, error) {
 		_, err := CheckTargetHostname(request.Target.Attributes)
 		if err != nil {
-			return nil, err
+			return nil, nil, err
 		}
 		dnsPort := uint16(extutil.ToUInt(request.Config["dnsPort"]))
 
 		return &network.BlackholeOpts{
 			Filter: network.Filter{Include: network.NewNetWithPortRanges(network.NetAny, network.PortRange{From: dnsPort, To: dnsPort})},
-		}, nil
+		}, nil, nil
 	}
 }

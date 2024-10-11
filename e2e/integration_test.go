@@ -465,13 +465,15 @@ func testNetworkDelay(t *testing.T, m *e2e.Minikube, e *e2e.Extension) {
 		wantedDelay         bool
 	}{
 		{
-			name:        "should delay all traffic",
-			wantedDelay: true,
+			name:                "should delay all traffic",
+			restrictedEndpoints: generateRestrictedEndpoints(1500),
+			wantedDelay:         true,
 		},
 		{
-			name:        "should delay only port 5000 traffic",
-			port:        []string{"5000"},
-			wantedDelay: true,
+			name:                "should delay only port 5000 traffic",
+			port:                []string{"5000"},
+			restrictedEndpoints: generateRestrictedEndpoints(1500),
+			wantedDelay:         true,
 		},
 		{
 			name:                "should delay only port 80 traffic",
@@ -531,6 +533,7 @@ func testNetworkDelay(t *testing.T, m *e2e.Minikube, e *e2e.Extension) {
 			require.NoError(t, action.Cancel())
 
 			netperf.AssertLatency(t, 0, unaffectedLatency*120/100)
+
 		})
 	}
 	requireAllSidecarsCleanedUp(t, m, e)
@@ -1187,8 +1190,8 @@ func generateRestrictedEndpoints(count int) []action_kit_api.RestrictedEndpoint 
 	for i := 0; i < count; i++ {
 		result = append(result, action_kit_api.RestrictedEndpoint{
 			Cidr:    fmt.Sprintf("%s/32", address.String()),
-			PortMin: 8086,
-			PortMax: 8088,
+			PortMin: 8085,
+			PortMax: 8086,
 		})
 		incrementIP(address, len(address)-1)
 	}
