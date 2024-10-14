@@ -44,18 +44,18 @@ func getNetworkBlackholeDescription() action_kit_api.ActionDescription {
 }
 
 func blackhole(r runc.Runc) networkOptsProvider {
-	return func(ctx context.Context, sidecar network.SidecarOpts, request action_kit_api.PrepareActionRequestBody) (network.Opts, error) {
+	return func(ctx context.Context, sidecar network.SidecarOpts, request action_kit_api.PrepareActionRequestBody) (network.Opts, action_kit_api.Messages, error) {
 		_, err := CheckTargetHostname(request.Target.Attributes)
 		if err != nil {
-			return nil, err
+			return nil, nil, err
 		}
 
-		filter, err := mapToNetworkFilter(ctx, r, sidecar, request.Config, getRestrictedEndpoints(request))
+		filter, messages, err := mapToNetworkFilter(ctx, r, sidecar, request.Config, getRestrictedEndpoints(request))
 		if err != nil {
-			return nil, err
+			return nil, nil, err
 		}
 
-		return &network.BlackholeOpts{Filter: filter}, nil
+		return &network.BlackholeOpts{Filter: filter}, messages, nil
 	}
 }
 
