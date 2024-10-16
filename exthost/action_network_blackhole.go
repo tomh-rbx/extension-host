@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: MIT
-// SPDX-FileCopyrightText: 2023 Steadybit GmbH
+// SPDX-FileCopyrightText: 2024 Steadybit GmbH
 
 package exthost
 
@@ -11,6 +11,7 @@ import (
 	"github.com/steadybit/action-kit/go/action_kit_commons/network"
 	"github.com/steadybit/action-kit/go/action_kit_commons/runc"
 	"github.com/steadybit/action-kit/go/action_kit_sdk"
+	extension_kit "github.com/steadybit/extension-kit"
 	"github.com/steadybit/extension-kit/extbuild"
 	"github.com/steadybit/extension-kit/extutil"
 )
@@ -50,10 +51,24 @@ func blackhole(r runc.Runc) networkOptsProvider {
 			return nil, nil, err
 		}
 
-		filter, messages, err := mapToNetworkFilter(ctx, r, sidecar, request.Config, getRestrictedEndpoints(request))
+		var messages action_kit_api.Messages
+		if usesCilium, err := network.HasCiliumIpRoutes(ctx, r, sidecar); err != nil {
+			messages = append(messages, action_kit_api.Message{
+				Level:   extutil.Ptr(action_kit_api.Warn),
+				Message: fmt.Sprintf("Failed to check for Cilium routes: %v", err),
+			})
+		} else if usesCilium {
+			return nil, nil, &extension_kit.ExtensionError{
+				Title:  "'Block Traffic' on hosts with cilium installed is not supported.",
+				Detail: extutil.Ptr("Try replacing this attack with 'Drop Outgoing Traffic' with a loss of 100%. That affects only outgoing traffic, but should yield similar results."),
+			}
+		}
+
+		filter, netMessages, err := mapToNetworkFilter(ctx, r, sidecar, request.Config, getRestrictedEndpoints(request))
 		if err != nil {
 			return nil, nil, err
 		}
+		messages = append(messages, netMessages...)
 
 		return &network.BlackholeOpts{Filter: filter}, messages, nil
 	}
