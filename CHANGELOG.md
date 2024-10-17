@@ -1,5 +1,12 @@
 # Changelog
 
+## v1.2.22
+
+- fix: fail block traffic early on hosts with cilium
+- fix: only create network excludes which are necessary for the given includes
+- fix: aggregate excludes to ip ranges if there are too many
+- fix: fail early when too many tc rules are generated for a network attack
+
 ## v1.2.21
 
 - feat: change default value for "jitter" in "Network Delay" attack to false
