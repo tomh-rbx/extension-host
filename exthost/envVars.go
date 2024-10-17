@@ -21,7 +21,7 @@ func readWhitelistedEnvVars() []string {
 		re := regexp.MustCompile(`[\\s,;]+`)
 		whitelistedEnvVars = re.Split(strings.Replace(strings.ToLower(discoveryEnvList), " ", "", -1), -1)
 	} else {
-		log.Debug().Msg("STEADYBIT_DISCOVERY_ENV_LIST not set, using default")
+		log.Trace().Msg("STEADYBIT_DISCOVERY_ENV_LIST not set, using default")
 		whitelistedEnvVars = []string{}
 	}
 	return whitelistedEnvVars
