@@ -1,5 +1,9 @@
 # Changelog
 
+## v1.2.23
+
+- chore: update dependencies
+
 ## v1.2.22
 
 - fix: fail block traffic early on hosts with cilium
