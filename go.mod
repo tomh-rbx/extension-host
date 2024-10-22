@@ -2,8 +2,6 @@ module github.com/steadybit/extension-host
 
 go 1.23
 
-toolchain go1.23.1
-
 require (
 	github.com/KimMachineGun/automemlimit v0.6.1
 	github.com/elastic/go-sysinfo v1.14.2
