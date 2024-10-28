@@ -84,6 +84,7 @@ func TestWithMinikube(t *testing.T) {
 				"--set", fmt.Sprintf("container.runtime=%s", m.Runtime),
 				"--set", "discovery.attributes.excludes.host={host.nic}",
 				"--set", "logging.level=trace",
+				"--set", "host.runcDebug=true",
 			}
 		},
 	}

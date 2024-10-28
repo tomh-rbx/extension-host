@@ -80,6 +80,10 @@ spec:
             {{- with .Values.extraEnv }}
               {{- toYaml . | nindent 12 }}
             {{- end }}
+            {{- if .Values.host.runcDebug }}
+            - name: STEADYBIT_EXTENSION_RUNC_DEBUG
+              value: "true"
+            {{- end }}
           {{- with .Values.extraEnvFrom }}
           envFrom:
             {{- toYaml . | nindent 12 }}
