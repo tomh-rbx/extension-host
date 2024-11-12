@@ -79,7 +79,7 @@ func main() {
 	action_kit_sdk.RegisterAction(exthost.NewFillMemoryHostAction(r))
 
 	//This will install a signal handler, that will stop active actions when receiving a SIGURS1, SIGTERM or SIGINT
-	action_kit_sdk.InstallSignalHandler()
+	extsignals.ActivateSignalHandlers()
 
 	action_kit_sdk.RegisterCoverageEndpoints()
 
