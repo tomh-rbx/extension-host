@@ -84,7 +84,6 @@ func TestWithMinikube(t *testing.T) {
 				"--set", fmt.Sprintf("container.runtime=%s", m.Runtime),
 				"--set", "discovery.attributes.excludes.host={host.nic}",
 				"--set", "logging.level=trace",
-				"--set", "host.runcDebug=true",
 			}
 		},
 	}
@@ -276,36 +275,37 @@ func testTimeTravel(t *testing.T, m *e2e.Minikube, e *e2e.Extension) {
 		DisableNtp: true,
 	}
 
+	offsetContainer := time.Until(getContainerTime(t, m, e))
+
 	action, err := e.RunAction(exthost.BaseActionID+".timetravel", getTarget(m), config, nil)
 	defer func() { _ = action.Cancel() }()
 	require.NoError(t, err)
 
 	assert.EventuallyWithT(t, func(c *assert.CollectT) {
-		diff := getTimeDiffBetweenNowAndContainerTime(t, m, e)
+		adjustedContainerTime := getContainerTime(t, m, e).Add(offsetContainer)
+		diff := time.Until(adjustedContainerTime)
 		assert.InDelta(t, config.Offset, diff.Milliseconds(), 2000)
 	}, 10*time.Second, 1*time.Second, "time travel failed to apply offset")
 
 	// rollback
 	require.NoError(t, action.Cancel())
 	assert.EventuallyWithT(t, func(c *assert.CollectT) {
-		diff := getTimeDiffBetweenNowAndContainerTime(t, m, e)
+		adjustedContainerTime := getContainerTime(t, m, e).Add(offsetContainer)
+		diff := time.Until(adjustedContainerTime)
 		assert.InDelta(t, 0, diff.Milliseconds(), 2000)
 	}, 10*time.Second, 1*time.Second, "time travel failed to rollback offset")
 }
 
-func getTimeDiffBetweenNowAndContainerTime(t *testing.T, m *e2e.Minikube, e *e2e.Extension) time.Duration {
+func getContainerTime(t *testing.T, m *e2e.Minikube, e *e2e.Extension) time.Time {
 	out, err := m.PodExec(e.Pod, "steadybit-extension-host", "date", "+%s")
 	if err != nil {
 		t.Fatal(err)
-		return 0
 	}
 	containerSecondsSinceEpoch := extutil.ToInt64(strings.TrimSpace(out))
 	if containerSecondsSinceEpoch == 0 {
 		t.Fatal("could not parse container time")
-		return 0
 	}
-	containerTime := time.Unix(containerSecondsSinceEpoch, 0)
-	return time.Until(containerTime)
+	return time.Unix(containerSecondsSinceEpoch, 0)
 }
 
 func validateDiscovery(t *testing.T, _ *e2e.Minikube, e *e2e.Extension) {
@@ -867,12 +867,12 @@ func testFillDisk(t *testing.T, m *e2e.Minikube, e *e2e.Extension) {
 		{
 			name:      "fill disk with percentage (fallocate)",
 			mode:      diskfill.Percentage,
-			size:      80,
+			size:      90,
 			blockSize: 0,
 			method:    diskfill.AtOnce,
 			wantedFileSize: func(m *e2e.Minikube) int {
 				diskSpace := getDiskSpace(m)
-				return int(((diskSpace.Capacity * 80 / 100) - diskSpace.Used) / 1024)
+				return int(((diskSpace.Capacity * 90 / 100) - diskSpace.Used) / 1024)
 			},
 			wantedDelta: 512,
 		},
@@ -902,12 +902,12 @@ func testFillDisk(t *testing.T, m *e2e.Minikube, e *e2e.Extension) {
 		{
 			name:      "fill disk with percentage (dd)",
 			mode:      diskfill.Percentage,
-			size:      70,
+			size:      90,
 			blockSize: 5,
 			method:    diskfill.OverTime,
 			wantedFileSize: func(m *e2e.Minikube) int {
 				diskSpace := getDiskSpace(m)
-				return int(((diskSpace.Capacity * 70 / 100) - diskSpace.Used) / 1024)
+				return int(((diskSpace.Capacity * 90 / 100) - diskSpace.Used) / 1024)
 			},
 			wantedDelta: 512,
 		},
