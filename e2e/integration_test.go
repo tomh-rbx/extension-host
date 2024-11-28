@@ -163,7 +163,6 @@ func TestWithMinikube(t *testing.T) {
 }
 
 func testStressCpu(t *testing.T, m *e2e.Minikube, e *e2e.Extension) {
-	log.Info().Msg("Starting testStressCpu")
 	config := struct {
 		Duration int `json:"duration"`
 		CpuLoad  int `json:"cpuLoad"`
@@ -372,7 +371,6 @@ func testShutdownHost(t *testing.T, m *e2e.Minikube, e *e2e.Extension) {
 }
 
 func testNetworkBlackhole(t *testing.T, m *e2e.Minikube, e *e2e.Extension) {
-	log.Info().Msg("Starting testNetworkBlackhole")
 	nginx := e2e.Nginx{Minikube: m}
 	err := nginx.Deploy("nginx-network-blackhole")
 	require.NoError(t, err, "failed to create pod")
@@ -450,7 +448,6 @@ func testNetworkBlackhole(t *testing.T, m *e2e.Minikube, e *e2e.Extension) {
 }
 
 func testNetworkDelay(t *testing.T, m *e2e.Minikube, e *e2e.Extension) {
-	log.Info().Msg("Starting testNetworkDelay")
 	netperf := e2e.Netperf{Minikube: m}
 	err := netperf.Deploy("delay")
 	defer func() { _ = netperf.Delete() }()
@@ -541,7 +538,6 @@ func testNetworkDelay(t *testing.T, m *e2e.Minikube, e *e2e.Extension) {
 }
 
 func testNetworkPackageLoss(t *testing.T, m *e2e.Minikube, e *e2e.Extension) {
-	log.Info().Msg("Starting testNetworkPackageLoss")
 	iperf := e2e.Iperf{Minikube: m}
 	err := iperf.Deploy("loss")
 	defer func() { _ = iperf.Delete() }()
@@ -611,7 +607,6 @@ func testNetworkPackageLoss(t *testing.T, m *e2e.Minikube, e *e2e.Extension) {
 }
 
 func testNetworkPackageCorruption(t *testing.T, m *e2e.Minikube, e *e2e.Extension) {
-	log.Info().Msg("Starting testNetworkPackageCorruption")
 	iperf := e2e.Iperf{Minikube: m}
 	err := iperf.Deploy("corruption")
 	defer func() { _ = iperf.Delete() }()
@@ -696,7 +691,7 @@ func testNetworkPackageCorruption(t *testing.T, m *e2e.Minikube, e *e2e.Extensio
 
 func testNetworkLimitBandwidth(t *testing.T, m *e2e.Minikube, e *e2e.Extension) {
 	t.Skip("Skipping testNetworkLimitBandwidth because it does not work on minikube, but was tested manually on a real cluster")
-	log.Info().Msg("Starting testNetworkLimitBandwidth")
+
 	iperf := e2e.Iperf{Minikube: m}
 	err := iperf.Deploy("bandwidth")
 	defer func() { _ = iperf.Delete() }()
@@ -770,7 +765,6 @@ func testNetworkLimitBandwidth(t *testing.T, m *e2e.Minikube, e *e2e.Extension) 
 }
 
 func testNetworkBlockDns(t *testing.T, m *e2e.Minikube, e *e2e.Extension) {
-	log.Info().Msg("Starting testNetworkBlockDns")
 	nginx := e2e.Nginx{Minikube: m}
 	err := nginx.Deploy("nginx-network-block-dns")
 	require.NoError(t, err, "failed to create pod")
@@ -1154,13 +1148,15 @@ func runInMinikube(m *e2e.Minikube, arg ...string) ([]byte, error) {
 }
 
 func requireAllSidecarsCleanedUp(t *testing.T, m *e2e.Minikube, e *e2e.Extension) {
-	out, err := m.PodExec(e.Pod, "steadybit-extension-host", "ls", "/run/steadybit/runc")
-	if strings.Contains(out, "No such file or directory") {
-		return
-	}
-	require.NoError(t, err)
-	space := strings.TrimSpace(out)
-	require.Empty(t, space, "no sidecar directories must be present")
+	require.EventuallyWithT(t, func(t *assert.CollectT) {
+		out, err := m.PodExec(e.Pod, "steadybit-extension-host", "ls", "/run/steadybit/runc")
+		if strings.Contains(out, "No such file or directory") {
+			return
+		}
+		require.NoError(t, err)
+		space := strings.TrimSpace(out)
+		require.Empty(t, space, "no sidecar directories must be present")
+	}, 30*time.Second, 1*time.Second)
 }
 
 func getMinikubeOptions() e2e.MinikubeOpts {
