@@ -84,7 +84,6 @@ func TestWithMinikube(t *testing.T) {
 				"--set", fmt.Sprintf("container.runtime=%s", m.Runtime),
 				"--set", "discovery.attributes.excludes.host={host.nic}",
 				"--set", "logging.level=trace",
-				"--set", "host.runcDebug=true",
 			}
 		},
 	}
@@ -164,7 +163,6 @@ func TestWithMinikube(t *testing.T) {
 }
 
 func testStressCpu(t *testing.T, m *e2e.Minikube, e *e2e.Extension) {
-	log.Info().Msg("Starting testStressCpu")
 	config := struct {
 		Duration int `json:"duration"`
 		CpuLoad  int `json:"cpuLoad"`
@@ -276,36 +274,37 @@ func testTimeTravel(t *testing.T, m *e2e.Minikube, e *e2e.Extension) {
 		DisableNtp: true,
 	}
 
+	offsetContainer := time.Until(getContainerTime(t, m, e))
+
 	action, err := e.RunAction(exthost.BaseActionID+".timetravel", getTarget(m), config, nil)
 	defer func() { _ = action.Cancel() }()
 	require.NoError(t, err)
 
 	assert.EventuallyWithT(t, func(c *assert.CollectT) {
-		diff := getTimeDiffBetweenNowAndContainerTime(t, m, e)
+		adjustedContainerTime := getContainerTime(t, m, e).Add(offsetContainer)
+		diff := time.Until(adjustedContainerTime)
 		assert.InDelta(t, config.Offset, diff.Milliseconds(), 2000)
 	}, 10*time.Second, 1*time.Second, "time travel failed to apply offset")
 
 	// rollback
 	require.NoError(t, action.Cancel())
 	assert.EventuallyWithT(t, func(c *assert.CollectT) {
-		diff := getTimeDiffBetweenNowAndContainerTime(t, m, e)
+		adjustedContainerTime := getContainerTime(t, m, e).Add(offsetContainer)
+		diff := time.Until(adjustedContainerTime)
 		assert.InDelta(t, 0, diff.Milliseconds(), 2000)
 	}, 10*time.Second, 1*time.Second, "time travel failed to rollback offset")
 }
 
-func getTimeDiffBetweenNowAndContainerTime(t *testing.T, m *e2e.Minikube, e *e2e.Extension) time.Duration {
+func getContainerTime(t *testing.T, m *e2e.Minikube, e *e2e.Extension) time.Time {
 	out, err := m.PodExec(e.Pod, "steadybit-extension-host", "date", "+%s")
 	if err != nil {
 		t.Fatal(err)
-		return 0
 	}
 	containerSecondsSinceEpoch := extutil.ToInt64(strings.TrimSpace(out))
 	if containerSecondsSinceEpoch == 0 {
 		t.Fatal("could not parse container time")
-		return 0
 	}
-	containerTime := time.Unix(containerSecondsSinceEpoch, 0)
-	return time.Until(containerTime)
+	return time.Unix(containerSecondsSinceEpoch, 0)
 }
 
 func validateDiscovery(t *testing.T, _ *e2e.Minikube, e *e2e.Extension) {
@@ -372,7 +371,6 @@ func testShutdownHost(t *testing.T, m *e2e.Minikube, e *e2e.Extension) {
 }
 
 func testNetworkBlackhole(t *testing.T, m *e2e.Minikube, e *e2e.Extension) {
-	log.Info().Msg("Starting testNetworkBlackhole")
 	nginx := e2e.Nginx{Minikube: m}
 	err := nginx.Deploy("nginx-network-blackhole")
 	require.NoError(t, err, "failed to create pod")
@@ -450,7 +448,6 @@ func testNetworkBlackhole(t *testing.T, m *e2e.Minikube, e *e2e.Extension) {
 }
 
 func testNetworkDelay(t *testing.T, m *e2e.Minikube, e *e2e.Extension) {
-	log.Info().Msg("Starting testNetworkDelay")
 	netperf := e2e.Netperf{Minikube: m}
 	err := netperf.Deploy("delay")
 	defer func() { _ = netperf.Delete() }()
@@ -541,7 +538,6 @@ func testNetworkDelay(t *testing.T, m *e2e.Minikube, e *e2e.Extension) {
 }
 
 func testNetworkPackageLoss(t *testing.T, m *e2e.Minikube, e *e2e.Extension) {
-	log.Info().Msg("Starting testNetworkPackageLoss")
 	iperf := e2e.Iperf{Minikube: m}
 	err := iperf.Deploy("loss")
 	defer func() { _ = iperf.Delete() }()
@@ -611,7 +607,6 @@ func testNetworkPackageLoss(t *testing.T, m *e2e.Minikube, e *e2e.Extension) {
 }
 
 func testNetworkPackageCorruption(t *testing.T, m *e2e.Minikube, e *e2e.Extension) {
-	log.Info().Msg("Starting testNetworkPackageCorruption")
 	iperf := e2e.Iperf{Minikube: m}
 	err := iperf.Deploy("corruption")
 	defer func() { _ = iperf.Delete() }()
@@ -696,7 +691,7 @@ func testNetworkPackageCorruption(t *testing.T, m *e2e.Minikube, e *e2e.Extensio
 
 func testNetworkLimitBandwidth(t *testing.T, m *e2e.Minikube, e *e2e.Extension) {
 	t.Skip("Skipping testNetworkLimitBandwidth because it does not work on minikube, but was tested manually on a real cluster")
-	log.Info().Msg("Starting testNetworkLimitBandwidth")
+
 	iperf := e2e.Iperf{Minikube: m}
 	err := iperf.Deploy("bandwidth")
 	defer func() { _ = iperf.Delete() }()
@@ -770,7 +765,6 @@ func testNetworkLimitBandwidth(t *testing.T, m *e2e.Minikube, e *e2e.Extension) 
 }
 
 func testNetworkBlockDns(t *testing.T, m *e2e.Minikube, e *e2e.Extension) {
-	log.Info().Msg("Starting testNetworkBlockDns")
 	nginx := e2e.Nginx{Minikube: m}
 	err := nginx.Deploy("nginx-network-block-dns")
 	require.NoError(t, err, "failed to create pod")
@@ -867,12 +861,12 @@ func testFillDisk(t *testing.T, m *e2e.Minikube, e *e2e.Extension) {
 		{
 			name:      "fill disk with percentage (fallocate)",
 			mode:      diskfill.Percentage,
-			size:      80,
+			size:      90,
 			blockSize: 0,
 			method:    diskfill.AtOnce,
 			wantedFileSize: func(m *e2e.Minikube) int {
 				diskSpace := getDiskSpace(m)
-				return int(((diskSpace.Capacity * 80 / 100) - diskSpace.Used) / 1024)
+				return int(((diskSpace.Capacity * 90 / 100) - diskSpace.Used) / 1024)
 			},
 			wantedDelta: 512,
 		},
@@ -902,12 +896,12 @@ func testFillDisk(t *testing.T, m *e2e.Minikube, e *e2e.Extension) {
 		{
 			name:      "fill disk with percentage (dd)",
 			mode:      diskfill.Percentage,
-			size:      70,
+			size:      90,
 			blockSize: 5,
 			method:    diskfill.OverTime,
 			wantedFileSize: func(m *e2e.Minikube) int {
 				diskSpace := getDiskSpace(m)
-				return int(((diskSpace.Capacity * 70 / 100) - diskSpace.Used) / 1024)
+				return int(((diskSpace.Capacity * 90 / 100) - diskSpace.Used) / 1024)
 			},
 			wantedDelta: 512,
 		},
@@ -1154,13 +1148,15 @@ func runInMinikube(m *e2e.Minikube, arg ...string) ([]byte, error) {
 }
 
 func requireAllSidecarsCleanedUp(t *testing.T, m *e2e.Minikube, e *e2e.Extension) {
-	out, err := m.PodExec(e.Pod, "steadybit-extension-host", "ls", "/run/steadybit/runc")
-	if strings.Contains(out, "No such file or directory") {
-		return
-	}
-	require.NoError(t, err)
-	space := strings.TrimSpace(out)
-	require.Empty(t, space, "no sidecar directories must be present")
+	require.EventuallyWithT(t, func(t *assert.CollectT) {
+		out, err := m.PodExec(e.Pod, "steadybit-extension-host", "ls", "/run/steadybit/runc")
+		if strings.Contains(out, "No such file or directory") {
+			return
+		}
+		require.NoError(t, err)
+		space := strings.TrimSpace(out)
+		require.Empty(t, space, "no sidecar directories must be present")
+	}, 30*time.Second, 1*time.Second)
 }
 
 func getMinikubeOptions() e2e.MinikubeOpts {
