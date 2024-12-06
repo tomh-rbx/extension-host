@@ -1,5 +1,9 @@
 # Changelog
 
+## v1.2.25
+
+- Use uid instead of name for user statement in Dockerfile
+
 ## v1.2.24
 
 - chore: update dependencies
