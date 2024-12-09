@@ -72,6 +72,8 @@ manifest should match snapshot using podAnnotations, podLabels and resources:
                   cpu: 200m
                   memory: 256Mi
               securityContext:
+                appArmorProfile:
+                  type: Unconfined
                 capabilities:
                   add:
                     - SYS_ADMIN
@@ -88,9 +90,6 @@ manifest should match snapshot using podAnnotations, podLabels and resources:
                     - SETGID
                     - AUDIT_WRITE
                 readOnlyRootFilesystem: true
-                runAsGroup: 10000
-                runAsNonRoot: true
-                runAsUser: 10000
                 seccompProfile:
                   type: Unconfined
               volumeMounts:
@@ -103,6 +102,10 @@ manifest should match snapshot using podAnnotations, podLabels and resources:
           dnsPolicy: ClusterFirstWithHostNet
           hostNetwork: true
           hostPID: true
+          securityContext:
+            runAsNonRoot: true
+            seccompProfile:
+              type: Unconfined
           serviceAccountName: steadybit-extension-host
           volumes:
             - emptyDir: {}
@@ -193,6 +196,8 @@ manifest should match snapshot with TLS:
                   cpu: 50m
                   memory: 16Mi
               securityContext:
+                appArmorProfile:
+                  type: Unconfined
                 capabilities:
                   add:
                     - SYS_ADMIN
@@ -209,9 +214,6 @@ manifest should match snapshot with TLS:
                     - SETGID
                     - AUDIT_WRITE
                 readOnlyRootFilesystem: true
-                runAsGroup: 10000
-                runAsNonRoot: true
-                runAsUser: 10000
                 seccompProfile:
                   type: Unconfined
               volumeMounts:
@@ -227,6 +229,10 @@ manifest should match snapshot with TLS:
           dnsPolicy: ClusterFirstWithHostNet
           hostNetwork: true
           hostPID: true
+          securityContext:
+            runAsNonRoot: true
+            seccompProfile:
+              type: Unconfined
           serviceAccountName: steadybit-extension-host
           volumes:
             - emptyDir: {}
@@ -334,9 +340,6 @@ manifest should match snapshot with appArmorProfile for k8s >= 1.30:
                     - SETGID
                     - AUDIT_WRITE
                 readOnlyRootFilesystem: true
-                runAsGroup: 10000
-                runAsNonRoot: true
-                runAsUser: 10000
                 seccompProfile:
                   type: Unconfined
               volumeMounts:
@@ -349,6 +352,10 @@ manifest should match snapshot with appArmorProfile for k8s >= 1.30:
           dnsPolicy: ClusterFirstWithHostNet
           hostNetwork: true
           hostPID: true
+          securityContext:
+            runAsNonRoot: true
+            seccompProfile:
+              type: Unconfined
           serviceAccountName: steadybit-extension-host
           volumes:
             - emptyDir: {}
@@ -435,6 +442,8 @@ manifest should match snapshot with different containerPorts:
                   cpu: 50m
                   memory: 16Mi
               securityContext:
+                appArmorProfile:
+                  type: Unconfined
                 capabilities:
                   add:
                     - SYS_ADMIN
@@ -451,9 +460,6 @@ manifest should match snapshot with different containerPorts:
                     - SETGID
                     - AUDIT_WRITE
                 readOnlyRootFilesystem: true
-                runAsGroup: 10000
-                runAsNonRoot: true
-                runAsUser: 10000
                 seccompProfile:
                   type: Unconfined
               volumeMounts:
@@ -466,6 +472,10 @@ manifest should match snapshot with different containerPorts:
           dnsPolicy: ClusterFirstWithHostNet
           hostNetwork: true
           hostPID: true
+          securityContext:
+            runAsNonRoot: true
+            seccompProfile:
+              type: Unconfined
           serviceAccountName: steadybit-extension-host
           volumes:
             - emptyDir: {}
@@ -559,6 +569,8 @@ manifest should match snapshot with extra env vars:
                   cpu: 50m
                   memory: 16Mi
               securityContext:
+                appArmorProfile:
+                  type: Unconfined
                 capabilities:
                   add:
                     - SYS_ADMIN
@@ -575,9 +587,6 @@ manifest should match snapshot with extra env vars:
                     - SETGID
                     - AUDIT_WRITE
                 readOnlyRootFilesystem: true
-                runAsGroup: 10000
-                runAsNonRoot: true
-                runAsUser: 10000
                 seccompProfile:
                   type: Unconfined
               volumeMounts:
@@ -590,6 +599,10 @@ manifest should match snapshot with extra env vars:
           dnsPolicy: ClusterFirstWithHostNet
           hostNetwork: true
           hostPID: true
+          securityContext:
+            runAsNonRoot: true
+            seccompProfile:
+              type: Unconfined
           serviceAccountName: steadybit-extension-host
           volumes:
             - emptyDir: {}
@@ -678,6 +691,8 @@ manifest should match snapshot with extra labels:
                   cpu: 50m
                   memory: 16Mi
               securityContext:
+                appArmorProfile:
+                  type: Unconfined
                 capabilities:
                   add:
                     - SYS_ADMIN
@@ -694,9 +709,6 @@ manifest should match snapshot with extra labels:
                     - SETGID
                     - AUDIT_WRITE
                 readOnlyRootFilesystem: true
-                runAsGroup: 10000
-                runAsNonRoot: true
-                runAsUser: 10000
                 seccompProfile:
                   type: Unconfined
               volumeMounts:
@@ -709,6 +721,10 @@ manifest should match snapshot with extra labels:
           dnsPolicy: ClusterFirstWithHostNet
           hostNetwork: true
           hostPID: true
+          securityContext:
+            runAsNonRoot: true
+            seccompProfile:
+              type: Unconfined
           serviceAccountName: steadybit-extension-host
           volumes:
             - emptyDir: {}
@@ -801,6 +817,8 @@ manifest should match snapshot with mutual TLS:
                   cpu: 50m
                   memory: 16Mi
               securityContext:
+                appArmorProfile:
+                  type: Unconfined
                 capabilities:
                   add:
                     - SYS_ADMIN
@@ -817,9 +835,6 @@ manifest should match snapshot with mutual TLS:
                     - SETGID
                     - AUDIT_WRITE
                 readOnlyRootFilesystem: true
-                runAsGroup: 10000
-                runAsNonRoot: true
-                runAsUser: 10000
                 seccompProfile:
                   type: Unconfined
               volumeMounts:
@@ -838,6 +853,10 @@ manifest should match snapshot with mutual TLS:
           dnsPolicy: ClusterFirstWithHostNet
           hostNetwork: true
           hostPID: true
+          securityContext:
+            runAsNonRoot: true
+            seccompProfile:
+              type: Unconfined
           serviceAccountName: steadybit-extension-host
           volumes:
             - emptyDir: {}
@@ -938,6 +957,8 @@ manifest should match snapshot with mutual TLS using containerPaths:
                   cpu: 50m
                   memory: 16Mi
               securityContext:
+                appArmorProfile:
+                  type: Unconfined
                 capabilities:
                   add:
                     - SYS_ADMIN
@@ -954,9 +975,6 @@ manifest should match snapshot with mutual TLS using containerPaths:
                     - SETGID
                     - AUDIT_WRITE
                 readOnlyRootFilesystem: true
-                runAsGroup: 10000
-                runAsNonRoot: true
-                runAsUser: 10000
                 seccompProfile:
                   type: Unconfined
               volumeMounts:
@@ -969,6 +987,10 @@ manifest should match snapshot with mutual TLS using containerPaths:
           dnsPolicy: ClusterFirstWithHostNet
           hostNetwork: true
           hostPID: true
+          securityContext:
+            runAsNonRoot: true
+            seccompProfile:
+              type: Unconfined
           serviceAccountName: steadybit-extension-host
           volumes:
             - emptyDir: {}
@@ -1055,6 +1077,8 @@ manifest should match snapshot with podSecurityContext:
                   cpu: 50m
                   memory: 16Mi
               securityContext:
+                appArmorProfile:
+                  type: Unconfined
                 capabilities:
                   add:
                     - SYS_ADMIN
@@ -1071,9 +1095,6 @@ manifest should match snapshot with podSecurityContext:
                     - SETGID
                     - AUDIT_WRITE
                 readOnlyRootFilesystem: true
-                runAsGroup: 10000
-                runAsNonRoot: true
-                runAsUser: 10000
                 seccompProfile:
                   type: Unconfined
               volumeMounts:
@@ -1087,7 +1108,10 @@ manifest should match snapshot with podSecurityContext:
           hostNetwork: true
           hostPID: true
           securityContext:
+            runAsNonRoot: true
             runAsUser: 2222
+            seccompProfile:
+              type: Unconfined
           serviceAccountName: steadybit-extension-host
           volumes:
             - emptyDir: {}
@@ -1174,6 +1198,8 @@ manifest should match snapshot with priority class:
                   cpu: 50m
                   memory: 16Mi
               securityContext:
+                appArmorProfile:
+                  type: Unconfined
                 capabilities:
                   add:
                     - SYS_ADMIN
@@ -1190,9 +1216,6 @@ manifest should match snapshot with priority class:
                     - SETGID
                     - AUDIT_WRITE
                 readOnlyRootFilesystem: true
-                runAsGroup: 10000
-                runAsNonRoot: true
-                runAsUser: 10000
                 seccompProfile:
                   type: Unconfined
               volumeMounts:
@@ -1206,6 +1229,10 @@ manifest should match snapshot with priority class:
           hostNetwork: true
           hostPID: true
           priorityClassName: my-priority-class
+          securityContext:
+            runAsNonRoot: true
+            seccompProfile:
+              type: Unconfined
           serviceAccountName: steadybit-extension-host
           volumes:
             - emptyDir: {}
@@ -1292,6 +1319,8 @@ manifest should match snapshot with update strategy:
                   cpu: 50m
                   memory: 16Mi
               securityContext:
+                appArmorProfile:
+                  type: Unconfined
                 capabilities:
                   add:
                     - SYS_ADMIN
@@ -1308,9 +1337,6 @@ manifest should match snapshot with update strategy:
                     - SETGID
                     - AUDIT_WRITE
                 readOnlyRootFilesystem: true
-                runAsGroup: 10000
-                runAsNonRoot: true
-                runAsUser: 10000
                 seccompProfile:
                   type: Unconfined
               volumeMounts:
@@ -1323,6 +1349,10 @@ manifest should match snapshot with update strategy:
           dnsPolicy: ClusterFirstWithHostNet
           hostNetwork: true
           hostPID: true
+          securityContext:
+            runAsNonRoot: true
+            seccompProfile:
+              type: Unconfined
           serviceAccountName: steadybit-extension-host
           volumes:
             - emptyDir: {}
@@ -1409,6 +1439,8 @@ manifest should match snapshot without TLS:
                   cpu: 50m
                   memory: 16Mi
               securityContext:
+                appArmorProfile:
+                  type: Unconfined
                 capabilities:
                   add:
                     - SYS_ADMIN
@@ -1425,9 +1457,6 @@ manifest should match snapshot without TLS:
                     - SETGID
                     - AUDIT_WRITE
                 readOnlyRootFilesystem: true
-                runAsGroup: 10000
-                runAsNonRoot: true
-                runAsUser: 10000
                 seccompProfile:
                   type: Unconfined
               volumeMounts:
@@ -1440,6 +1469,10 @@ manifest should match snapshot without TLS:
           dnsPolicy: ClusterFirstWithHostNet
           hostNetwork: true
           hostPID: true
+          securityContext:
+            runAsNonRoot: true
+            seccompProfile:
+              type: Unconfined
           serviceAccountName: steadybit-extension-host
           volumes:
             - emptyDir: {}
