@@ -84,6 +84,11 @@ serviceAccount:
   # serviceAccount.name -- The name of the ServiceAccount to use.
   name: steadybit-extension-host
 
+securityContextConstraint:
+  # securityContextConstraint.create -- Specifies whether a SecurityContextConstraint should be created. Defaults to true if the cluster is OpenShift.
+  create: null
+  name: steadybit-extension-host
+
 # extra labels to apply to the Kubernetes resources
 extraLabels: {}
 
@@ -110,7 +115,33 @@ affinity: {}
 priorityClassName: null
 
 # podSecurityContext -- SecurityContext to apply to the pod.
-podSecurityContext: {}
+podSecurityContext:
+  seccompProfile:
+    type: Unconfined
+  runAsNonRoot: true
+
+# containerSecurityContext -- SecurityContext to apply to the container.
+containerSecurityContext:
+  appArmorProfile:
+    type: Unconfined
+  seccompProfile:
+    type: Unconfined
+  readOnlyRootFilesystem: true
+  capabilities:
+    add:
+      - SYS_ADMIN
+      - SYS_CHROOT
+      - SYS_RESOURCE
+      - SYS_BOOT
+      - NET_RAW
+      - SYS_TIME
+      - SYS_PTRACE
+      - KILL
+      - NET_ADMIN
+      - DAC_OVERRIDE
+      - SETUID
+      - SETGID
+      - AUDIT_WRITE
 
 # extraEnv -- Array with extra environment variables to add to the container
 # e.g:
@@ -127,23 +158,6 @@ extraEnv: []
 #  - secretRef:
 #    name: env-secrets
 extraEnvFrom: []
-
-securityContext:
-  capabilities:
-    add:
-      - SYS_ADMIN
-      - SYS_CHROOT
-      - SYS_RESOURCE
-      - SYS_BOOT
-      - NET_RAW
-      - SYS_TIME
-      - SYS_PTRACE
-      - KILL
-      - NET_ADMIN
-      - DAC_OVERRIDE
-      - SETUID
-      - SETGID
-      - AUDIT_WRITE
 
 discovery:
   attributes:
