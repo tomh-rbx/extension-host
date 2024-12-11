@@ -72,8 +72,6 @@ manifest should match snapshot using podAnnotations, podLabels and resources:
                   cpu: 200m
                   memory: 256Mi
               securityContext:
-                appArmorProfile:
-                  type: Unconfined
                 capabilities:
                   add:
                     - SYS_ADMIN
@@ -196,8 +194,6 @@ manifest should match snapshot with TLS:
                   cpu: 50m
                   memory: 16Mi
               securityContext:
-                appArmorProfile:
-                  type: Unconfined
                 capabilities:
                   add:
                     - SYS_ADMIN
@@ -442,8 +438,6 @@ manifest should match snapshot with different containerPorts:
                   cpu: 50m
                   memory: 16Mi
               securityContext:
-                appArmorProfile:
-                  type: Unconfined
                 capabilities:
                   add:
                     - SYS_ADMIN
@@ -569,8 +563,6 @@ manifest should match snapshot with extra env vars:
                   cpu: 50m
                   memory: 16Mi
               securityContext:
-                appArmorProfile:
-                  type: Unconfined
                 capabilities:
                   add:
                     - SYS_ADMIN
@@ -691,8 +683,6 @@ manifest should match snapshot with extra labels:
                   cpu: 50m
                   memory: 16Mi
               securityContext:
-                appArmorProfile:
-                  type: Unconfined
                 capabilities:
                   add:
                     - SYS_ADMIN
@@ -817,8 +807,6 @@ manifest should match snapshot with mutual TLS:
                   cpu: 50m
                   memory: 16Mi
               securityContext:
-                appArmorProfile:
-                  type: Unconfined
                 capabilities:
                   add:
                     - SYS_ADMIN
@@ -957,8 +945,6 @@ manifest should match snapshot with mutual TLS using containerPaths:
                   cpu: 50m
                   memory: 16Mi
               securityContext:
-                appArmorProfile:
-                  type: Unconfined
                 capabilities:
                   add:
                     - SYS_ADMIN
@@ -1077,8 +1063,6 @@ manifest should match snapshot with podSecurityContext:
                   cpu: 50m
                   memory: 16Mi
               securityContext:
-                appArmorProfile:
-                  type: Unconfined
                 capabilities:
                   add:
                     - SYS_ADMIN
@@ -1198,8 +1182,6 @@ manifest should match snapshot with priority class:
                   cpu: 50m
                   memory: 16Mi
               securityContext:
-                appArmorProfile:
-                  type: Unconfined
                 capabilities:
                   add:
                     - SYS_ADMIN
@@ -1319,8 +1301,6 @@ manifest should match snapshot with update strategy:
                   cpu: 50m
                   memory: 16Mi
               securityContext:
-                appArmorProfile:
-                  type: Unconfined
                 capabilities:
                   add:
                     - SYS_ADMIN
@@ -1439,8 +1419,6 @@ manifest should match snapshot without TLS:
                   cpu: 50m
                   memory: 16Mi
               securityContext:
-                appArmorProfile:
-                  type: Unconfined
                 capabilities:
                   add:
                     - SYS_ADMIN
