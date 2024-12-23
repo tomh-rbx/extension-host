@@ -38,7 +38,7 @@ const (
 var (
 	targetSelectionTemplates = []action_kit_api.TargetSelectionTemplate{
 		{
-			Label:       "by host name",
+			Label:       "host name",
 			Description: extutil.Ptr("Find host by host name."),
 			Query:       "host.hostname=\"\"",
 		},
