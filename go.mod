@@ -11,7 +11,7 @@ require (
 	github.com/pkg/errors v0.9.1
 	github.com/rs/zerolog v1.33.0
 	github.com/steadybit/action-kit/go/action_kit_api/v2 v2.9.6
-	github.com/steadybit/action-kit/go/action_kit_commons v1.2.12
+	github.com/steadybit/action-kit/go/action_kit_commons v1.2.14
 	github.com/steadybit/action-kit/go/action_kit_sdk v1.1.14
 	github.com/steadybit/action-kit/go/action_kit_test v1.3.0
 	github.com/steadybit/discovery-kit/go/discovery_kit_api v1.6.0
@@ -56,6 +56,7 @@ require (
 	github.com/mattn/go-colorable v0.1.13 // indirect
 	github.com/mattn/go-isatty v0.0.20 // indirect
 	github.com/moby/spdystream v0.5.0 // indirect
+	github.com/moby/sys/capability v0.4.0 // indirect
 	github.com/modern-go/concurrent v0.0.0-20180306012644-bacd9c7ef1dd // indirect
 	github.com/modern-go/reflect2 v1.0.2 // indirect
 	github.com/mohae/deepcopy v0.0.0-20170929034955-c48cc78d4826 // indirect
