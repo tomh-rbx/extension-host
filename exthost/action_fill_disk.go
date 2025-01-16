@@ -195,6 +195,7 @@ func (a *fillDiskAction) Prepare(ctx context.Context, state *FillDiskActionState
 	state.Sidecar = diskfill.SidecarOpts{
 		TargetProcess: initProcess,
 		IdSuffix:      "host",
+		ExecutionId:   request.ExecutionId,
 	}
 	state.FillDiskOpts = opts
 	state.ExecutionId = request.ExecutionId
