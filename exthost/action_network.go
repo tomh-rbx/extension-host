@@ -102,6 +102,7 @@ func (a *networkAction) Prepare(ctx context.Context, state *NetworkActionState, 
 	state.Sidecar = network.SidecarOpts{
 		TargetProcess: initProcess,
 		IdSuffix:      "host",
+		ExecutionId:   request.ExecutionId,
 	}
 
 	opts, messages, err := a.optsProvider(ctx, state.Sidecar, request)

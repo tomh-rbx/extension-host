@@ -101,6 +101,7 @@ func (a *stressAction) Prepare(ctx context.Context, state *StressActionState, re
 	state.Sidecar = stress.SidecarOpts{
 		TargetProcess: initProcess,
 		IdSuffix:      "host",
+		ExecutionId:   request.ExecutionId,
 	}
 	state.ExecutionId = request.ExecutionId
 	if !extutil.ToBool(request.Config["failOnOomKill"]) {
