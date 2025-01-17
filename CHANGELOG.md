@@ -1,5 +1,9 @@
 # Changelog
 
+## v1.2.27 (Next Release)
+
+- Rename some network actions to explicitly contain the term "outgoing"
+
 ## v1.2.26
 
 - fix: improve container id to be unique by adding the execution id
