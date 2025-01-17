@@ -1,5 +1,9 @@
 # Changelog
 
+## v1.2.26
+
+- fix: improve container id to be unique by adding the execution id
+
 ## v1.2.25
 
 - Use uid instead of name for user statement in Dockerfile
