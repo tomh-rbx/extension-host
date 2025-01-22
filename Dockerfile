@@ -9,18 +9,25 @@ ARG TARGETOS TARGETARCH
 ARG BUILD_WITH_COVERAGE
 ARG BUILD_SNAPSHOT=true
 ARG SKIP_LICENSES_REPORT=false
+ARG RUNC_VERSION=v1.1.15
 
 WORKDIR /app
 
 RUN echo 'deb [trusted=yes] https://repo.goreleaser.com/apt/ /' > /etc/apt/sources.list.d/goreleaser.list \
     && apt-get -qq update \
-    && apt-get -qq install -y --no-install-recommends build-essential libcap2-bin goreleaser
+    && apt-get -qq install -y --no-install-recommends build-essential libcap2-bin goreleaser gpg curl
 
 COPY . .
 
 RUN GOOS=$TARGETOS GOARCH=$TARGETARCH goreleaser build --snapshot="${BUILD_SNAPSHOT}" --single-target -o extension \
     && setcap "cap_sys_boot,cap_sys_time,cap_setuid,cap_sys_chroot,cap_setgid,cap_net_raw,cap_net_admin,cap_sys_admin,cap_dac_override+eip" ./extension
 
+# As of today the runc binary from debian is built using golang 1.19.8 and will be flagged by CVE scanners as vulnerable to several CVEs.
+# We are dowonloading the runc binary from the official github release page and will use it instead of the one from the debian package.
+RUN curl -sfL https://github.com/opencontainers/runc/releases/download/$RUNC_VERSION/runc.$TARGETARCH -o ./runc \
+    && curl -sfL -o - https://raw.githubusercontent.com/opencontainers/runc/refs/heads/main/runc.keyring | gpg --import \
+    && curl -sfL -o - https://github.com/opencontainers/runc/releases/download/$RUNC_VERSION/runc.$TARGETARCH.asc | gpg --verify - ./runc \
+    && chmod a+x ./runc
 
 ##
 ## Runtime
@@ -43,10 +50,12 @@ RUN groupadd --gid $USER_GID $USERNAME \
 
 RUN apt-get -qq update \
     && apt-get -qq upgrade -y \
-    && apt-get -qq install -y --no-install-recommends procps stress-ng iptables iproute2 dnsutils runc libcap2-bin util-linux cgroup-tools \
+    && apt-get -qq install -y --no-install-recommends procps stress-ng iptables iproute2 dnsutils libcap2-bin util-linux cgroup-tools \
     && apt-get -y autoremove \
     && rm -rf /var/lib/apt/lists/* \
     && mkdir -p /run/systemd/system /sidecar
+
+COPY --from=build /app/runc /usr/sbin/runc
 
 USER $USER_UID
 
