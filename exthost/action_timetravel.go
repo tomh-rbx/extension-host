@@ -80,6 +80,7 @@ func (a *timeTravelAction) Describe() action_kit_api.ActionDescription {
 				Label:        "Offset",
 				Description:  extutil.Ptr("The offset to the current time."),
 				Type:         action_kit_api.Duration,
+				DurationUnits: extutil.Ptr([]action_kit_api.DurationUnit{action_kit_api.DurationUnitMilliseconds, action_kit_api.DurationUnitSeconds, action_kit_api.DurationUnitMinutes, action_kit_api.DurationUnitHours, action_kit_api.DurationUnitDays}),
 				DefaultValue: extutil.Ptr("60m"),
 				Required:     extutil.Ptr(true),
 				Order:        extutil.Ptr(1),
