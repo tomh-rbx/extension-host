@@ -1,5 +1,9 @@
 # Changelog
 
+## v1.2.28
+
+- chore: update dependecies (CVE-2024-11187 & CVE-2024-12705)
+
 ## v1.2.27
 
 - Rename some network actions to explicitly contain the term "outgoing"
