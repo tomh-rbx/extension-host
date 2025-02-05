@@ -13,6 +13,7 @@ import (
 	"github.com/steadybit/action-kit/go/action_kit_api/v2"
 	"github.com/steadybit/action-kit/go/action_kit_commons/runc"
 	"github.com/steadybit/action-kit/go/action_kit_commons/stress"
+	"github.com/steadybit/action-kit/go/action_kit_commons/utils"
 	"github.com/steadybit/action-kit/go/action_kit_sdk"
 	"github.com/steadybit/extension-kit"
 	"github.com/steadybit/extension-kit/extutil"
@@ -97,6 +98,8 @@ func (a *stressAction) Prepare(ctx context.Context, state *StressActionState, re
 		return nil, extension_kit.ToError("Failed to prepare stress settings.", err)
 	}
 
+	adaptCpuHosts(&opts)
+
 	state.StressOpts = opts
 	state.Sidecar = stress.SidecarOpts{
 		TargetProcess: initProcess,
@@ -108,6 +111,19 @@ func (a *stressAction) Prepare(ctx context.Context, state *StressActionState, re
 		state.IgnoreExitCodes = []int{137}
 	}
 	return nil, nil
+}
+
+func adaptCpuHosts(s *stress.Opts) {
+	if s.CpuWorkers == nil || *s.CpuWorkers != 0 {
+		return
+	}
+
+	//stress-ng will use all configured processors, we deem this to be wrong and expect all online cpus to be used.
+	if c, err := utils.ReadCpusAllowedCount("/proc/1/status"); err == nil {
+		s.CpuWorkers = extutil.Ptr(c)
+	} else {
+		log.Debug().Err(err).Msg("failed to read cpus allowed for pid 1")
+	}
 }
 
 func (a *stressAction) Start(ctx context.Context, state *StressActionState) (*action_kit_api.StartResult, error) {
