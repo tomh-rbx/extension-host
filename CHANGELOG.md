@@ -1,5 +1,9 @@
 # Changelog
 
+## (next)
+
+- fix: stress cpu attack uses all configured CPUs and not all available CPUs
+
 ## v1.2.28
 
 - chore: update dependecies (CVE-2024-11187 & CVE-2024-12705)
