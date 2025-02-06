@@ -1,6 +1,6 @@
 # Changelog
 
-## (next)
+## v1.2.29
 
 - fix: stress cpu attack uses all configured CPUs and not all available CPUs
 
