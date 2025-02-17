@@ -6,7 +6,7 @@ toolchain go1.23.4
 
 require (
 	github.com/KimMachineGun/automemlimit v0.7.0
-	github.com/elastic/go-sysinfo v1.15.0
+	github.com/elastic/go-sysinfo v1.15.1
 	github.com/google/uuid v1.6.0
 	github.com/kelseyhightower/envconfig v1.4.0
 	github.com/mitchellh/go-ps v1.0.0
