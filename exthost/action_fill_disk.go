@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: MIT
-// SPDX-FileCopyrightText: 2024 Steadybit GmbH
+// SPDX-FileCopyrightText: 2025 Steadybit GmbH
 
 package exthost
 
@@ -34,6 +34,7 @@ type FillDiskActionState struct {
 // Make sure fillDiskAction implements all required interfaces
 var _ action_kit_sdk.Action[FillDiskActionState] = (*fillDiskAction)(nil)
 var _ action_kit_sdk.ActionWithStop[FillDiskActionState] = (*fillDiskAction)(nil)
+var _ action_kit_sdk.ActionWithStatus[FillDiskActionState] = (*fillDiskAction)(nil)
 
 func NewFillDiskHostAction(r runc.Runc) action_kit_sdk.Action[FillDiskActionState] {
 	return &fillDiskAction{
@@ -234,39 +235,61 @@ func (a *fillDiskAction) Start(ctx context.Context, state *FillDiskActionState) 
 	}, nil
 }
 
-func (a *fillDiskAction) Stop(_ context.Context, state *FillDiskActionState) (*action_kit_api.StopResult, error) {
-	messages := make([]action_kit_api.Message, 0)
-
-	stopped, err := a.stopFillDiskHost(state.ExecutionId)
-	if stopped {
-		messages = append(messages, action_kit_api.Message{
-			Level:   extutil.Ptr(action_kit_api.Info),
-			Message: "Canceled fill disk on host",
-		})
+func (a *fillDiskAction) Status(_ context.Context, state *FillDiskActionState) (*action_kit_api.StatusResult, error) {
+	exited, err := a.fillDiskHostExited(state.ExecutionId)
+	if !exited {
+		return &action_kit_api.StatusResult{Completed: false}, nil
 	}
 
-	if err != nil {
+	if err == nil {
+		return &action_kit_api.StatusResult{
+			Completed: true,
+			Messages: &[]action_kit_api.Message{
+				{
+					Level:   extutil.Ptr(action_kit_api.Info),
+					Message: "fill disk on host stopped",
+				},
+			},
+		}, nil
+	}
+
+	return &action_kit_api.StatusResult{
+		Completed: true,
+		Error: &action_kit_api.ActionKitError{
+			Status: extutil.Ptr(action_kit_api.Failed),
+			Title:  fmt.Sprintf("Failed to fill memory on host: %s", err.Error()),
+		},
+	}, nil
+}
+
+func (a *fillDiskAction) Stop(_ context.Context, state *FillDiskActionState) (*action_kit_api.StopResult, error) {
+	if err := a.stopFillDiskHost(state.ExecutionId); err != nil {
 		return nil, extension_kit.ToError("Failed to stop fill disk on host", err)
 	}
 
 	return &action_kit_api.StopResult{
-		Messages: &messages,
+		Messages: &[]action_kit_api.Message{
+			{
+				Level:   extutil.Ptr(action_kit_api.Info),
+				Message: "Canceled fill disk on host",
+			},
+		},
 	}, nil
 }
 
-func (a *fillDiskAction) fillDiskExited(executionId uuid.UUID) (bool, error) {
+func (a *fillDiskAction) stopFillDiskHost(executionId uuid.UUID) error {
+	s, ok := a.diskfills.LoadAndDelete(executionId)
+	if !ok {
+		return errors.New("no diskfill host found")
+	}
+
+	return s.(*diskfill.DiskFill).Stop()
+}
+
+func (a *fillDiskAction) fillDiskHostExited(executionId uuid.UUID) (bool, error) {
 	s, ok := a.diskfills.Load(executionId)
 	if !ok {
 		return true, nil
 	}
 	return s.(*diskfill.DiskFill).Exited()
-}
-
-func (a *fillDiskAction) stopFillDiskHost(executionId uuid.UUID) (bool, error) {
-	s, ok := a.diskfills.LoadAndDelete(executionId)
-	if !ok {
-		return false, errors.New("no diskfill host found")
-	}
-	err := s.(*diskfill.DiskFill).Stop()
-	return err == nil, err
 }

@@ -1,5 +1,9 @@
 # Changelog
 
+## next
+
+- fix: fill disk fails when file permissions disallow write
+
 ## v1.2.29
 
 - fix: stress cpu attack uses all configured CPUs and not all available CPUs
