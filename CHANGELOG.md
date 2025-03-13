@@ -2,7 +2,7 @@
 
 ## next
 
-- fix: fill disk fails when file permissions disallow write
+- fix: fill disk/stress io fails when file permissions disallow write
 
 ## v1.2.29
 
