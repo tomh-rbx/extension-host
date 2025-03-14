@@ -236,30 +236,17 @@ func (a *fillDiskAction) Start(ctx context.Context, state *FillDiskActionState) 
 }
 
 func (a *fillDiskAction) Status(_ context.Context, state *FillDiskActionState) (*action_kit_api.StatusResult, error) {
-	exited, err := a.fillDiskHostExited(state.ExecutionId)
-	if !exited {
+	if _, err := a.fillDiskHostExited(state.ExecutionId); err == nil {
 		return &action_kit_api.StatusResult{Completed: false}, nil
-	}
-
-	if err == nil {
+	} else {
 		return &action_kit_api.StatusResult{
 			Completed: true,
-			Messages: &[]action_kit_api.Message{
-				{
-					Level:   extutil.Ptr(action_kit_api.Info),
-					Message: "fill disk on host stopped",
-				},
+			Error: &action_kit_api.ActionKitError{
+				Status: extutil.Ptr(action_kit_api.Failed),
+				Title:  fmt.Sprintf("Failed to fill disk on host: %s", err.Error()),
 			},
 		}, nil
 	}
-
-	return &action_kit_api.StatusResult{
-		Completed: true,
-		Error: &action_kit_api.ActionKitError{
-			Status: extutil.Ptr(action_kit_api.Failed),
-			Title:  fmt.Sprintf("Failed to fill memory on host: %s", err.Error()),
-		},
-	}, nil
 }
 
 func (a *fillDiskAction) Stop(_ context.Context, state *FillDiskActionState) (*action_kit_api.StopResult, error) {
