@@ -1,6 +1,6 @@
 # Changelog
 
-## v1.2.30 (next)
+## v1.2.30
 
 - Updated dependencies
 - fix: fill disk/stress io fails when file permissions disallow write
