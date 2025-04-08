@@ -76,7 +76,7 @@ func (a *fillMemoryAction) Describe() action_kit_api.ActionDescription {
 			{
 				Name:         "mode",
 				Label:        "Mode",
-				Description:  extutil.Ptr("How would you like to specify the amount of data to be filled?"),
+				Description:  extutil.Ptr("*Fill and meet specified usage:* Fill up the memory until the desired usage is met. Memory allocation will be adjusted constantly to meet the target.\n\n*Fill the specified amount:* Allocate and hold the specified amount of Memory."),
 				Type:         action_kit_api.String,
 				DefaultValue: extutil.Ptr(string(memfill.ModeUsage)),
 				Required:     extutil.Ptr(true),
@@ -95,7 +95,7 @@ func (a *fillMemoryAction) Describe() action_kit_api.ActionDescription {
 			{
 				Name:         "size",
 				Label:        "Size",
-				Description:  extutil.Ptr("Depending on the unit, specify the percentage or the number of Megabytes to fill."),
+				Description:  extutil.Ptr("Percentage of total memory or Megabytes."),
 				Type:         action_kit_api.Integer,
 				DefaultValue: extutil.Ptr("100"),
 				Required:     extutil.Ptr(true),
