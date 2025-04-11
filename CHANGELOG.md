@@ -1,5 +1,9 @@
 # Changelog
 
+## v2.6.3 (next)
+
+- remove dependency to lsns
+
 ## v1.2.30
 
 - Updated dependencies
