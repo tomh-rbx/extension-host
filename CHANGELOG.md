@@ -1,8 +1,11 @@
 # Changelog
 
-## v2.6.3 (next)
+## v1.2.31
 
 - remove dependency to lsns
+- update dependencies
+- require iproute-tc and libcap instead of /usr/sbin/tc and /usr/sbin/capsh
+
 
 ## v1.2.30
 
