@@ -1,5 +1,9 @@
 # Changelog
 
+## v1.2.32 (next)
+
+- fix shutdown/reboot always failing on plain EC2 instances
+
 ## v1.2.31
 
 - remove dependency to lsns
