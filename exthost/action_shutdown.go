@@ -6,31 +6,21 @@ package exthost
 
 import (
 	"context"
+	"fmt"
 	"github.com/rs/zerolog/log"
 	"github.com/steadybit/action-kit/go/action_kit_api/v2"
 	"github.com/steadybit/action-kit/go/action_kit_sdk"
 	"github.com/steadybit/extension-host/exthost/shutdown"
 	"github.com/steadybit/extension-kit/extbuild"
 	"github.com/steadybit/extension-kit/extutil"
-	"runtime"
 )
 
 type shutdownAction struct {
-	command shutdown.Command
-	sysrq   shutdown.Sysrq
-	syscall shutdown.Syscall
+	s shutdown.Shutdown
 }
 
-type ShutdownMethod uint64
-
-const (
-	Command ShutdownMethod = iota
-	SyscallOrSysrq
-)
-
 type ActionState struct {
-	Reboot         bool
-	ShutdownMethod ShutdownMethod
+	Reboot bool
 }
 
 // Make sure action implements all required interfaces
@@ -40,9 +30,7 @@ var (
 
 func NewShutdownAction() action_kit_sdk.Action[ActionState] {
 	return &shutdownAction{
-		command: shutdown.NewCommand(),
-		sysrq:   shutdown.NewSysrq(),
-		syscall: shutdown.NewSyscall(),
+		s: shutdown.Get(),
 	}
 }
 
@@ -110,19 +98,8 @@ func (l *shutdownAction) Prepare(_ context.Context, state *ActionState, request 
 	reboot := extutil.ToBool(request.Config["reboot"])
 	state.Reboot = reboot
 
-	if l.command.IsShutdownCommandExecutable() {
-		state.ShutdownMethod = Command
-	} else {
-		if runtime.GOOS == "windows" {
-			return &action_kit_api.PrepareResult{
-				Error: &action_kit_api.ActionKitError{
-					Title:  "Shutdown command not found",
-					Status: extutil.Ptr(action_kit_api.Errored),
-				},
-			}, nil
-		} else {
-			state.ShutdownMethod = SyscallOrSysrq
-		}
+	if shutdown.Get() == nil {
+		return nil, fmt.Errorf("no shutdown method available")
 	}
 
 	return nil, nil
@@ -132,60 +109,24 @@ func (l *shutdownAction) Prepare(_ context.Context, state *ActionState, request 
 // You can mutate the state here.
 // You can use the result to return messages/errors/metrics or artifacts
 func (l *shutdownAction) Start(_ context.Context, state *ActionState) (*action_kit_api.StartResult, error) {
-	if state.ShutdownMethod == Command {
-		if state.Reboot {
-			log.Info().Msg("Rebooting host via command")
-			err := l.command.Reboot()
-			if err != nil {
-				log.Err(err).Msg("Rebooting host via command failed")
-				return &action_kit_api.StartResult{
-					Error: &action_kit_api.ActionKitError{
-						Title:  "Reboot failed",
-						Status: extutil.Ptr(action_kit_api.Failed),
-						Detail: extutil.Ptr(err.Error()),
-					},
-				}, nil
-			}
-		} else {
-			log.Info().Msg("Shutting down host via command")
-			err := l.command.Shutdown()
-			if err != nil {
-				log.Err(err).Msg("Shutting down host via command failed")
-				return &action_kit_api.StartResult{
-					Error: &action_kit_api.ActionKitError{
-						Title:  "Shutdown failed",
-						Status: extutil.Ptr(action_kit_api.Failed),
-						Detail: extutil.Ptr(err.Error()),
-					},
-				}, nil
-			}
-		}
-	} else {
-		go func() {
-			if state.Reboot {
-				log.Info().Msg("Rebooting host via syscall")
-				err := l.syscall.Reboot()
-				if err != nil {
-					log.Error().Err(err).Msg("Rebooting host via syscall failed")
-					log.Info().Msg("Rebooting host via sysrq")
-					err := l.sysrq.Reboot()
-					if err != nil {
-						log.Error().Err(err).Msg("Rebooting host via sysrq failed")
-					}
-				}
-			} else {
-				log.Info().Msg("Shutting down host via syscall")
-				err := l.syscall.Shutdown()
-				if err != nil {
-					log.Error().Err(err).Msg("Shutting down host via syscall failed")
-					log.Info().Msg("Shutting down host via sysrq")
-					err := l.sysrq.Shutdown()
-					if err != nil {
-						log.Error().Err(err).Msg("Shutting down host via sysrq failed")
-					}
-				}
-			}
-		}()
+	action := "Shutdown"
+	method := l.s.Shutdown
+	if state.Reboot {
+		action = "Reboot"
+		method = l.s.Reboot
 	}
+
+	log.Info().Msgf("%s host via %s", action, l.s.Name())
+	if err := method(); err != nil {
+		log.Err(err).Msgf("%s host via %s failed", action, l.s.Name())
+		return &action_kit_api.StartResult{
+			Error: &action_kit_api.ActionKitError{
+				Title:  fmt.Sprintf("%s failed", action),
+				Status: extutil.Ptr(action_kit_api.Failed),
+				Detail: extutil.Ptr(err.Error()),
+			},
+		}, nil
+	}
+
 	return nil, nil
 }

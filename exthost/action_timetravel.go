@@ -13,7 +13,6 @@ import (
 	"github.com/steadybit/extension-host/exthost/timetravel"
 	"github.com/steadybit/extension-kit/extbuild"
 	"github.com/steadybit/extension-kit/extutil"
-	"runtime"
 	"time"
 )
 
@@ -76,14 +75,14 @@ func (a *timeTravelAction) Describe() action_kit_api.ActionDescription {
 		// The parameters for the action
 		Parameters: []action_kit_api.ActionParameter{
 			{
-				Name:         "offset",
-				Label:        "Offset",
-				Description:  extutil.Ptr("The offset to the current time."),
-				Type:         action_kit_api.Duration,
+				Name:          "offset",
+				Label:         "Offset",
+				Description:   extutil.Ptr("The offset to the current time."),
+				Type:          action_kit_api.Duration,
 				DurationUnits: extutil.Ptr([]action_kit_api.DurationUnit{action_kit_api.DurationUnitMilliseconds, action_kit_api.DurationUnitSeconds, action_kit_api.DurationUnitMinutes, action_kit_api.DurationUnitHours, action_kit_api.DurationUnitDays}),
-				DefaultValue: extutil.Ptr("60m"),
-				Required:     extutil.Ptr(true),
-				Order:        extutil.Ptr(1),
+				DefaultValue:  extutil.Ptr("60m"),
+				Required:      extutil.Ptr(true),
+				Order:         extutil.Ptr(1),
 			},
 			{
 				Name:         "duration",
@@ -131,20 +130,7 @@ func (a *timeTravelAction) Prepare(_ context.Context, state *TimeTravelActionSta
 	}
 	state.DisableNtp = extutil.ToBool(request.Config["disableNtp"])
 
-	if !isUnixLike() {
-		return &action_kit_api.PrepareResult{
-			Error: extutil.Ptr(action_kit_api.ActionKitError{
-				Title:  "Cannot run on non-unix-like systems",
-				Status: extutil.Ptr(action_kit_api.Errored),
-			}),
-		}, nil
-	}
-
 	return nil, nil
-}
-
-func isUnixLike() bool {
-	return runtime.GOOS != "windows"
 }
 
 // Start is called to start the action

@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: MIT
 // SPDX-FileCopyrightText: 2025 Steadybit GmbH
 
-//go:build linux
+//go:build darwin
 
 package shutdown
 
@@ -12,11 +12,11 @@ import (
 )
 
 type syscallShutdown struct {
-	reboot func(cmd int) (err error)
+	sc func(trap, a1, a2, a3 uintptr) (r1, r2 uintptr, err syscall.Errno)
 }
 
 func newSyscallShutdown() Shutdown {
-	return &syscallShutdown{reboot: syscall.Reboot}
+	return &syscallShutdown{sc: syscall.Syscall}
 }
 
 func (s *syscallShutdown) IsAvailable() bool {
@@ -24,21 +24,21 @@ func (s *syscallShutdown) IsAvailable() bool {
 }
 
 func (s *syscallShutdown) Reboot() error {
-	return s.runReboot(syscall.LINUX_REBOOT_CMD_RESTART, "LINUX_REBOOT_CMD_RESTART")
+	return s.runSyscall(syscall.SYS_REBOOT, "SYS_REBOOT")
 }
 
 func (s *syscallShutdown) Shutdown() error {
-	return s.runReboot(syscall.LINUX_REBOOT_CMD_POWER_OFF, "LINUX_REBOOT_CMD_POWER_OFF")
+	return s.runSyscall(syscall.SYS_SHUTDOWN, "SYS_SHUTDOWN")
 }
 
 func (s *syscallShutdown) Name() string {
-	return "syscall_linux"
+	return "syscall"
 }
 
-func (s *syscallShutdown) runReboot(cmd int, name string) error {
+func (s *syscallShutdown) runSyscall(trap uintptr, name string) error {
 	go func() {
 		time.Sleep(3 * time.Second)
-		if err := s.reboot(cmd); err != nil {
+		if _, _, err := s.sc(trap, 0, 0, 0); err != 0 {
 			log.Err(err).Msgf("failed %s", name)
 		}
 	}()
