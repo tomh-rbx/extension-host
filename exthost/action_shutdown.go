@@ -42,8 +42,8 @@ func (l *shutdownAction) NewEmptyState() ActionState {
 func (l *shutdownAction) Describe() action_kit_api.ActionDescription {
 	return action_kit_api.ActionDescription{
 		Id:          shutdownActionID,
-		Label:       "Shutdown Host",
-		Description: "Reboots or shuts down the host.",
+		Label:       "Trigger Shutdown Host",
+		Description: "Triggers a reboot or shutdown of the host.",
 		Version:     extbuild.GetSemverVersionStringOrUnknown(),
 		Icon:        extutil.Ptr(shutdownIcon),
 		TargetSelection: extutil.Ptr(action_kit_api.TargetSelection{

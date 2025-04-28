@@ -1,15 +1,15 @@
 # Changelog
 
-## v1.2.32 (next)
+## v1.2.32
 
 - fix shutdown/reboot always failing on plain EC2 instances
+- Rename "Shutdown Host" to "Trigger Shutdown Host"
 
 ## v1.2.31
 
 - remove dependency to lsns
 - update dependencies
 - require iproute-tc and libcap instead of /usr/sbin/tc and /usr/sbin/capsh
-
 
 ## v1.2.30
 
