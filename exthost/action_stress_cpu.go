@@ -58,7 +58,7 @@ func getStressCpuDescription() action_kit_api.ActionDescription {
 				Label:        "Host CPU Load",
 				Description:  extutil.Ptr("How much CPU should be consumed?"),
 				Type:         action_kit_api.Percentage,
-				DefaultValue: extutil.Ptr("100"),
+				DefaultValue: extutil.Ptr("80"),
 				Required:     extutil.Ptr(true),
 				Order:        extutil.Ptr(1),
 				MinValue:     extutil.Ptr(0),

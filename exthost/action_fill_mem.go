@@ -97,7 +97,7 @@ func (a *fillMemoryAction) Describe() action_kit_api.ActionDescription {
 				Label:        "Size",
 				Description:  extutil.Ptr("Percentage of total memory or Megabytes."),
 				Type:         action_kit_api.Integer,
-				DefaultValue: extutil.Ptr("100"),
+				DefaultValue: extutil.Ptr("80"),
 				Required:     extutil.Ptr(true),
 				Order:        extutil.Ptr(3),
 			},

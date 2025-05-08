@@ -60,7 +60,7 @@ func getStressMemoryDescription() action_kit_api.ActionDescription {
 				Label:        "Load on Host Memory",
 				Description:  extutil.Ptr("How much of the total memory should be allocated?"),
 				Type:         action_kit_api.Percentage,
-				DefaultValue: extutil.Ptr("100"),
+				DefaultValue: extutil.Ptr("80"),
 				Required:     extutil.Ptr(true),
 				Order:        extutil.Ptr(1),
 				MinValue:     extutil.Ptr(1),
