@@ -1,5 +1,10 @@
 # Changelog
 
+## v1.2.33
+
+- safe defaults for stress-attacks
+- update depdendencies
+
 ## v1.2.32
 
 - fix shutdown/reboot always failing on plain EC2 instances
