@@ -1,5 +1,10 @@
 # Changelog
 
+## v1.2.34 (next)
+
+- possibility to set the host.hostname attribute in the discovery by the k8s downward api
+
+
 ## v1.2.33
 
 - safe defaults for stress-attacks
