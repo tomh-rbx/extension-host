@@ -1,6 +1,6 @@
 # Changelog
 
-## v1.2.34 (next)
+## v1.2.34
 
 - possibility to set the host.hostname attribute in the discovery by the k8s downward api
 
