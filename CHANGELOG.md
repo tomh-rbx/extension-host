@@ -1,9 +1,13 @@
 # Changelog
 
-## v1.2.34
+## v1.2.35
 
 - possibility to set the host.hostname attribute in the discovery by the k8s downward api
 
+
+## v1.2.34
+
+- rename "Host" to "Linux Host" in discovery
 
 ## v1.2.33
 
