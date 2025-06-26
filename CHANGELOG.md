@@ -1,5 +1,9 @@
 # Changelog
 
+## v1.2.37 
+
+- fix: propagate environment to started runc processes
+
 ## v1.2.36
 
 - fix: experiment execution when using the host.hostname of the k8s downward API
