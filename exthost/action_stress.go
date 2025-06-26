@@ -233,7 +233,8 @@ func (a *stressAction) stopStressHost(executionId uuid.UUID) bool {
 }
 
 func isStressNgInstalled() bool {
-	cmd := exec.Command("stress-ng", "-V")
+	stressngPath := utils.LocateExecutable("stress-ng", "STEADYBIT_EXTENSION_STRESSNG_PATH", "stress-ng")
+	cmd := exec.Command(stressngPath, "-V")
 	cmd.Dir = os.TempDir()
 	var outputBuffer bytes.Buffer
 	cmd.Stdout = &outputBuffer
