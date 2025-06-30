@@ -6,6 +6,8 @@ package exthost
 
 import (
 	"context"
+	"github.com/steadybit/action-kit/go/action_kit_commons/network"
+	"github.com/steadybit/extension-host/config"
 	"time"
 
 	"github.com/rs/zerolog/log"
@@ -140,7 +142,13 @@ func (a *timeTravelAction) Prepare(_ context.Context, state *TimeTravelActionSta
 func (a *timeTravelAction) Start(ctx context.Context, state *TimeTravelActionState) (*action_kit_api.StartResult, error) {
 	if state.DisableNtp {
 		log.Info().Msg("Blocking NTP traffic")
-		if err := timetravel.AdjustNtpTrafficRules(ctx, a.runc, false); err != nil {
+		runner, err := a.runner(ctx)
+		if err != nil {
+			log.Error().Err(err).Msg("Failed to create runner for blocking NTP traffic")
+			return nil, err
+		}
+
+		if err := timetravel.AdjustNtpTrafficRules(ctx, runner, false); err != nil {
 			log.Error().Err(err).Msg("Failed to block ntp traffic")
 			return nil, err
 		}
@@ -169,7 +177,13 @@ func (a *timeTravelAction) Stop(ctx context.Context, state *TimeTravelActionStat
 	log.Info().Msg("Adjusting time back")
 	if state.DisableNtp {
 		log.Info().Msg("Unblocking NTP traffic")
-		if err := timetravel.AdjustNtpTrafficRules(ctx, a.runc, true); err != nil {
+		runner, err := a.runner(ctx)
+		if err != nil {
+			log.Error().Err(err).Msg("Failed to create runner for unblocking NTP traffic")
+			return nil, err
+		}
+
+		if err := timetravel.AdjustNtpTrafficRules(ctx, runner, true); err != nil {
 			log.Error().Err(err).Msg("Failed to unblock NTP traffic")
 			return nil, err
 		}
@@ -181,4 +195,22 @@ func (a *timeTravelAction) Stop(ctx context.Context, state *TimeTravelActionStat
 	}
 	state.OffsetApplied = false
 	return nil, nil
+}
+
+func (a *timeTravelAction) runner(ctx context.Context) (network.CommandRunner, error) {
+	if config.Config.DisableRunc {
+		return network.NewProcessRunner(), nil
+	}
+
+	initProcess, err := runc.ReadLinuxProcessInfo(ctx, 1)
+	if err != nil {
+		return nil, err
+	}
+
+	sidecar := network.SidecarOpts{
+		TargetProcess: initProcess,
+		IdSuffix:      "host",
+	}
+
+	return network.NewRuncRunner(a.runc, sidecar), nil
 }

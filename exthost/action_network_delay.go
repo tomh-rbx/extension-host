@@ -94,7 +94,7 @@ func delay(r runc.Runc) networkOptsProvider {
 
 		interfaces := extutil.ToStringArray(request.Config["networkInterface"])
 		if len(interfaces) == 0 {
-			interfaces, err = network.ListNonLoopbackInterfaceNames(ctx, r, sidecar)
+			interfaces, err = network.ListNonLoopbackInterfaceNames(ctx, runner(r, sidecar))
 			if err != nil {
 				return nil, nil, err
 			}

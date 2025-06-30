@@ -4,20 +4,22 @@
 package shutdown
 
 import (
+	"context"
 	"github.com/rs/zerolog/log"
-	"github.com/steadybit/extension-host/exthost/common"
-	"os"
+	"github.com/steadybit/action-kit/go/action_kit_commons/utils"
 	"os/exec"
 	"time"
 )
 
 type commandShutdown struct {
-	run      func(name string, arg ...string) error
+	run      func(ctx context.Context, name string, arg ...string) error
 	lookPath func(name string) (string, error)
 }
 
 func newCommandShutdown() Shutdown {
-	return &commandShutdown{run: common.RunAsRoot, lookPath: exec.LookPath}
+	return &commandShutdown{run: func(ctx context.Context, name string, arg ...string) error {
+		return utils.RootCommandContext(ctx, name, arg...).Run()
+	}, lookPath: exec.LookPath}
 }
 
 func (c *commandShutdown) IsAvailable() bool {
@@ -26,10 +28,6 @@ func (c *commandShutdown) IsAvailable() bool {
 		return false
 	}
 	return true
-}
-
-func isExecAny(mode os.FileMode) bool {
-	return mode&0111 != 0
 }
 
 func (c *commandShutdown) Shutdown() error {
@@ -46,15 +44,15 @@ func (c *commandShutdown) Name() string {
 }
 
 func (c *commandShutdown) runShutdown(mode string) error {
-	if err := c.run("shutdown", "-k", "--no-wall", "now"); err != nil {
-		_ = c.run("shutdown", "-c")
+	if err := c.run(context.Background(), "shutdown", "-k", "--no-wall", "now"); err != nil {
+		_ = c.run(context.Background(), "shutdown", "-c")
 		log.Err(err).Msg("failed 'shutdown -k --no-wall now'")
 		return err
 	}
 
 	go func() {
 		time.Sleep(3 * time.Second)
-		if err := c.run("shutdown", mode, "now"); err != nil {
+		if err := c.run(context.Background(), "shutdown", mode, "now"); err != nil {
 			log.Err(err).Msgf("failed 'shutdown %s now'", mode)
 		}
 	}()

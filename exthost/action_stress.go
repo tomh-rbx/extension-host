@@ -15,6 +15,7 @@ import (
 	"github.com/steadybit/action-kit/go/action_kit_commons/stress"
 	"github.com/steadybit/action-kit/go/action_kit_commons/utils"
 	"github.com/steadybit/action-kit/go/action_kit_sdk"
+	"github.com/steadybit/extension-host/config"
 	"github.com/steadybit/extension-kit"
 	"github.com/steadybit/extension-kit/extutil"
 	"golang.org/x/sync/syncmap"
@@ -126,8 +127,16 @@ func adaptCpuHosts(s *stress.Opts) {
 	}
 }
 
+func (a *stressAction) stress(ctx context.Context, sidecar stress.SidecarOpts, opts stress.Opts) (stress.Stress, error) {
+	if config.Config.DisableRunc {
+		return stress.NewStressProcess(opts)
+	}
+
+	return stress.NewStressRunc(ctx, a.runc, sidecar, opts)
+}
+
 func (a *stressAction) Start(ctx context.Context, state *StressActionState) (*action_kit_api.StartResult, error) {
-	s, err := stress.New(ctx, a.runc, state.Sidecar, state.StressOpts)
+	s, err := a.stress(ctx, state.Sidecar, state.StressOpts)
 	if err != nil {
 		return nil, extension_kit.ToError("Failed to stress host", err)
 	}
@@ -220,7 +229,7 @@ func (a *stressAction) stressExited(executionId uuid.UUID) (bool, error) {
 	if !ok {
 		return true, nil
 	}
-	return s.(*stress.Stress).Exited()
+	return s.(stress.Stress).Exited()
 }
 
 func (a *stressAction) stopStressHost(executionId uuid.UUID) bool {
@@ -228,13 +237,13 @@ func (a *stressAction) stopStressHost(executionId uuid.UUID) bool {
 	if !ok {
 		return false
 	}
-	s.(*stress.Stress).Stop()
+	s.(stress.Stress).Stop()
 	return true
 }
 
 func isStressNgInstalled() bool {
-	stressngPath := utils.LocateExecutable("stress-ng", "STEADYBIT_EXTENSION_STRESSNG_PATH")
-	cmd := exec.Command(stressngPath, "-V")
+	path := utils.LocateExecutable("stress-ng", "STEADYBIT_EXTENSION_STRESSNG_PATH")
+	cmd := exec.Command(path, "-V")
 	cmd.Dir = os.TempDir()
 	var outputBuffer bytes.Buffer
 	cmd.Stdout = &outputBuffer

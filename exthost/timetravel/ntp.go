@@ -6,20 +6,9 @@ package timetravel
 import (
 	"context"
 	"github.com/steadybit/action-kit/go/action_kit_commons/network"
-	"github.com/steadybit/action-kit/go/action_kit_commons/runc"
 )
 
-func AdjustNtpTrafficRules(ctx context.Context, r runc.Runc, allowNtpTraffic bool) error {
-	initProcess, err := runc.ReadLinuxProcessInfo(ctx, 1)
-	if err != nil {
-		return err
-	}
-
-	sidecar := network.SidecarOpts{
-		TargetProcess: initProcess,
-		IdSuffix:      "host",
-	}
-
+func AdjustNtpTrafficRules(ctx context.Context, runner network.CommandRunner, allowNtpTraffic bool) error {
 	opts := &network.BlackholeOpts{
 		IpProto: network.IpProtoUdp,
 		Filter: network.Filter{
@@ -28,8 +17,8 @@ func AdjustNtpTrafficRules(ctx context.Context, r runc.Runc, allowNtpTraffic boo
 	}
 
 	if allowNtpTraffic {
-		return network.Revert(ctx, r, sidecar, opts)
+		return network.Revert(ctx, runner, opts)
 	} else {
-		return network.Apply(ctx, r, sidecar, opts)
+		return network.Apply(ctx, runner, opts)
 	}
 }

@@ -4,6 +4,7 @@
 package shutdown
 
 import (
+	"context"
 	"errors"
 	"github.com/stretchr/testify/assert"
 	"sync"
@@ -75,7 +76,7 @@ func Test_commandShutdown_Reboot(t *testing.T) {
 			var m sync.Mutex
 
 			c := &commandShutdown{
-				run: func(name string, arg ...string) error {
+				run: func(ctx context.Context, name string, arg ...string) error {
 					m.Lock()
 					defer m.Unlock()
 					calls = append(calls, append([]string{name}, arg...))
@@ -131,7 +132,7 @@ func Test_commandShutdown_Shutdown(t *testing.T) {
 			calls := make([][]string, 0)
 
 			c := &commandShutdown{
-				run: func(name string, arg ...string) error {
+				run: func(ctx context.Context, name string, arg ...string) error {
 					m.Lock()
 					defer m.Unlock()
 					calls = append(calls, append([]string{name}, arg...))
