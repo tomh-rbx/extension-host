@@ -136,11 +136,10 @@ func (a *fillMemoryAction) Describe() action_kit_api.ActionDescription {
 
 func fillMemoryOpts(request action_kit_api.PrepareActionRequestBody) (memfill.Opts, error) {
 	opts := memfill.Opts{
-		BinaryPath: config.Config.MemfillPath,
-		Size:       extutil.ToInt(request.Config["size"]),
-		Mode:       memfill.Mode(request.Config["mode"].(string)),
-		Unit:       memfill.Unit(request.Config["unit"].(string)),
-		Duration:   time.Duration(extutil.ToInt64(request.Config["duration"])) * time.Millisecond,
+		Size:     extutil.ToInt(request.Config["size"]),
+		Mode:     memfill.Mode(request.Config["mode"].(string)),
+		Unit:     memfill.Unit(request.Config["unit"].(string)),
+		Duration: time.Duration(extutil.ToInt64(request.Config["duration"])) * time.Millisecond,
 	}
 	return opts, nil
 }
@@ -170,8 +169,16 @@ func (a *fillMemoryAction) Prepare(ctx context.Context, state *FillMemoryActionS
 	return nil, nil
 }
 
+func (a *fillMemoryAction) memfill(targetProcess runc.LinuxProcessInfo, opts memfill.Opts) (memfill.Memfill, error) {
+	if config.Config.DisableRunc {
+		return memfill.NewMemfillProcess(targetProcess, opts)
+	}
+
+	return memfill.NewMemfillProcess(targetProcess, opts)
+}
+
 func (a *fillMemoryAction) Start(_ context.Context, state *FillMemoryActionState) (*action_kit_api.StartResult, error) {
-	memFill, err := memfill.New(state.TargetProcess, state.FillMemoryOpts)
+	memFill, err := a.memfill(state.TargetProcess, state.FillMemoryOpts)
 	if err != nil {
 		return nil, extension_kit.ToError("Failed to prepare fill memory on host", err)
 	}
@@ -262,7 +269,7 @@ func (a *fillMemoryAction) fillMemoryExited(executionId uuid.UUID) (bool, error)
 	if !ok {
 		return true, nil
 	}
-	return s.(*memfill.MemFill).Exited()
+	return s.(memfill.Memfill).Exited()
 }
 
 func (a *fillMemoryAction) stopFillMemoryHost(executionId uuid.UUID) bool {
@@ -270,6 +277,6 @@ func (a *fillMemoryAction) stopFillMemoryHost(executionId uuid.UUID) bool {
 	if !ok {
 		return false
 	}
-	err := s.(*memfill.MemFill).Stop()
+	err := s.(memfill.Memfill).Stop()
 	return err == nil
 }

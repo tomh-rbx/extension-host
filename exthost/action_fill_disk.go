@@ -7,6 +7,7 @@ import (
 	"errors"
 	"fmt"
 	"github.com/opencontainers/runtime-spec/specs-go"
+	"github.com/steadybit/extension-host/config"
 
 	"github.com/google/uuid"
 	"github.com/steadybit/action-kit/go/action_kit_api/v2"
@@ -204,9 +205,16 @@ func (a *fillDiskAction) Prepare(ctx context.Context, state *FillDiskActionState
 	return nil, nil
 }
 
+func (a *fillDiskAction) diskfill(ctx context.Context, sidecar diskfill.SidecarOpts, opts diskfill.Opts) (diskfill.Diskfill, error) {
+	if config.Config.DisableRunc {
+		return diskfill.NewDiskfillProcess(ctx, opts)
+	}
+
+	return diskfill.NewDiskfillRunc(ctx, a.runc, sidecar, opts)
+}
+
 func (a *fillDiskAction) Start(ctx context.Context, state *FillDiskActionState) (*action_kit_api.StartResult, error) {
-	copiedOpts := state.FillDiskOpts
-	diskFill, err := diskfill.New(ctx, a.runc, state.Sidecar, copiedOpts)
+	diskFill, err := a.diskfill(ctx, state.Sidecar, state.FillDiskOpts)
 	if err != nil {
 		return nil, extension_kit.ToError("Failed to prepare fill disk on host", err)
 	}
@@ -224,7 +232,7 @@ func (a *fillDiskAction) Start(ctx context.Context, state *FillDiskActionState) 
 		},
 	}
 
-	if diskFill.Noop {
+	if diskFill.Noop() {
 		messages = append(messages, action_kit_api.Message{
 			Level:   extutil.Ptr(action_kit_api.Info),
 			Message: "Noop mode is enabled. No disk will be filled, because the disk is already filled enough.",
@@ -271,7 +279,7 @@ func (a *fillDiskAction) stopFillDiskHost(executionId uuid.UUID) error {
 		return errors.New("no diskfill host found")
 	}
 
-	return s.(*diskfill.DiskFill).Stop()
+	return s.(diskfill.Diskfill).Stop()
 }
 
 func (a *fillDiskAction) fillDiskHostExited(executionId uuid.UUID) (bool, error) {
@@ -279,5 +287,5 @@ func (a *fillDiskAction) fillDiskHostExited(executionId uuid.UUID) (bool, error)
 	if !ok {
 		return true, nil
 	}
-	return s.(*diskfill.DiskFill).Exited()
+	return s.(diskfill.Diskfill).Exited()
 }

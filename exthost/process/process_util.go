@@ -4,11 +4,12 @@
 package stopprocess
 
 import (
+	"context"
 	"errors"
 	"fmt"
 	"github.com/mitchellh/go-ps"
 	"github.com/rs/zerolog/log"
-	"github.com/steadybit/extension-host/exthost/common"
+	"github.com/steadybit/action-kit/go/action_kit_commons/utils"
 	"github.com/steadybit/extension-kit/extutil"
 	"strings"
 	"syscall"
@@ -43,7 +44,7 @@ func stopProcessUnix(pid int, force bool) error {
 		err := syscall.Kill(pid, syscall.SIGKILL)
 		if err != nil {
 			log.Debug().Err(err).Int("pid", pid).Msg("Failed to send SIGKILL via syscall")
-			err = common.RunAsRoot("kill", "-9", fmt.Sprintf("%d", pid))
+			err = utils.RootCommandContext(context.Background(), "kill", "-9", fmt.Sprintf("%d", pid)).Run()
 		}
 		if err != nil {
 			return fmt.Errorf("failed to send SIGKILL process via exec: %w", err)
@@ -54,7 +55,7 @@ func stopProcessUnix(pid int, force bool) error {
 	err := syscall.Kill(pid, syscall.SIGTERM)
 	if err != nil {
 		log.Error().Err(err).Int("pid", pid).Msg("failed to send SIGTERM via syscall")
-		err = common.RunAsRoot("kill", fmt.Sprintf("%d", pid))
+		err = utils.RootCommandContext(context.Background(), "kill", fmt.Sprintf("%d", pid)).Run()
 	}
 	if err != nil {
 		return fmt.Errorf("failed to send SIGTERM via exec: %w", err)

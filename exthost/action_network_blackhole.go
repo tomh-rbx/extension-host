@@ -53,7 +53,7 @@ func blackhole(r runc.Runc) networkOptsProvider {
 		}
 
 		var messages action_kit_api.Messages
-		if usesCilium, err := network.HasCiliumIpRoutes(ctx, r, sidecar); err != nil {
+		if usesCilium, err := network.HasCiliumIpRoutes(ctx, runner(r, sidecar)); err != nil {
 			messages = append(messages, action_kit_api.Message{
 				Level:   extutil.Ptr(action_kit_api.Warn),
 				Message: fmt.Sprintf("Failed to check for Cilium routes: %v", err),

@@ -133,7 +133,7 @@ func (a *networkAction) Start(ctx context.Context, state *NetworkActionState) (*
 		},
 	}}
 
-	err = network.Apply(ctx, a.runc, state.Sidecar, opts)
+	err = network.Apply(ctx, runner(a.runc, state.Sidecar), opts)
 	if err != nil {
 		var toomany *network.ErrTooManyTcCommands
 		if errors.As(err, &toomany) {
@@ -155,11 +155,18 @@ func (a *networkAction) Stop(ctx context.Context, state *NetworkActionState) (*a
 		return nil, extension_kit.ToError("Failed to deserialize network settings.", err)
 	}
 
-	if err := network.Revert(ctx, a.runc, state.Sidecar, opts); err != nil {
+	if err := network.Revert(ctx, runner(a.runc, state.Sidecar), opts); err != nil {
 		return nil, extension_kit.ToError("Failed to revert network settings.", err)
 	}
 
 	return nil, nil
+}
+
+func runner(r runc.Runc, sidecar network.SidecarOpts) network.CommandRunner {
+	if config.Config.DisableRunc {
+		return network.NewProcessRunner()
+	}
+	return network.NewRuncRunner(r, sidecar)
 }
 
 func parsePortRanges(raw []string) ([]network.PortRange, error) {
@@ -183,14 +190,20 @@ func parsePortRanges(raw []string) ([]network.PortRange, error) {
 	return ranges, nil
 }
 
+func hostnameResolver(r runc.Runc, sidecar network.SidecarOpts) *network.HostnameResolver {
+	if config.Config.DisableRunc {
+		return &network.HostnameResolver{Dig: &network.CommandDigRunner{}}
+	}
+	return &network.HostnameResolver{Dig: &network.RuncDigRunner{Runc: r, Sidecar: sidecar}}
+}
+
 func mapToNetworkFilter(ctx context.Context, r runc.Runc, sidecar network.SidecarOpts, actionConfig map[string]interface{}, restrictedEndpoints []action_kit_api.RestrictedEndpoint) (network.Filter, action_kit_api.Messages, error) {
 	includeCidrs, unresolved := network.ParseCIDRs(append(
 		extutil.ToStringArray(actionConfig["ip"]),
 		extutil.ToStringArray(actionConfig["hostname"])...,
 	))
 
-	dig := network.HostnameResolver{Dig: &network.RuncDigRunner{Runc: r, Sidecar: sidecar}}
-	resolved, err := dig.Resolve(ctx, unresolved...)
+	resolved, err := hostnameResolver(r, sidecar).Resolve(ctx, unresolved...)
 	if err != nil {
 		return network.Filter{}, nil, err
 	}
