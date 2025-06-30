@@ -1,5 +1,9 @@
 # Changelog
 
+## v1.3.0
+
+- feat: add option to disable runc for running attacks
+
 ## v1.2.37 
 
 - fix: propagate environment to started runc processes
