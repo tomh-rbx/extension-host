@@ -136,10 +136,11 @@ func (a *fillMemoryAction) Describe() action_kit_api.ActionDescription {
 
 func fillMemoryOpts(request action_kit_api.PrepareActionRequestBody) (memfill.Opts, error) {
 	opts := memfill.Opts{
-		Size:     extutil.ToInt(request.Config["size"]),
-		Mode:     memfill.Mode(request.Config["mode"].(string)),
-		Unit:     memfill.Unit(request.Config["unit"].(string)),
-		Duration: time.Duration(extutil.ToInt64(request.Config["duration"])) * time.Millisecond,
+		Size:         extutil.ToInt(request.Config["size"]),
+		Mode:         memfill.Mode(request.Config["mode"].(string)),
+		Unit:         memfill.Unit(request.Config["unit"].(string)),
+		Duration:     time.Duration(extutil.ToInt64(request.Config["duration"])) * time.Millisecond,
+		IgnoreCgroup: true,
 	}
 	return opts, nil
 }
