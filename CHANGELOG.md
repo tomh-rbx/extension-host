@@ -2,6 +2,10 @@
 
 ## v1.3.0
 
+- fix: ignore cgroups for memfill
+
+## v1.3.0
+
 - feat: add option to disable runc for running attacks
 
 ## v1.2.37 
