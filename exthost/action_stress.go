@@ -202,7 +202,7 @@ func (a *stressAction) Status(_ context.Context, state *StressActionState) (*act
 	return &action_kit_api.StatusResult{
 		Completed: true,
 		Error: &action_kit_api.ActionKitError{
-			Status: extutil.Ptr(action_kit_api.Failed),
+			Status: extutil.Ptr(action_kit_api.Errored),
 			Title:  fmt.Sprintf("Failed to stress host: %s", errMessage),
 		},
 	}, nil
