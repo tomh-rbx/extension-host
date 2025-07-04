@@ -1,6 +1,10 @@
 # Changelog
 
-## v1.3.0
+## v1.3.2
+
+- If stress/diskfill/memfill exits unexpetedly report this as error and not as failure
+
+## v1.3.1
 
 - fix: ignore cgroups for memfill
 
