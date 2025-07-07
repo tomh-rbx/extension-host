@@ -121,7 +121,7 @@ func (l *shutdownAction) Start(_ context.Context, state *ActionState) (*action_k
 		return &action_kit_api.StartResult{
 			Error: &action_kit_api.ActionKitError{
 				Title:  fmt.Sprintf("%s failed", action),
-				Status: extutil.Ptr(action_kit_api.Errored),
+				Status: extutil.Ptr(action_kit_api.Failed),
 				Detail: extutil.Ptr(err.Error()),
 			},
 		}, nil

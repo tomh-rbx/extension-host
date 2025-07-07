@@ -244,7 +244,7 @@ func (a *fillMemoryAction) Status(_ context.Context, state *FillMemoryActionStat
 	return &action_kit_api.StatusResult{
 		Completed: true,
 		Error: &action_kit_api.ActionKitError{
-			Status: extutil.Ptr(action_kit_api.Errored),
+			Status: extutil.Ptr(action_kit_api.Failed),
 			Title:  fmt.Sprintf("Failed to fill memory on host: %s", errMessage),
 		},
 	}, nil
