@@ -116,14 +116,19 @@ Under the hood start `ip` or `tc` is used to reconfigure the network stack and `
 
 All needed binaries are included in the extension container image.
 
-## Troubleshooting
+## Removing some of the capabilities in Kubernetes/Containers
 
-Using cgroups v2 on the host and `nsdelegate` to mount the cgroup filesystem will prevent
-the action from running processes in other cgroups (e.g. stress cpu/memory, disk fill).
-In that case you need to remount the cgroup filesystem without the `nsdelegate` option.
+In case you want to reduce the default capabilities of this extension, remove them from the helm values and use a custom image which doesn't set the capability on the executable.
+A customer image can be built using the following Dockerfile:
 
-```sh
-sudo mount -o remount,rw,nosuid,nodev,noexec,relatime -t cgroup2 none /sys/fs/cgroup
+```dockerfile
+FROM ghcr.io/steadybit/extension-host:latest
+
+USER root
+RUN setcap 'cap_setuid,cap_sys_chroot,cap_setgid,cap_net_raw,cap_net_admin,cap_sys_admin,cap_dac_override,cap_sys_ptrace+eip' /extension
+USER 10000
+
+ENTRYPOINT ["/extension"]
 ```
 
 ## Version and Revision
