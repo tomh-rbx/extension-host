@@ -49,6 +49,8 @@ func getNetworkDelayDescription() action_kit_api.ActionDescription {
 				Description:  extutil.Ptr("How much should the traffic be delayed?"),
 				Type:         action_kit_api.Duration,
 				DefaultValue: extutil.Ptr("500ms"),
+				MinValue:     extutil.Ptr(0),
+				MaxValue:     extutil.Ptr(3600000), //1 hour (less then tc limit - 4294967295 usecs)
 				Required:     extutil.Ptr(true),
 				Order:        extutil.Ptr(1),
 			},
