@@ -7,14 +7,13 @@ package exthost
 import (
 	"errors"
 	"fmt"
-	"time"
-
 	"github.com/steadybit/action-kit/go/action_kit_api/v2"
-	"github.com/steadybit/action-kit/go/action_kit_commons/runc"
+	"github.com/steadybit/action-kit/go/action_kit_commons/ociruntime"
 	"github.com/steadybit/action-kit/go/action_kit_commons/stress"
 	"github.com/steadybit/action-kit/go/action_kit_sdk"
 	"github.com/steadybit/extension-kit/extbuild"
 	"github.com/steadybit/extension-kit/extutil"
+	"time"
 )
 
 type Mode string
@@ -25,7 +24,7 @@ const (
 	ModeFlush             Mode = "flush"
 )
 
-func NewStressIoAction(r runc.Runc) action_kit_sdk.Action[StressActionState] {
+func NewStressIoAction(r ociruntime.OciRuntime) action_kit_sdk.Action[StressActionState] {
 	return newStressAction(r, getStressIoDescription, stressIo)
 }
 

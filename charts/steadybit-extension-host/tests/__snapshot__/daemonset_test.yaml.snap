@@ -40,6 +40,12 @@ manifest should match snapshot using podAnnotations, podLabels and resources:
                   value: INFO
                 - name: STEADYBIT_LOG_FORMAT
                   value: text
+                - name: STEADYBIT_EXTENSION_OCIRUNTIME_DEBUG
+                  value: "false"
+                - name: STEADYBIT_EXTENSION_OCIRUNTIME_ROOT
+                  value: /run/steadybit/oci
+                - name: STEADYBIT_EXTENSION_OCIRUNTIME_PATH
+                  value: runc
                 - name: STEADYBIT_EXTENSION_HOSTNAME
                   valueFrom:
                     fieldRef:
@@ -80,19 +86,24 @@ manifest should match snapshot using podAnnotations, podLabels and resources:
               securityContext:
                 capabilities:
                   add:
+                    - NET_BIND_SERVICE
+                    - KILL
                     - SYS_ADMIN
                     - SYS_CHROOT
-                    - SYS_RESOURCE
-                    - SYS_BOOT
-                    - NET_RAW
-                    - SYS_TIME
                     - SYS_PTRACE
-                    - KILL
                     - NET_ADMIN
                     - DAC_OVERRIDE
                     - SETUID
                     - SETGID
                     - AUDIT_WRITE
+                    - SYS_BOOT
+                    - NET_RAW
+                    - SYS_TIME
+                    - SETPCAP
+                    - MKNOD
+                    - SYS_RESOURCE
+                  drop:
+                    - ALL
                 readOnlyRootFilesystem: true
                 seccompProfile:
                   type: Unconfined
@@ -101,8 +112,8 @@ manifest should match snapshot using podAnnotations, podLabels and resources:
                   name: tmp-dir
                 - mountPath: /sys/fs/cgroup
                   name: cgroup-root
-                - mountPath: /run/steadybit/runc
-                  name: runc-root
+                - mountPath: /run/steadybit/oci
+                  name: ociruntime-root
           dnsPolicy: ClusterFirstWithHostNet
           hostNetwork: true
           hostPID: true
@@ -119,7 +130,7 @@ manifest should match snapshot using podAnnotations, podLabels and resources:
                 type: Directory
               name: cgroup-root
             - emptyDir: {}
-              name: runc-root
+              name: ociruntime-root
       updateStrategy:
         rollingUpdate:
           maxUnavailable: 1
@@ -166,6 +177,12 @@ manifest should match snapshot with Steadybit-Extension-host env var:
                   value: text
                 - name: STEADYBIT_EXTENSION_HOST
                   value: extension-host.example.com
+                - name: STEADYBIT_EXTENSION_OCIRUNTIME_DEBUG
+                  value: "false"
+                - name: STEADYBIT_EXTENSION_OCIRUNTIME_ROOT
+                  value: /run/steadybit/oci
+                - name: STEADYBIT_EXTENSION_OCIRUNTIME_PATH
+                  value: runc
                 - name: STEADYBIT_EXTENSION_HOSTNAME
                   valueFrom:
                     fieldRef:
@@ -206,19 +223,24 @@ manifest should match snapshot with Steadybit-Extension-host env var:
               securityContext:
                 capabilities:
                   add:
+                    - NET_BIND_SERVICE
+                    - KILL
                     - SYS_ADMIN
                     - SYS_CHROOT
-                    - SYS_RESOURCE
-                    - SYS_BOOT
-                    - NET_RAW
-                    - SYS_TIME
                     - SYS_PTRACE
-                    - KILL
                     - NET_ADMIN
                     - DAC_OVERRIDE
                     - SETUID
                     - SETGID
                     - AUDIT_WRITE
+                    - SYS_BOOT
+                    - NET_RAW
+                    - SYS_TIME
+                    - SETPCAP
+                    - MKNOD
+                    - SYS_RESOURCE
+                  drop:
+                    - ALL
                 readOnlyRootFilesystem: true
                 seccompProfile:
                   type: Unconfined
@@ -227,8 +249,8 @@ manifest should match snapshot with Steadybit-Extension-host env var:
                   name: tmp-dir
                 - mountPath: /sys/fs/cgroup
                   name: cgroup-root
-                - mountPath: /run/steadybit/runc
-                  name: runc-root
+                - mountPath: /run/steadybit/oci
+                  name: ociruntime-root
           dnsPolicy: ClusterFirstWithHostNet
           hostNetwork: true
           hostPID: true
@@ -245,7 +267,7 @@ manifest should match snapshot with Steadybit-Extension-host env var:
                 type: Directory
               name: cgroup-root
             - emptyDir: {}
-              name: runc-root
+              name: ociruntime-root
       updateStrategy:
         rollingUpdate:
           maxUnavailable: 1
@@ -294,6 +316,12 @@ manifest should match snapshot with TLS:
                   value: /etc/extension/certificates/server-cert/tls.crt
                 - name: STEADYBIT_EXTENSION_TLS_SERVER_KEY
                   value: /etc/extension/certificates/server-cert/tls.key
+                - name: STEADYBIT_EXTENSION_OCIRUNTIME_DEBUG
+                  value: "false"
+                - name: STEADYBIT_EXTENSION_OCIRUNTIME_ROOT
+                  value: /run/steadybit/oci
+                - name: STEADYBIT_EXTENSION_OCIRUNTIME_PATH
+                  value: runc
                 - name: STEADYBIT_EXTENSION_HOSTNAME
                   valueFrom:
                     fieldRef:
@@ -334,19 +362,24 @@ manifest should match snapshot with TLS:
               securityContext:
                 capabilities:
                   add:
+                    - NET_BIND_SERVICE
+                    - KILL
                     - SYS_ADMIN
                     - SYS_CHROOT
-                    - SYS_RESOURCE
-                    - SYS_BOOT
-                    - NET_RAW
-                    - SYS_TIME
                     - SYS_PTRACE
-                    - KILL
                     - NET_ADMIN
                     - DAC_OVERRIDE
                     - SETUID
                     - SETGID
                     - AUDIT_WRITE
+                    - SYS_BOOT
+                    - NET_RAW
+                    - SYS_TIME
+                    - SETPCAP
+                    - MKNOD
+                    - SYS_RESOURCE
+                  drop:
+                    - ALL
                 readOnlyRootFilesystem: true
                 seccompProfile:
                   type: Unconfined
@@ -355,8 +388,8 @@ manifest should match snapshot with TLS:
                   name: tmp-dir
                 - mountPath: /sys/fs/cgroup
                   name: cgroup-root
-                - mountPath: /run/steadybit/runc
-                  name: runc-root
+                - mountPath: /run/steadybit/oci
+                  name: ociruntime-root
                 - mountPath: /etc/extension/certificates/server-cert
                   name: certificate-server-cert
                   readOnly: true
@@ -376,7 +409,7 @@ manifest should match snapshot with TLS:
                 type: Directory
               name: cgroup-root
             - emptyDir: {}
-              name: runc-root
+              name: ociruntime-root
             - name: certificate-server-cert
               secret:
                 optional: false
@@ -424,6 +457,12 @@ manifest should match snapshot with appArmorProfile for k8s >= 1.30:
                   value: INFO
                 - name: STEADYBIT_LOG_FORMAT
                   value: text
+                - name: STEADYBIT_EXTENSION_OCIRUNTIME_DEBUG
+                  value: "false"
+                - name: STEADYBIT_EXTENSION_OCIRUNTIME_ROOT
+                  value: /run/steadybit/oci
+                - name: STEADYBIT_EXTENSION_OCIRUNTIME_PATH
+                  value: runc
                 - name: STEADYBIT_EXTENSION_HOSTNAME
                   valueFrom:
                     fieldRef:
@@ -466,19 +505,24 @@ manifest should match snapshot with appArmorProfile for k8s >= 1.30:
                   type: Unconfined
                 capabilities:
                   add:
+                    - NET_BIND_SERVICE
+                    - KILL
                     - SYS_ADMIN
                     - SYS_CHROOT
-                    - SYS_RESOURCE
-                    - SYS_BOOT
-                    - NET_RAW
-                    - SYS_TIME
                     - SYS_PTRACE
-                    - KILL
                     - NET_ADMIN
                     - DAC_OVERRIDE
                     - SETUID
                     - SETGID
                     - AUDIT_WRITE
+                    - SYS_BOOT
+                    - NET_RAW
+                    - SYS_TIME
+                    - SETPCAP
+                    - MKNOD
+                    - SYS_RESOURCE
+                  drop:
+                    - ALL
                 readOnlyRootFilesystem: true
                 seccompProfile:
                   type: Unconfined
@@ -487,8 +531,8 @@ manifest should match snapshot with appArmorProfile for k8s >= 1.30:
                   name: tmp-dir
                 - mountPath: /sys/fs/cgroup
                   name: cgroup-root
-                - mountPath: /run/steadybit/runc
-                  name: runc-root
+                - mountPath: /run/steadybit/oci
+                  name: ociruntime-root
           dnsPolicy: ClusterFirstWithHostNet
           hostNetwork: true
           hostPID: true
@@ -505,7 +549,7 @@ manifest should match snapshot with appArmorProfile for k8s >= 1.30:
                 type: Directory
               name: cgroup-root
             - emptyDir: {}
-              name: runc-root
+              name: ociruntime-root
       updateStrategy:
         rollingUpdate:
           maxUnavailable: 1
@@ -550,6 +594,12 @@ manifest should match snapshot with different containerPorts:
                   value: INFO
                 - name: STEADYBIT_LOG_FORMAT
                   value: text
+                - name: STEADYBIT_EXTENSION_OCIRUNTIME_DEBUG
+                  value: "false"
+                - name: STEADYBIT_EXTENSION_OCIRUNTIME_ROOT
+                  value: /run/steadybit/oci
+                - name: STEADYBIT_EXTENSION_OCIRUNTIME_PATH
+                  value: runc
                 - name: STEADYBIT_EXTENSION_HOSTNAME
                   valueFrom:
                     fieldRef:
@@ -590,19 +640,24 @@ manifest should match snapshot with different containerPorts:
               securityContext:
                 capabilities:
                   add:
+                    - NET_BIND_SERVICE
+                    - KILL
                     - SYS_ADMIN
                     - SYS_CHROOT
-                    - SYS_RESOURCE
-                    - SYS_BOOT
-                    - NET_RAW
-                    - SYS_TIME
                     - SYS_PTRACE
-                    - KILL
                     - NET_ADMIN
                     - DAC_OVERRIDE
                     - SETUID
                     - SETGID
                     - AUDIT_WRITE
+                    - SYS_BOOT
+                    - NET_RAW
+                    - SYS_TIME
+                    - SETPCAP
+                    - MKNOD
+                    - SYS_RESOURCE
+                  drop:
+                    - ALL
                 readOnlyRootFilesystem: true
                 seccompProfile:
                   type: Unconfined
@@ -611,8 +666,8 @@ manifest should match snapshot with different containerPorts:
                   name: tmp-dir
                 - mountPath: /sys/fs/cgroup
                   name: cgroup-root
-                - mountPath: /run/steadybit/runc
-                  name: runc-root
+                - mountPath: /run/steadybit/oci
+                  name: ociruntime-root
           dnsPolicy: ClusterFirstWithHostNet
           hostNetwork: true
           hostPID: true
@@ -629,7 +684,7 @@ manifest should match snapshot with different containerPorts:
                 type: Directory
               name: cgroup-root
             - emptyDir: {}
-              name: runc-root
+              name: ociruntime-root
       updateStrategy:
         rollingUpdate:
           maxUnavailable: 1
@@ -676,6 +731,12 @@ manifest should match snapshot with extra env vars:
                   value: text
                 - name: FOO
                   value: bar
+                - name: STEADYBIT_EXTENSION_OCIRUNTIME_DEBUG
+                  value: "false"
+                - name: STEADYBIT_EXTENSION_OCIRUNTIME_ROOT
+                  value: /run/steadybit/oci
+                - name: STEADYBIT_EXTENSION_OCIRUNTIME_PATH
+                  value: runc
                 - name: STEADYBIT_EXTENSION_HOSTNAME
                   valueFrom:
                     fieldRef:
@@ -721,19 +782,24 @@ manifest should match snapshot with extra env vars:
               securityContext:
                 capabilities:
                   add:
+                    - NET_BIND_SERVICE
+                    - KILL
                     - SYS_ADMIN
                     - SYS_CHROOT
-                    - SYS_RESOURCE
-                    - SYS_BOOT
-                    - NET_RAW
-                    - SYS_TIME
                     - SYS_PTRACE
-                    - KILL
                     - NET_ADMIN
                     - DAC_OVERRIDE
                     - SETUID
                     - SETGID
                     - AUDIT_WRITE
+                    - SYS_BOOT
+                    - NET_RAW
+                    - SYS_TIME
+                    - SETPCAP
+                    - MKNOD
+                    - SYS_RESOURCE
+                  drop:
+                    - ALL
                 readOnlyRootFilesystem: true
                 seccompProfile:
                   type: Unconfined
@@ -742,8 +808,8 @@ manifest should match snapshot with extra env vars:
                   name: tmp-dir
                 - mountPath: /sys/fs/cgroup
                   name: cgroup-root
-                - mountPath: /run/steadybit/runc
-                  name: runc-root
+                - mountPath: /run/steadybit/oci
+                  name: ociruntime-root
           dnsPolicy: ClusterFirstWithHostNet
           hostNetwork: true
           hostPID: true
@@ -760,7 +826,7 @@ manifest should match snapshot with extra env vars:
                 type: Directory
               name: cgroup-root
             - emptyDir: {}
-              name: runc-root
+              name: ociruntime-root
       updateStrategy:
         rollingUpdate:
           maxUnavailable: 1
@@ -807,6 +873,12 @@ manifest should match snapshot with extra labels:
                   value: INFO
                 - name: STEADYBIT_LOG_FORMAT
                   value: text
+                - name: STEADYBIT_EXTENSION_OCIRUNTIME_DEBUG
+                  value: "false"
+                - name: STEADYBIT_EXTENSION_OCIRUNTIME_ROOT
+                  value: /run/steadybit/oci
+                - name: STEADYBIT_EXTENSION_OCIRUNTIME_PATH
+                  value: runc
                 - name: STEADYBIT_EXTENSION_HOSTNAME
                   valueFrom:
                     fieldRef:
@@ -847,19 +919,24 @@ manifest should match snapshot with extra labels:
               securityContext:
                 capabilities:
                   add:
+                    - NET_BIND_SERVICE
+                    - KILL
                     - SYS_ADMIN
                     - SYS_CHROOT
-                    - SYS_RESOURCE
-                    - SYS_BOOT
-                    - NET_RAW
-                    - SYS_TIME
                     - SYS_PTRACE
-                    - KILL
                     - NET_ADMIN
                     - DAC_OVERRIDE
                     - SETUID
                     - SETGID
                     - AUDIT_WRITE
+                    - SYS_BOOT
+                    - NET_RAW
+                    - SYS_TIME
+                    - SETPCAP
+                    - MKNOD
+                    - SYS_RESOURCE
+                  drop:
+                    - ALL
                 readOnlyRootFilesystem: true
                 seccompProfile:
                   type: Unconfined
@@ -868,8 +945,8 @@ manifest should match snapshot with extra labels:
                   name: tmp-dir
                 - mountPath: /sys/fs/cgroup
                   name: cgroup-root
-                - mountPath: /run/steadybit/runc
-                  name: runc-root
+                - mountPath: /run/steadybit/oci
+                  name: ociruntime-root
           dnsPolicy: ClusterFirstWithHostNet
           hostNetwork: true
           hostPID: true
@@ -886,7 +963,7 @@ manifest should match snapshot with extra labels:
                 type: Directory
               name: cgroup-root
             - emptyDir: {}
-              name: runc-root
+              name: ociruntime-root
       updateStrategy:
         rollingUpdate:
           maxUnavailable: 1
@@ -931,6 +1008,12 @@ manifest should match snapshot with hostnameFromKubernetes enabled:
                   value: INFO
                 - name: STEADYBIT_LOG_FORMAT
                   value: text
+                - name: STEADYBIT_EXTENSION_OCIRUNTIME_DEBUG
+                  value: "false"
+                - name: STEADYBIT_EXTENSION_OCIRUNTIME_ROOT
+                  value: /run/steadybit/oci
+                - name: STEADYBIT_EXTENSION_OCIRUNTIME_PATH
+                  value: runc
                 - name: STEADYBIT_EXTENSION_HOSTNAME
                   valueFrom:
                     fieldRef:
@@ -971,19 +1054,24 @@ manifest should match snapshot with hostnameFromKubernetes enabled:
               securityContext:
                 capabilities:
                   add:
+                    - NET_BIND_SERVICE
+                    - KILL
                     - SYS_ADMIN
                     - SYS_CHROOT
-                    - SYS_RESOURCE
-                    - SYS_BOOT
-                    - NET_RAW
-                    - SYS_TIME
                     - SYS_PTRACE
-                    - KILL
                     - NET_ADMIN
                     - DAC_OVERRIDE
                     - SETUID
                     - SETGID
                     - AUDIT_WRITE
+                    - SYS_BOOT
+                    - NET_RAW
+                    - SYS_TIME
+                    - SETPCAP
+                    - MKNOD
+                    - SYS_RESOURCE
+                  drop:
+                    - ALL
                 readOnlyRootFilesystem: true
                 seccompProfile:
                   type: Unconfined
@@ -992,8 +1080,8 @@ manifest should match snapshot with hostnameFromKubernetes enabled:
                   name: tmp-dir
                 - mountPath: /sys/fs/cgroup
                   name: cgroup-root
-                - mountPath: /run/steadybit/runc
-                  name: runc-root
+                - mountPath: /run/steadybit/oci
+                  name: ociruntime-root
           dnsPolicy: ClusterFirstWithHostNet
           hostNetwork: true
           hostPID: true
@@ -1010,7 +1098,7 @@ manifest should match snapshot with hostnameFromKubernetes enabled:
                 type: Directory
               name: cgroup-root
             - emptyDir: {}
-              name: runc-root
+              name: ociruntime-root
       updateStrategy:
         rollingUpdate:
           maxUnavailable: 1
@@ -1061,6 +1149,12 @@ manifest should match snapshot with mutual TLS:
                   value: /etc/extension/certificates/server-cert/tls.key
                 - name: STEADYBIT_EXTENSION_TLS_CLIENT_CAS
                   value: /etc/extension/certificates/client-cert-a/tls.crt,/etc/extension/certificates/client-cert-a/tls.crt
+                - name: STEADYBIT_EXTENSION_OCIRUNTIME_DEBUG
+                  value: "false"
+                - name: STEADYBIT_EXTENSION_OCIRUNTIME_ROOT
+                  value: /run/steadybit/oci
+                - name: STEADYBIT_EXTENSION_OCIRUNTIME_PATH
+                  value: runc
                 - name: STEADYBIT_EXTENSION_HOSTNAME
                   valueFrom:
                     fieldRef:
@@ -1101,19 +1195,24 @@ manifest should match snapshot with mutual TLS:
               securityContext:
                 capabilities:
                   add:
+                    - NET_BIND_SERVICE
+                    - KILL
                     - SYS_ADMIN
                     - SYS_CHROOT
-                    - SYS_RESOURCE
-                    - SYS_BOOT
-                    - NET_RAW
-                    - SYS_TIME
                     - SYS_PTRACE
-                    - KILL
                     - NET_ADMIN
                     - DAC_OVERRIDE
                     - SETUID
                     - SETGID
                     - AUDIT_WRITE
+                    - SYS_BOOT
+                    - NET_RAW
+                    - SYS_TIME
+                    - SETPCAP
+                    - MKNOD
+                    - SYS_RESOURCE
+                  drop:
+                    - ALL
                 readOnlyRootFilesystem: true
                 seccompProfile:
                   type: Unconfined
@@ -1122,8 +1221,8 @@ manifest should match snapshot with mutual TLS:
                   name: tmp-dir
                 - mountPath: /sys/fs/cgroup
                   name: cgroup-root
-                - mountPath: /run/steadybit/runc
-                  name: runc-root
+                - mountPath: /run/steadybit/oci
+                  name: ociruntime-root
                 - mountPath: /etc/extension/certificates/client-cert-a
                   name: certificate-client-cert-a
                   readOnly: true
@@ -1146,7 +1245,7 @@ manifest should match snapshot with mutual TLS:
                 type: Directory
               name: cgroup-root
             - emptyDir: {}
-              name: runc-root
+              name: ociruntime-root
             - name: certificate-client-cert-a
               secret:
                 optional: false
@@ -1205,6 +1304,12 @@ manifest should match snapshot with mutual TLS using containerPaths:
                   value: /etc/tls/server.key
                 - name: STEADYBIT_EXTENSION_TLS_CLIENT_CAS
                   value: /etc/tls/ca.crt,/etc/tls/ca2.crt
+                - name: STEADYBIT_EXTENSION_OCIRUNTIME_DEBUG
+                  value: "false"
+                - name: STEADYBIT_EXTENSION_OCIRUNTIME_ROOT
+                  value: /run/steadybit/oci
+                - name: STEADYBIT_EXTENSION_OCIRUNTIME_PATH
+                  value: runc
                 - name: STEADYBIT_EXTENSION_HOSTNAME
                   valueFrom:
                     fieldRef:
@@ -1245,19 +1350,24 @@ manifest should match snapshot with mutual TLS using containerPaths:
               securityContext:
                 capabilities:
                   add:
+                    - NET_BIND_SERVICE
+                    - KILL
                     - SYS_ADMIN
                     - SYS_CHROOT
-                    - SYS_RESOURCE
-                    - SYS_BOOT
-                    - NET_RAW
-                    - SYS_TIME
                     - SYS_PTRACE
-                    - KILL
                     - NET_ADMIN
                     - DAC_OVERRIDE
                     - SETUID
                     - SETGID
                     - AUDIT_WRITE
+                    - SYS_BOOT
+                    - NET_RAW
+                    - SYS_TIME
+                    - SETPCAP
+                    - MKNOD
+                    - SYS_RESOURCE
+                  drop:
+                    - ALL
                 readOnlyRootFilesystem: true
                 seccompProfile:
                   type: Unconfined
@@ -1266,8 +1376,8 @@ manifest should match snapshot with mutual TLS using containerPaths:
                   name: tmp-dir
                 - mountPath: /sys/fs/cgroup
                   name: cgroup-root
-                - mountPath: /run/steadybit/runc
-                  name: runc-root
+                - mountPath: /run/steadybit/oci
+                  name: ociruntime-root
           dnsPolicy: ClusterFirstWithHostNet
           hostNetwork: true
           hostPID: true
@@ -1284,7 +1394,7 @@ manifest should match snapshot with mutual TLS using containerPaths:
                 type: Directory
               name: cgroup-root
             - emptyDir: {}
-              name: runc-root
+              name: ociruntime-root
       updateStrategy:
         rollingUpdate:
           maxUnavailable: 1
@@ -1329,6 +1439,12 @@ manifest should match snapshot with podSecurityContext:
                   value: INFO
                 - name: STEADYBIT_LOG_FORMAT
                   value: text
+                - name: STEADYBIT_EXTENSION_OCIRUNTIME_DEBUG
+                  value: "false"
+                - name: STEADYBIT_EXTENSION_OCIRUNTIME_ROOT
+                  value: /run/steadybit/oci
+                - name: STEADYBIT_EXTENSION_OCIRUNTIME_PATH
+                  value: runc
                 - name: STEADYBIT_EXTENSION_HOSTNAME
                   valueFrom:
                     fieldRef:
@@ -1369,19 +1485,24 @@ manifest should match snapshot with podSecurityContext:
               securityContext:
                 capabilities:
                   add:
+                    - NET_BIND_SERVICE
+                    - KILL
                     - SYS_ADMIN
                     - SYS_CHROOT
-                    - SYS_RESOURCE
-                    - SYS_BOOT
-                    - NET_RAW
-                    - SYS_TIME
                     - SYS_PTRACE
-                    - KILL
                     - NET_ADMIN
                     - DAC_OVERRIDE
                     - SETUID
                     - SETGID
                     - AUDIT_WRITE
+                    - SYS_BOOT
+                    - NET_RAW
+                    - SYS_TIME
+                    - SETPCAP
+                    - MKNOD
+                    - SYS_RESOURCE
+                  drop:
+                    - ALL
                 readOnlyRootFilesystem: true
                 seccompProfile:
                   type: Unconfined
@@ -1390,8 +1511,8 @@ manifest should match snapshot with podSecurityContext:
                   name: tmp-dir
                 - mountPath: /sys/fs/cgroup
                   name: cgroup-root
-                - mountPath: /run/steadybit/runc
-                  name: runc-root
+                - mountPath: /run/steadybit/oci
+                  name: ociruntime-root
           dnsPolicy: ClusterFirstWithHostNet
           hostNetwork: true
           hostPID: true
@@ -1409,7 +1530,7 @@ manifest should match snapshot with podSecurityContext:
                 type: Directory
               name: cgroup-root
             - emptyDir: {}
-              name: runc-root
+              name: ociruntime-root
       updateStrategy:
         rollingUpdate:
           maxUnavailable: 1
@@ -1454,6 +1575,12 @@ manifest should match snapshot with priority class:
                   value: INFO
                 - name: STEADYBIT_LOG_FORMAT
                   value: text
+                - name: STEADYBIT_EXTENSION_OCIRUNTIME_DEBUG
+                  value: "false"
+                - name: STEADYBIT_EXTENSION_OCIRUNTIME_ROOT
+                  value: /run/steadybit/oci
+                - name: STEADYBIT_EXTENSION_OCIRUNTIME_PATH
+                  value: runc
                 - name: STEADYBIT_EXTENSION_HOSTNAME
                   valueFrom:
                     fieldRef:
@@ -1494,19 +1621,24 @@ manifest should match snapshot with priority class:
               securityContext:
                 capabilities:
                   add:
+                    - NET_BIND_SERVICE
+                    - KILL
                     - SYS_ADMIN
                     - SYS_CHROOT
-                    - SYS_RESOURCE
-                    - SYS_BOOT
-                    - NET_RAW
-                    - SYS_TIME
                     - SYS_PTRACE
-                    - KILL
                     - NET_ADMIN
                     - DAC_OVERRIDE
                     - SETUID
                     - SETGID
                     - AUDIT_WRITE
+                    - SYS_BOOT
+                    - NET_RAW
+                    - SYS_TIME
+                    - SETPCAP
+                    - MKNOD
+                    - SYS_RESOURCE
+                  drop:
+                    - ALL
                 readOnlyRootFilesystem: true
                 seccompProfile:
                   type: Unconfined
@@ -1515,8 +1647,8 @@ manifest should match snapshot with priority class:
                   name: tmp-dir
                 - mountPath: /sys/fs/cgroup
                   name: cgroup-root
-                - mountPath: /run/steadybit/runc
-                  name: runc-root
+                - mountPath: /run/steadybit/oci
+                  name: ociruntime-root
           dnsPolicy: ClusterFirstWithHostNet
           hostNetwork: true
           hostPID: true
@@ -1534,7 +1666,7 @@ manifest should match snapshot with priority class:
                 type: Directory
               name: cgroup-root
             - emptyDir: {}
-              name: runc-root
+              name: ociruntime-root
       updateStrategy:
         rollingUpdate:
           maxUnavailable: 1
@@ -1579,6 +1711,12 @@ manifest should match snapshot with update strategy:
                   value: INFO
                 - name: STEADYBIT_LOG_FORMAT
                   value: text
+                - name: STEADYBIT_EXTENSION_OCIRUNTIME_DEBUG
+                  value: "false"
+                - name: STEADYBIT_EXTENSION_OCIRUNTIME_ROOT
+                  value: /run/steadybit/oci
+                - name: STEADYBIT_EXTENSION_OCIRUNTIME_PATH
+                  value: runc
                 - name: STEADYBIT_EXTENSION_HOSTNAME
                   valueFrom:
                     fieldRef:
@@ -1619,19 +1757,24 @@ manifest should match snapshot with update strategy:
               securityContext:
                 capabilities:
                   add:
+                    - NET_BIND_SERVICE
+                    - KILL
                     - SYS_ADMIN
                     - SYS_CHROOT
-                    - SYS_RESOURCE
-                    - SYS_BOOT
-                    - NET_RAW
-                    - SYS_TIME
                     - SYS_PTRACE
-                    - KILL
                     - NET_ADMIN
                     - DAC_OVERRIDE
                     - SETUID
                     - SETGID
                     - AUDIT_WRITE
+                    - SYS_BOOT
+                    - NET_RAW
+                    - SYS_TIME
+                    - SETPCAP
+                    - MKNOD
+                    - SYS_RESOURCE
+                  drop:
+                    - ALL
                 readOnlyRootFilesystem: true
                 seccompProfile:
                   type: Unconfined
@@ -1640,8 +1783,8 @@ manifest should match snapshot with update strategy:
                   name: tmp-dir
                 - mountPath: /sys/fs/cgroup
                   name: cgroup-root
-                - mountPath: /run/steadybit/runc
-                  name: runc-root
+                - mountPath: /run/steadybit/oci
+                  name: ociruntime-root
           dnsPolicy: ClusterFirstWithHostNet
           hostNetwork: true
           hostPID: true
@@ -1658,7 +1801,7 @@ manifest should match snapshot with update strategy:
                 type: Directory
               name: cgroup-root
             - emptyDir: {}
-              name: runc-root
+              name: ociruntime-root
       updateStrategy:
         rollingUpdate:
           maxUnavailable: 5
@@ -1703,6 +1846,12 @@ manifest should match snapshot without TLS:
                   value: INFO
                 - name: STEADYBIT_LOG_FORMAT
                   value: text
+                - name: STEADYBIT_EXTENSION_OCIRUNTIME_DEBUG
+                  value: "false"
+                - name: STEADYBIT_EXTENSION_OCIRUNTIME_ROOT
+                  value: /run/steadybit/oci
+                - name: STEADYBIT_EXTENSION_OCIRUNTIME_PATH
+                  value: runc
                 - name: STEADYBIT_EXTENSION_HOSTNAME
                   valueFrom:
                     fieldRef:
@@ -1743,19 +1892,24 @@ manifest should match snapshot without TLS:
               securityContext:
                 capabilities:
                   add:
+                    - NET_BIND_SERVICE
+                    - KILL
                     - SYS_ADMIN
                     - SYS_CHROOT
-                    - SYS_RESOURCE
-                    - SYS_BOOT
-                    - NET_RAW
-                    - SYS_TIME
                     - SYS_PTRACE
-                    - KILL
                     - NET_ADMIN
                     - DAC_OVERRIDE
                     - SETUID
                     - SETGID
                     - AUDIT_WRITE
+                    - SYS_BOOT
+                    - NET_RAW
+                    - SYS_TIME
+                    - SETPCAP
+                    - MKNOD
+                    - SYS_RESOURCE
+                  drop:
+                    - ALL
                 readOnlyRootFilesystem: true
                 seccompProfile:
                   type: Unconfined
@@ -1764,8 +1918,8 @@ manifest should match snapshot without TLS:
                   name: tmp-dir
                 - mountPath: /sys/fs/cgroup
                   name: cgroup-root
-                - mountPath: /run/steadybit/runc
-                  name: runc-root
+                - mountPath: /run/steadybit/oci
+                  name: ociruntime-root
           dnsPolicy: ClusterFirstWithHostNet
           hostNetwork: true
           hostPID: true
@@ -1782,7 +1936,7 @@ manifest should match snapshot without TLS:
                 type: Directory
               name: cgroup-root
             - emptyDir: {}
-              name: runc-root
+              name: ociruntime-root
       updateStrategy:
         rollingUpdate:
           maxUnavailable: 1

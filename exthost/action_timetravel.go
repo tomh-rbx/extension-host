@@ -6,21 +6,20 @@ package exthost
 
 import (
 	"context"
-	"github.com/steadybit/action-kit/go/action_kit_commons/network"
-	"github.com/steadybit/extension-host/config"
-	"time"
-
 	"github.com/rs/zerolog/log"
 	"github.com/steadybit/action-kit/go/action_kit_api/v2"
-	"github.com/steadybit/action-kit/go/action_kit_commons/runc"
+	"github.com/steadybit/action-kit/go/action_kit_commons/network"
+	"github.com/steadybit/action-kit/go/action_kit_commons/ociruntime"
 	"github.com/steadybit/action-kit/go/action_kit_sdk"
+	"github.com/steadybit/extension-host/config"
 	"github.com/steadybit/extension-host/exthost/timetravel"
 	"github.com/steadybit/extension-kit/extbuild"
 	"github.com/steadybit/extension-kit/extutil"
+	"time"
 )
 
 type timeTravelAction struct {
-	runc runc.Runc
+	runc ociruntime.OciRuntime
 }
 
 type TimeTravelActionState struct {
@@ -35,7 +34,7 @@ var (
 	_ action_kit_sdk.ActionWithStop[TimeTravelActionState] = (*timeTravelAction)(nil) // Optional, needed when the action needs a stop method
 )
 
-func NewTimetravelAction(r runc.Runc) action_kit_sdk.Action[TimeTravelActionState] {
+func NewTimetravelAction(r ociruntime.OciRuntime) action_kit_sdk.Action[TimeTravelActionState] {
 	return &timeTravelAction{runc: r}
 }
 
@@ -202,7 +201,7 @@ func (a *timeTravelAction) runner(ctx context.Context) (network.CommandRunner, e
 		return network.NewProcessRunner(), nil
 	}
 
-	initProcess, err := runc.ReadLinuxProcessInfo(ctx, 1)
+	initProcess, err := ociruntime.ReadLinuxProcessInfo(ctx, 1)
 	if err != nil {
 		return nil, err
 	}

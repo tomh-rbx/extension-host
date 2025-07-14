@@ -7,18 +7,17 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
-
 	"github.com/steadybit/action-kit/go/action_kit_api/v2"
 	"github.com/steadybit/action-kit/go/action_kit_commons/network"
-	"github.com/steadybit/action-kit/go/action_kit_commons/runc"
+	"github.com/steadybit/action-kit/go/action_kit_commons/ociruntime"
 	"github.com/steadybit/action-kit/go/action_kit_sdk"
 	"github.com/steadybit/extension-kit/extbuild"
 	"github.com/steadybit/extension-kit/extutil"
 )
 
-func NewNetworkCorruptPackagesContainerAction(r runc.Runc) action_kit_sdk.Action[NetworkActionState] {
+func NewNetworkCorruptPackagesContainerAction(r ociruntime.OciRuntime) action_kit_sdk.Action[NetworkActionState] {
 	return &networkAction{
-		runc:         r,
+		ociRuntime:   r,
 		optsProvider: corruptPackages(r),
 		optsDecoder:  corruptPackagesDecode,
 		description:  getNetworkCorruptPackagesDescription(),
@@ -65,7 +64,7 @@ func getNetworkCorruptPackagesDescription() action_kit_api.ActionDescription {
 	}
 }
 
-func corruptPackages(r runc.Runc) networkOptsProvider {
+func corruptPackages(r ociruntime.OciRuntime) networkOptsProvider {
 	return func(ctx context.Context, sidecar network.SidecarOpts, request action_kit_api.PrepareActionRequestBody) (network.Opts, action_kit_api.Messages, error) {
 		_, err := CheckTargetHostname(request.Target.Attributes)
 		if err != nil {
