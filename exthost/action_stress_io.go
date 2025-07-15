@@ -1,6 +1,4 @@
-/*
- * Copyright 2023 steadybit GmbH. All rights reserved.
- */
+// Copyright 2025 steadybit GmbH. All rights reserved.
 
 package exthost
 
@@ -152,7 +150,7 @@ func stressIo(request action_kit_api.PrepareActionRequestBody) (stress.Opts, err
 	}
 
 	if mode == string(ModeReadWriteAndFlush) || mode == string(ModeFlush) {
-		opts.IoWorkers = &workers
+		opts.IomixWorkers = &workers
 	}
 
 	return opts, nil
