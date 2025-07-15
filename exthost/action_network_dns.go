@@ -8,15 +8,15 @@ import (
 	"fmt"
 	"github.com/steadybit/action-kit/go/action_kit_api/v2"
 	"github.com/steadybit/action-kit/go/action_kit_commons/network"
-	"github.com/steadybit/action-kit/go/action_kit_commons/runc"
+	"github.com/steadybit/action-kit/go/action_kit_commons/ociruntime"
 	"github.com/steadybit/action-kit/go/action_kit_sdk"
 	"github.com/steadybit/extension-kit/extbuild"
 	"github.com/steadybit/extension-kit/extutil"
 )
 
-func NewNetworkBlockDnsContainerAction(r runc.Runc) action_kit_sdk.Action[NetworkActionState] {
+func NewNetworkBlockDnsContainerAction(r ociruntime.OciRuntime) action_kit_sdk.Action[NetworkActionState] {
 	return &networkAction{
-		runc:         r,
+		ociRuntime:   r,
 		optsProvider: blockDns(),
 		optsDecoder:  blackholeDecode,
 		description:  getNetworkBlockDnsDescription(),

@@ -7,19 +7,18 @@ package exthost
 import (
 	"errors"
 	"fmt"
-	"math"
-	"time"
-
 	"github.com/elastic/go-sysinfo"
 	"github.com/steadybit/action-kit/go/action_kit_api/v2"
-	"github.com/steadybit/action-kit/go/action_kit_commons/runc"
+	"github.com/steadybit/action-kit/go/action_kit_commons/ociruntime"
 	"github.com/steadybit/action-kit/go/action_kit_commons/stress"
 	"github.com/steadybit/action-kit/go/action_kit_sdk"
 	"github.com/steadybit/extension-kit/extbuild"
 	"github.com/steadybit/extension-kit/extutil"
+	"math"
+	"time"
 )
 
-func NewStressMemoryAction(r runc.Runc) action_kit_sdk.Action[StressActionState] {
+func NewStressMemoryAction(r ociruntime.OciRuntime) action_kit_sdk.Action[StressActionState] {
 	return newStressAction(r, getStressMemoryDescription, stressMemory)
 }
 

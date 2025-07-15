@@ -6,14 +6,13 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	"github.com/opencontainers/runtime-spec/specs-go"
-	"github.com/steadybit/extension-host/config"
-
 	"github.com/google/uuid"
+	"github.com/opencontainers/runtime-spec/specs-go"
 	"github.com/steadybit/action-kit/go/action_kit_api/v2"
 	"github.com/steadybit/action-kit/go/action_kit_commons/diskfill"
-	"github.com/steadybit/action-kit/go/action_kit_commons/runc"
+	"github.com/steadybit/action-kit/go/action_kit_commons/ociruntime"
 	"github.com/steadybit/action-kit/go/action_kit_sdk"
+	"github.com/steadybit/extension-host/config"
 	extension_kit "github.com/steadybit/extension-kit"
 	"github.com/steadybit/extension-kit/extbuild"
 	"github.com/steadybit/extension-kit/extutil"
@@ -23,8 +22,8 @@ import (
 var ID = fmt.Sprintf("%s.fill_disk", BaseActionID)
 
 type fillDiskAction struct {
-	runc      runc.Runc
-	diskfills syncmap.Map
+	ociRuntime ociruntime.OciRuntime
+	diskfills  syncmap.Map
 }
 
 type FillDiskActionState struct {
@@ -38,9 +37,9 @@ var _ action_kit_sdk.Action[FillDiskActionState] = (*fillDiskAction)(nil)
 var _ action_kit_sdk.ActionWithStop[FillDiskActionState] = (*fillDiskAction)(nil)
 var _ action_kit_sdk.ActionWithStatus[FillDiskActionState] = (*fillDiskAction)(nil)
 
-func NewFillDiskHostAction(r runc.Runc) action_kit_sdk.Action[FillDiskActionState] {
+func NewFillDiskHostAction(r ociruntime.OciRuntime) action_kit_sdk.Action[FillDiskActionState] {
 	return &fillDiskAction{
-		runc: r,
+		ociRuntime: r,
 	}
 }
 
@@ -190,7 +189,7 @@ func (a *fillDiskAction) Prepare(ctx context.Context, state *FillDiskActionState
 		return nil, err
 	}
 
-	initProcess, err := runc.ReadLinuxProcessInfo(ctx, 1, specs.PIDNamespace)
+	initProcess, err := ociruntime.ReadLinuxProcessInfo(ctx, 1, specs.PIDNamespace)
 	if err != nil {
 		return nil, extension_kit.ToError("Failed to prepare fill disk settings.", err)
 	}
@@ -210,7 +209,7 @@ func (a *fillDiskAction) diskfill(ctx context.Context, sidecar diskfill.SidecarO
 		return diskfill.NewDiskfillProcess(ctx, opts)
 	}
 
-	return diskfill.NewDiskfillRunc(ctx, a.runc, sidecar, opts)
+	return diskfill.NewDiskfillRunc(ctx, a.ociRuntime, sidecar, opts)
 }
 
 func (a *fillDiskAction) Start(ctx context.Context, state *FillDiskActionState) (*action_kit_api.StartResult, error) {

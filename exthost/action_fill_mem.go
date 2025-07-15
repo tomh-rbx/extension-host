@@ -6,30 +6,29 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	"github.com/opencontainers/runtime-spec/specs-go"
-	"os/exec"
-	"time"
-
 	"github.com/google/uuid"
+	"github.com/opencontainers/runtime-spec/specs-go"
 	"github.com/steadybit/action-kit/go/action_kit_api/v2"
 	"github.com/steadybit/action-kit/go/action_kit_commons/memfill"
-	"github.com/steadybit/action-kit/go/action_kit_commons/runc"
+	"github.com/steadybit/action-kit/go/action_kit_commons/ociruntime"
 	"github.com/steadybit/action-kit/go/action_kit_sdk"
 	"github.com/steadybit/extension-host/config"
 	extension_kit "github.com/steadybit/extension-kit"
 	"github.com/steadybit/extension-kit/extbuild"
 	"github.com/steadybit/extension-kit/extutil"
 	"golang.org/x/sync/syncmap"
+	"os/exec"
+	"time"
 )
 
 type fillMemoryAction struct {
-	runc     runc.Runc
-	memfills syncmap.Map
+	ociRuntime ociruntime.OciRuntime
+	memfills   syncmap.Map
 }
 
 type FillMemoryActionState struct {
 	ExecutionId     uuid.UUID
-	TargetProcess   runc.LinuxProcessInfo
+	TargetProcess   ociruntime.LinuxProcessInfo
 	FillMemoryOpts  memfill.Opts
 	IgnoreExitCodes []int
 }
@@ -39,9 +38,9 @@ var _ action_kit_sdk.Action[FillMemoryActionState] = (*fillMemoryAction)(nil)
 var _ action_kit_sdk.ActionWithStop[FillMemoryActionState] = (*fillMemoryAction)(nil)
 var _ action_kit_sdk.ActionWithStatus[FillMemoryActionState] = (*fillMemoryAction)(nil)
 
-func NewFillMemoryHostAction(r runc.Runc) action_kit_sdk.Action[FillMemoryActionState] {
+func NewFillMemoryHostAction(r ociruntime.OciRuntime) action_kit_sdk.Action[FillMemoryActionState] {
 	return &fillMemoryAction{
-		runc: r,
+		ociRuntime: r,
 	}
 }
 
@@ -155,7 +154,7 @@ func (a *fillMemoryAction) Prepare(ctx context.Context, state *FillMemoryActionS
 		return nil, err
 	}
 
-	initProcess, err := runc.ReadLinuxProcessInfo(ctx, 1, specs.PIDNamespace)
+	initProcess, err := ociruntime.ReadLinuxProcessInfo(ctx, 1, specs.PIDNamespace)
 	if err != nil {
 		return nil, extension_kit.ToError("Failed to prepare fill memory settings.", err)
 	}
@@ -170,7 +169,7 @@ func (a *fillMemoryAction) Prepare(ctx context.Context, state *FillMemoryActionS
 	return nil, nil
 }
 
-func (a *fillMemoryAction) memfill(targetProcess runc.LinuxProcessInfo, opts memfill.Opts) (memfill.Memfill, error) {
+func (a *fillMemoryAction) memfill(targetProcess ociruntime.LinuxProcessInfo, opts memfill.Opts) (memfill.Memfill, error) {
 	if config.Config.DisableRunc {
 		return memfill.NewMemfillProcess(targetProcess, opts)
 	}

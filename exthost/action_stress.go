@@ -11,7 +11,7 @@ import (
 	"github.com/opencontainers/runtime-spec/specs-go"
 	"github.com/rs/zerolog/log"
 	"github.com/steadybit/action-kit/go/action_kit_api/v2"
-	"github.com/steadybit/action-kit/go/action_kit_commons/runc"
+	"github.com/steadybit/action-kit/go/action_kit_commons/ociruntime"
 	"github.com/steadybit/action-kit/go/action_kit_commons/stress"
 	"github.com/steadybit/action-kit/go/action_kit_commons/utils"
 	"github.com/steadybit/action-kit/go/action_kit_sdk"
@@ -28,7 +28,7 @@ import (
 type stressOptsProvider func(request action_kit_api.PrepareActionRequestBody) (stress.Opts, error)
 
 type stressAction struct {
-	runc         runc.Runc
+	ociRuntime   ociruntime.OciRuntime
 	description  action_kit_api.ActionDescription
 	optsProvider stressOptsProvider
 	stresses     syncmap.Map
@@ -49,14 +49,14 @@ var (
 )
 
 func newStressAction(
-	runc runc.Runc,
+	runc ociruntime.OciRuntime,
 	description func() action_kit_api.ActionDescription,
 	optsProvider stressOptsProvider,
 ) action_kit_sdk.Action[StressActionState] {
 	return &stressAction{
 		description:  description(),
 		optsProvider: optsProvider,
-		runc:         runc,
+		ociRuntime:   runc,
 		stresses:     syncmap.Map{},
 	}
 }
@@ -94,7 +94,7 @@ func (a *stressAction) Prepare(ctx context.Context, state *StressActionState, re
 		return nil, err
 	}
 
-	initProcess, err := runc.ReadLinuxProcessInfo(ctx, 1, specs.PIDNamespace, specs.CgroupNamespace)
+	initProcess, err := ociruntime.ReadLinuxProcessInfo(ctx, 1, specs.PIDNamespace, specs.CgroupNamespace)
 	if err != nil {
 		return nil, extension_kit.ToError("Failed to prepare stress settings.", err)
 	}
@@ -132,7 +132,7 @@ func (a *stressAction) stress(ctx context.Context, sidecar stress.SidecarOpts, o
 		return stress.NewStressProcess(opts)
 	}
 
-	return stress.NewStressRunc(ctx, a.runc, sidecar, opts)
+	return stress.NewStressRunc(ctx, a.ociRuntime, sidecar, opts)
 }
 
 func (a *stressAction) Start(ctx context.Context, state *StressActionState) (*action_kit_api.StartResult, error) {

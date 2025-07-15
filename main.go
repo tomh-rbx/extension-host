@@ -9,7 +9,7 @@ import (
 	"github.com/rs/zerolog"
 	"github.com/rs/zerolog/log"
 	"github.com/steadybit/action-kit/go/action_kit_api/v2"
-	"github.com/steadybit/action-kit/go/action_kit_commons/runc"
+	"github.com/steadybit/action-kit/go/action_kit_commons/ociruntime"
 	"github.com/steadybit/action-kit/go/action_kit_sdk"
 	"github.com/steadybit/discovery-kit/go/discovery_kit_api"
 	"github.com/steadybit/discovery-kit/go/discovery_kit_sdk"
@@ -56,8 +56,8 @@ func main() {
 	// by the Steadybit agent to obtain the extension's capabilities.
 	exthttp.RegisterHttpHandler("/", exthttp.GetterAsHandler(getExtensionList))
 
-	r := runc.NewRunc(runc.ConfigFromEnvironment())
-	log.Info().Interface("cfg", runc.ConfigFromEnvironment())
+	r := ociruntime.NewOciRuntimeWithCrunForSidecars(ociruntime.ConfigFromEnvironment())
+	log.Info().Interface("cfg", ociruntime.ConfigFromEnvironment())
 
 	// This is a section you will most likely want to change: The registration of HTTP handlers
 	// for your extension. You might want to change these because the names do not fit, or because

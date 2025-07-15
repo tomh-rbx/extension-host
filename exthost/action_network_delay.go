@@ -7,19 +7,18 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
-	"time"
-
 	"github.com/steadybit/action-kit/go/action_kit_api/v2"
 	"github.com/steadybit/action-kit/go/action_kit_commons/network"
-	"github.com/steadybit/action-kit/go/action_kit_commons/runc"
+	"github.com/steadybit/action-kit/go/action_kit_commons/ociruntime"
 	"github.com/steadybit/action-kit/go/action_kit_sdk"
 	"github.com/steadybit/extension-kit/extbuild"
 	"github.com/steadybit/extension-kit/extutil"
+	"time"
 )
 
-func NewNetworkDelayContainerAction(r runc.Runc) action_kit_sdk.Action[NetworkActionState] {
+func NewNetworkDelayContainerAction(r ociruntime.OciRuntime) action_kit_sdk.Action[NetworkActionState] {
 	return &networkAction{
-		runc:         r,
+		ociRuntime:   r,
 		optsProvider: delay(r),
 		optsDecoder:  delayDecode,
 		description:  getNetworkDelayDescription(),
@@ -75,7 +74,7 @@ func getNetworkDelayDescription() action_kit_api.ActionDescription {
 	}
 }
 
-func delay(r runc.Runc) networkOptsProvider {
+func delay(r ociruntime.OciRuntime) networkOptsProvider {
 	return func(ctx context.Context, sidecar network.SidecarOpts, request action_kit_api.PrepareActionRequestBody) (network.Opts, action_kit_api.Messages, error) {
 		_, err := CheckTargetHostname(request.Target.Attributes)
 		if err != nil {
