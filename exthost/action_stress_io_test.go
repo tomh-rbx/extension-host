@@ -1,3 +1,5 @@
+// Copyright 2025 steadybit GmbH. All rights reserved.
+
 package exthost
 
 import (
@@ -36,7 +38,7 @@ func TestActionIO_Prepare(t *testing.T) {
 				}),
 			},
 
-			wantedArgs: []string{"--timeout", "1", "--hdd", "1", "--hdd-bytes", "768m", "--io", "1", "--temp-path", "/tmp", "-v"},
+			wantedArgs: []string{"--timeout", "1", "--hdd", "1", "--hdd-bytes", "768m", "--iomix", "1", "--temp-path", "/tmp", "-v"},
 		},
 		{
 			name: "Should return config (flush only)",
@@ -56,7 +58,7 @@ func TestActionIO_Prepare(t *testing.T) {
 				}),
 			},
 
-			wantedArgs: []string{"--timeout", "1", "--io", "1", "--temp-path", "/tmp", "-v"},
+			wantedArgs: []string{"--timeout", "1", "--iomix", "1", "--temp-path", "/tmp", "-v"},
 		},
 		{
 			name: "Should return config (read_write only)",
