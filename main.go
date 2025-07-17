@@ -1,13 +1,10 @@
-/*
- * Copyright 2023 steadybit GmbH. All rights reserved.
- */
+// Copyright 2025 steadybit GmbH. All rights reserved.
 
 package main
 
 import (
 	_ "github.com/KimMachineGun/automemlimit" // By default, it sets `GOMEMLIMIT` to 90% of cgroup's memory limit.
 	"github.com/rs/zerolog"
-	"github.com/rs/zerolog/log"
 	"github.com/steadybit/action-kit/go/action_kit_api/v2"
 	"github.com/steadybit/action-kit/go/action_kit_commons/ociruntime"
 	"github.com/steadybit/action-kit/go/action_kit_sdk"
@@ -57,7 +54,6 @@ func main() {
 	exthttp.RegisterHttpHandler("/", exthttp.GetterAsHandler(getExtensionList))
 
 	r := ociruntime.NewOciRuntimeWithCrunForSidecars(ociruntime.ConfigFromEnvironment())
-	log.Info().Interface("cfg", ociruntime.ConfigFromEnvironment())
 
 	// This is a section you will most likely want to change: The registration of HTTP handlers
 	// for your extension. You might want to change these because the names do not fit, or because
