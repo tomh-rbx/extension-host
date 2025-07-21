@@ -1,5 +1,10 @@
 # Changelog
 
+## v1.4.0
+
+ - run steadybit sidecar containers using crun
+ - use stressng --iomix (instead of --io) to stress io
+
 ## v1.3.2
 
 - If stress/diskfill/memfill exits unexpetedly report this as error and not as failure
