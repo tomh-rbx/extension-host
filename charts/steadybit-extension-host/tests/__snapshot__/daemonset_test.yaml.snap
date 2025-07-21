@@ -43,7 +43,7 @@ manifest should match snapshot using podAnnotations, podLabels and resources:
                 - name: STEADYBIT_EXTENSION_OCIRUNTIME_DEBUG
                   value: "false"
                 - name: STEADYBIT_EXTENSION_OCIRUNTIME_ROOT
-                  value: /run/steadybit/oci
+                  value: /run/steadybit/runc
                 - name: STEADYBIT_EXTENSION_OCIRUNTIME_PATH
                   value: runc
                 - name: STEADYBIT_EXTENSION_HOSTNAME
@@ -180,7 +180,7 @@ manifest should match snapshot with Steadybit-Extension-host env var:
                 - name: STEADYBIT_EXTENSION_OCIRUNTIME_DEBUG
                   value: "false"
                 - name: STEADYBIT_EXTENSION_OCIRUNTIME_ROOT
-                  value: /run/steadybit/oci
+                  value: /run/steadybit/runc
                 - name: STEADYBIT_EXTENSION_OCIRUNTIME_PATH
                   value: runc
                 - name: STEADYBIT_EXTENSION_HOSTNAME
@@ -319,7 +319,7 @@ manifest should match snapshot with TLS:
                 - name: STEADYBIT_EXTENSION_OCIRUNTIME_DEBUG
                   value: "false"
                 - name: STEADYBIT_EXTENSION_OCIRUNTIME_ROOT
-                  value: /run/steadybit/oci
+                  value: /run/steadybit/runc
                 - name: STEADYBIT_EXTENSION_OCIRUNTIME_PATH
                   value: runc
                 - name: STEADYBIT_EXTENSION_HOSTNAME
@@ -460,7 +460,7 @@ manifest should match snapshot with appArmorProfile for k8s >= 1.30:
                 - name: STEADYBIT_EXTENSION_OCIRUNTIME_DEBUG
                   value: "false"
                 - name: STEADYBIT_EXTENSION_OCIRUNTIME_ROOT
-                  value: /run/steadybit/oci
+                  value: /run/steadybit/runc
                 - name: STEADYBIT_EXTENSION_OCIRUNTIME_PATH
                   value: runc
                 - name: STEADYBIT_EXTENSION_HOSTNAME
@@ -597,7 +597,7 @@ manifest should match snapshot with different containerPorts:
                 - name: STEADYBIT_EXTENSION_OCIRUNTIME_DEBUG
                   value: "false"
                 - name: STEADYBIT_EXTENSION_OCIRUNTIME_ROOT
-                  value: /run/steadybit/oci
+                  value: /run/steadybit/runc
                 - name: STEADYBIT_EXTENSION_OCIRUNTIME_PATH
                   value: runc
                 - name: STEADYBIT_EXTENSION_HOSTNAME
@@ -734,7 +734,7 @@ manifest should match snapshot with extra env vars:
                 - name: STEADYBIT_EXTENSION_OCIRUNTIME_DEBUG
                   value: "false"
                 - name: STEADYBIT_EXTENSION_OCIRUNTIME_ROOT
-                  value: /run/steadybit/oci
+                  value: /run/steadybit/runc
                 - name: STEADYBIT_EXTENSION_OCIRUNTIME_PATH
                   value: runc
                 - name: STEADYBIT_EXTENSION_HOSTNAME
@@ -876,7 +876,7 @@ manifest should match snapshot with extra labels:
                 - name: STEADYBIT_EXTENSION_OCIRUNTIME_DEBUG
                   value: "false"
                 - name: STEADYBIT_EXTENSION_OCIRUNTIME_ROOT
-                  value: /run/steadybit/oci
+                  value: /run/steadybit/runc
                 - name: STEADYBIT_EXTENSION_OCIRUNTIME_PATH
                   value: runc
                 - name: STEADYBIT_EXTENSION_HOSTNAME
@@ -1011,7 +1011,7 @@ manifest should match snapshot with hostnameFromKubernetes enabled:
                 - name: STEADYBIT_EXTENSION_OCIRUNTIME_DEBUG
                   value: "false"
                 - name: STEADYBIT_EXTENSION_OCIRUNTIME_ROOT
-                  value: /run/steadybit/oci
+                  value: /run/steadybit/runc
                 - name: STEADYBIT_EXTENSION_OCIRUNTIME_PATH
                   value: runc
                 - name: STEADYBIT_EXTENSION_HOSTNAME
@@ -1152,7 +1152,7 @@ manifest should match snapshot with mutual TLS:
                 - name: STEADYBIT_EXTENSION_OCIRUNTIME_DEBUG
                   value: "false"
                 - name: STEADYBIT_EXTENSION_OCIRUNTIME_ROOT
-                  value: /run/steadybit/oci
+                  value: /run/steadybit/runc
                 - name: STEADYBIT_EXTENSION_OCIRUNTIME_PATH
                   value: runc
                 - name: STEADYBIT_EXTENSION_HOSTNAME
@@ -1307,7 +1307,7 @@ manifest should match snapshot with mutual TLS using containerPaths:
                 - name: STEADYBIT_EXTENSION_OCIRUNTIME_DEBUG
                   value: "false"
                 - name: STEADYBIT_EXTENSION_OCIRUNTIME_ROOT
-                  value: /run/steadybit/oci
+                  value: /run/steadybit/runc
                 - name: STEADYBIT_EXTENSION_OCIRUNTIME_PATH
                   value: runc
                 - name: STEADYBIT_EXTENSION_HOSTNAME
@@ -1442,7 +1442,7 @@ manifest should match snapshot with podSecurityContext:
                 - name: STEADYBIT_EXTENSION_OCIRUNTIME_DEBUG
                   value: "false"
                 - name: STEADYBIT_EXTENSION_OCIRUNTIME_ROOT
-                  value: /run/steadybit/oci
+                  value: /run/steadybit/runc
                 - name: STEADYBIT_EXTENSION_OCIRUNTIME_PATH
                   value: runc
                 - name: STEADYBIT_EXTENSION_HOSTNAME
@@ -1578,7 +1578,7 @@ manifest should match snapshot with priority class:
                 - name: STEADYBIT_EXTENSION_OCIRUNTIME_DEBUG
                   value: "false"
                 - name: STEADYBIT_EXTENSION_OCIRUNTIME_ROOT
-                  value: /run/steadybit/oci
+                  value: /run/steadybit/runc
                 - name: STEADYBIT_EXTENSION_OCIRUNTIME_PATH
                   value: runc
                 - name: STEADYBIT_EXTENSION_HOSTNAME
@@ -1714,7 +1714,7 @@ manifest should match snapshot with update strategy:
                 - name: STEADYBIT_EXTENSION_OCIRUNTIME_DEBUG
                   value: "false"
                 - name: STEADYBIT_EXTENSION_OCIRUNTIME_ROOT
-                  value: /run/steadybit/oci
+                  value: /run/steadybit/runc
                 - name: STEADYBIT_EXTENSION_OCIRUNTIME_PATH
                   value: runc
                 - name: STEADYBIT_EXTENSION_HOSTNAME
@@ -1849,7 +1849,7 @@ manifest should match snapshot without TLS:
                 - name: STEADYBIT_EXTENSION_OCIRUNTIME_DEBUG
                   value: "false"
                 - name: STEADYBIT_EXTENSION_OCIRUNTIME_ROOT
-                  value: /run/steadybit/oci
+                  value: /run/steadybit/runc
                 - name: STEADYBIT_EXTENSION_OCIRUNTIME_PATH
                   value: runc
                 - name: STEADYBIT_EXTENSION_HOSTNAME
