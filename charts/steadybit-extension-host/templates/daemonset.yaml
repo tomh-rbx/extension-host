@@ -83,7 +83,7 @@ spec:
             - name: STEADYBIT_EXTENSION_OCIRUNTIME_DEBUG
               value: {{ .Values.ociRuntime.debug | quote }}
             - name: STEADYBIT_EXTENSION_OCIRUNTIME_ROOT
-              value: /run/steadybit/runc
+              value: /run/steadybit/oci
             - name: STEADYBIT_EXTENSION_OCIRUNTIME_PATH
               value: {{ .Values.ociRuntime.path }}
             {{- if .Values.discovery.hostnameFromKubernetes }}
