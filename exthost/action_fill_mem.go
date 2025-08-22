@@ -1,5 +1,4 @@
-// SPDX-License-Identifier: MIT
-// SPDX-FileCopyrightText: 2023 Steadybit GmbH
+// Copyright 2025 steadybit GmbH. All rights reserved.
 
 package exthost
 
@@ -8,12 +7,13 @@ import (
 	"errors"
 	"fmt"
 	"github.com/google/uuid"
+	"github.com/opencontainers/runtime-spec/specs-go"
 	"github.com/steadybit/action-kit/go/action_kit_api/v2"
 	"github.com/steadybit/action-kit/go/action_kit_commons/memfill"
-	"github.com/steadybit/action-kit/go/action_kit_commons/runc"
+	"github.com/steadybit/action-kit/go/action_kit_commons/ociruntime"
 	"github.com/steadybit/action-kit/go/action_kit_sdk"
 	"github.com/steadybit/extension-host/config"
-	"github.com/steadybit/extension-kit"
+	extension_kit "github.com/steadybit/extension-kit"
 	"github.com/steadybit/extension-kit/extbuild"
 	"github.com/steadybit/extension-kit/extutil"
 	"golang.org/x/sync/syncmap"
@@ -22,13 +22,13 @@ import (
 )
 
 type fillMemoryAction struct {
-	runc     runc.Runc
-	memfills syncmap.Map
+	ociRuntime ociruntime.OciRuntime
+	memfills   syncmap.Map
 }
 
 type FillMemoryActionState struct {
 	ExecutionId     uuid.UUID
-	TargetProcess   runc.LinuxProcessInfo
+	TargetProcess   ociruntime.LinuxProcessInfo
 	FillMemoryOpts  memfill.Opts
 	IgnoreExitCodes []int
 }
@@ -38,9 +38,9 @@ var _ action_kit_sdk.Action[FillMemoryActionState] = (*fillMemoryAction)(nil)
 var _ action_kit_sdk.ActionWithStop[FillMemoryActionState] = (*fillMemoryAction)(nil)
 var _ action_kit_sdk.ActionWithStatus[FillMemoryActionState] = (*fillMemoryAction)(nil)
 
-func NewFillMemoryHostAction(r runc.Runc) action_kit_sdk.Action[FillMemoryActionState] {
+func NewFillMemoryHostAction(r ociruntime.OciRuntime) action_kit_sdk.Action[FillMemoryActionState] {
 	return &fillMemoryAction{
-		runc: r,
+		ociRuntime: r,
 	}
 }
 
@@ -59,7 +59,7 @@ func (a *fillMemoryAction) Describe() action_kit_api.ActionDescription {
 			TargetType:         targetID,
 			SelectionTemplates: &targetSelectionTemplates,
 		},
-		Technology:  extutil.Ptr("Host"),
+		Technology:  extutil.Ptr("Linux Host"),
 		Category:    extutil.Ptr("Resource"),
 		Kind:        action_kit_api.Attack,
 		TimeControl: action_kit_api.TimeControlExternal,
@@ -68,7 +68,7 @@ func (a *fillMemoryAction) Describe() action_kit_api.ActionDescription {
 				Name:         "duration",
 				Label:        "Duration",
 				Description:  extutil.Ptr("How long should the memory be filled?"),
-				Type:         action_kit_api.Duration,
+				Type:         action_kit_api.ActionParameterTypeDuration,
 				DefaultValue: extutil.Ptr("30s"),
 				Required:     extutil.Ptr(true),
 				Order:        extutil.Ptr(1),
@@ -76,8 +76,8 @@ func (a *fillMemoryAction) Describe() action_kit_api.ActionDescription {
 			{
 				Name:         "mode",
 				Label:        "Mode",
-				Description:  extutil.Ptr("How would you like to specify the amount of data to be filled?"),
-				Type:         action_kit_api.String,
+				Description:  extutil.Ptr("*Fill and meet specified usage:* Fill up the memory until the desired usage is met. Memory allocation will be adjusted constantly to meet the target.\n\n*Fill the specified amount:* Allocate and hold the specified amount of Memory."),
+				Type:         action_kit_api.ActionParameterTypeString,
 				DefaultValue: extutil.Ptr(string(memfill.ModeUsage)),
 				Required:     extutil.Ptr(true),
 				Order:        extutil.Ptr(2),
@@ -95,9 +95,9 @@ func (a *fillMemoryAction) Describe() action_kit_api.ActionDescription {
 			{
 				Name:         "size",
 				Label:        "Size",
-				Description:  extutil.Ptr("Depending on the unit, specify the percentage or the number of Megabytes to fill."),
-				Type:         action_kit_api.Integer,
-				DefaultValue: extutil.Ptr("100"),
+				Description:  extutil.Ptr("Percentage of total memory or Megabytes."),
+				Type:         action_kit_api.ActionParameterTypeInteger,
+				DefaultValue: extutil.Ptr("80"),
 				Required:     extutil.Ptr(true),
 				Order:        extutil.Ptr(3),
 			},
@@ -105,7 +105,7 @@ func (a *fillMemoryAction) Describe() action_kit_api.ActionDescription {
 				Name:         "unit",
 				Label:        "Unit",
 				Description:  extutil.Ptr("Unit for the size parameter."),
-				Type:         action_kit_api.String,
+				Type:         action_kit_api.ActionParameterTypeString,
 				DefaultValue: extutil.Ptr(string(memfill.UnitPercent)),
 				Required:     extutil.Ptr(true),
 				Order:        extutil.Ptr(4),
@@ -124,7 +124,7 @@ func (a *fillMemoryAction) Describe() action_kit_api.ActionDescription {
 				Name:         "failOnOomKill",
 				Label:        "Fail on OOM Kill",
 				Description:  extutil.Ptr("Should an OOM kill be considered a failure?"),
-				Type:         action_kit_api.Boolean,
+				Type:         action_kit_api.ActionParameterTypeBoolean,
 				DefaultValue: extutil.Ptr("false"),
 				Required:     extutil.Ptr(true),
 				Order:        extutil.Ptr(5),
@@ -135,11 +135,11 @@ func (a *fillMemoryAction) Describe() action_kit_api.ActionDescription {
 
 func fillMemoryOpts(request action_kit_api.PrepareActionRequestBody) (memfill.Opts, error) {
 	opts := memfill.Opts{
-		BinaryPath: config.Config.MemfillPath,
-		Size:       extutil.ToInt(request.Config["size"]),
-		Mode:       memfill.Mode(request.Config["mode"].(string)),
-		Unit:       memfill.Unit(request.Config["unit"].(string)),
-		Duration:   time.Duration(extutil.ToInt64(request.Config["duration"])) * time.Millisecond,
+		Size:         extutil.ToInt(request.Config["size"]),
+		Mode:         memfill.Mode(request.Config["mode"].(string)),
+		Unit:         memfill.Unit(request.Config["unit"].(string)),
+		Duration:     time.Duration(extutil.ToInt64(request.Config["duration"])) * time.Millisecond,
+		IgnoreCgroup: true,
 	}
 	return opts, nil
 }
@@ -154,7 +154,7 @@ func (a *fillMemoryAction) Prepare(ctx context.Context, state *FillMemoryActionS
 		return nil, err
 	}
 
-	initProcess, err := runc.ReadLinuxProcessInfo(ctx, 1)
+	initProcess, err := ociruntime.ReadLinuxProcessInfo(ctx, 1, specs.PIDNamespace)
 	if err != nil {
 		return nil, extension_kit.ToError("Failed to prepare fill memory settings.", err)
 	}
@@ -169,8 +169,16 @@ func (a *fillMemoryAction) Prepare(ctx context.Context, state *FillMemoryActionS
 	return nil, nil
 }
 
+func (a *fillMemoryAction) memfill(targetProcess ociruntime.LinuxProcessInfo, opts memfill.Opts) (memfill.Memfill, error) {
+	if config.Config.DisableRunc {
+		return memfill.NewMemfillProcess(targetProcess, opts)
+	}
+
+	return memfill.NewMemfillProcess(targetProcess, opts)
+}
+
 func (a *fillMemoryAction) Start(_ context.Context, state *FillMemoryActionState) (*action_kit_api.StartResult, error) {
-	memFill, err := memfill.New(state.TargetProcess, state.FillMemoryOpts)
+	memFill, err := a.memfill(state.TargetProcess, state.FillMemoryOpts)
 	if err != nil {
 		return nil, extension_kit.ToError("Failed to prepare fill memory on host", err)
 	}
@@ -261,7 +269,7 @@ func (a *fillMemoryAction) fillMemoryExited(executionId uuid.UUID) (bool, error)
 	if !ok {
 		return true, nil
 	}
-	return s.(*memfill.MemFill).Exited()
+	return s.(memfill.Memfill).Exited()
 }
 
 func (a *fillMemoryAction) stopFillMemoryHost(executionId uuid.UUID) bool {
@@ -269,6 +277,6 @@ func (a *fillMemoryAction) stopFillMemoryHost(executionId uuid.UUID) bool {
 	if !ok {
 		return false
 	}
-	err := s.(*memfill.MemFill).Stop()
+	err := s.(memfill.Memfill).Stop()
 	return err == nil
 }

@@ -80,9 +80,17 @@ spec:
             {{- with .Values.extraEnv }}
               {{- toYaml . | nindent 12 }}
             {{- end }}
-            {{- if .Values.host.runcDebug }}
-            - name: STEADYBIT_EXTENSION_RUNC_DEBUG
-              value: "true"
+            - name: STEADYBIT_EXTENSION_OCIRUNTIME_DEBUG
+              value: {{ .Values.ociRuntime.debug | quote }}
+            - name: STEADYBIT_EXTENSION_OCIRUNTIME_ROOT
+              value: /run/steadybit/oci
+            - name: STEADYBIT_EXTENSION_OCIRUNTIME_PATH
+              value: {{ .Values.ociRuntime.path }}
+            {{- if .Values.discovery.hostnameFromKubernetes }}
+            - name: STEADYBIT_EXTENSION_HOSTNAME
+              valueFrom:
+                fieldRef:
+                  fieldPath: spec.nodeName
             {{- end }}
           {{- with .Values.extraEnvFrom }}
           envFrom:
@@ -93,8 +101,8 @@ spec:
               mountPath: /tmp
             - name: cgroup-root
               mountPath: /sys/fs/cgroup
-            - name: runc-root
-              mountPath: /run/steadybit/runc
+            - name: ociruntime-root
+              mountPath: /run/steadybit/oci
             {{- include "extensionlib.deployment.volumeMounts" (list .) | nindent 12 }}
           livenessProbe:
             initialDelaySeconds: {{ .Values.probes.liveness.initialDelaySeconds }}
@@ -125,7 +133,7 @@ spec:
           hostPath:
             path: /sys/fs/cgroup
             type: Directory
-        - name: runc-root
+        - name: ociruntime-root
           emptyDir: {}
           {{- include "extensionlib.deployment.volumes" (list .) | nindent 8 }}
       serviceAccountName: {{ .Values.serviceAccount.name }}

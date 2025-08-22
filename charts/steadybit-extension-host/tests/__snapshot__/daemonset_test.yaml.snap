@@ -21,6 +21,8 @@ manifest should match snapshot using podAnnotations, podLabels and resources:
             some-annotation: some-annotation-value
             steadybit.com/extension-auto-discovery: |
               {"extensions":[{"port":8085,"protocol":"http","types":["ACTION","DISCOVERY"]}]}
+            steadybit.com/extension-auto-registration: |
+              {"extensions":[{"port":8085,"protocol":"http"}]}
           labels:
             app: steadybit-extension-host
             app.kubernetes.io/name: steadybit-extension-host
@@ -38,6 +40,16 @@ manifest should match snapshot using podAnnotations, podLabels and resources:
                   value: INFO
                 - name: STEADYBIT_LOG_FORMAT
                   value: text
+                - name: STEADYBIT_EXTENSION_OCIRUNTIME_DEBUG
+                  value: "false"
+                - name: STEADYBIT_EXTENSION_OCIRUNTIME_ROOT
+                  value: /run/steadybit/oci
+                - name: STEADYBIT_EXTENSION_OCIRUNTIME_PATH
+                  value: runc
+                - name: STEADYBIT_EXTENSION_HOSTNAME
+                  valueFrom:
+                    fieldRef:
+                      fieldPath: spec.nodeName
               image: ghcr.io/steadybit/extension-host:v0.0.0
               imagePullPolicy: IfNotPresent
               livenessProbe:
@@ -74,19 +86,24 @@ manifest should match snapshot using podAnnotations, podLabels and resources:
               securityContext:
                 capabilities:
                   add:
+                    - NET_BIND_SERVICE
+                    - KILL
                     - SYS_ADMIN
                     - SYS_CHROOT
-                    - SYS_RESOURCE
-                    - SYS_BOOT
-                    - NET_RAW
-                    - SYS_TIME
                     - SYS_PTRACE
-                    - KILL
                     - NET_ADMIN
                     - DAC_OVERRIDE
                     - SETUID
                     - SETGID
                     - AUDIT_WRITE
+                    - SYS_BOOT
+                    - NET_RAW
+                    - SYS_TIME
+                    - SETPCAP
+                    - MKNOD
+                    - SYS_RESOURCE
+                  drop:
+                    - ALL
                 readOnlyRootFilesystem: true
                 seccompProfile:
                   type: Unconfined
@@ -95,8 +112,8 @@ manifest should match snapshot using podAnnotations, podLabels and resources:
                   name: tmp-dir
                 - mountPath: /sys/fs/cgroup
                   name: cgroup-root
-                - mountPath: /run/steadybit/runc
-                  name: runc-root
+                - mountPath: /run/steadybit/oci
+                  name: ociruntime-root
           dnsPolicy: ClusterFirstWithHostNet
           hostNetwork: true
           hostPID: true
@@ -113,12 +130,12 @@ manifest should match snapshot using podAnnotations, podLabels and resources:
                 type: Directory
               name: cgroup-root
             - emptyDir: {}
-              name: runc-root
+              name: ociruntime-root
       updateStrategy:
         rollingUpdate:
           maxUnavailable: 1
         type: RollingUpdate
-manifest should match snapshot with TLS:
+manifest should match snapshot with Steadybit-Extension-host env var:
   1: |
     apiVersion: apps/v1
     kind: DaemonSet
@@ -139,7 +156,9 @@ manifest should match snapshot with TLS:
             container.apparmor.security.beta.kubernetes.io/steadybit-extension-host: unconfined
             oneagent.dynatrace.com/injection: "false"
             steadybit.com/extension-auto-discovery: |
-              {"extensions":[{"port":8085,"protocol":"https","types":["ACTION","DISCOVERY"]}]}
+              {"extensions":[{"port":8085,"protocol":"http","types":["ACTION","DISCOVERY"]}]}
+            steadybit.com/extension-auto-registration: |
+              {"extensions":[{"port":8085,"protocol":"http"}]}
           labels:
             app: steadybit-extension-host
             app.kubernetes.io/name: steadybit-extension-host
@@ -156,10 +175,18 @@ manifest should match snapshot with TLS:
                   value: INFO
                 - name: STEADYBIT_LOG_FORMAT
                   value: text
-                - name: STEADYBIT_EXTENSION_TLS_SERVER_CERT
-                  value: /etc/extension/certificates/server-cert/tls.crt
-                - name: STEADYBIT_EXTENSION_TLS_SERVER_KEY
-                  value: /etc/extension/certificates/server-cert/tls.key
+                - name: STEADYBIT_EXTENSION_HOST
+                  value: extension-host.example.com
+                - name: STEADYBIT_EXTENSION_OCIRUNTIME_DEBUG
+                  value: "false"
+                - name: STEADYBIT_EXTENSION_OCIRUNTIME_ROOT
+                  value: /run/steadybit/oci
+                - name: STEADYBIT_EXTENSION_OCIRUNTIME_PATH
+                  value: runc
+                - name: STEADYBIT_EXTENSION_HOSTNAME
+                  valueFrom:
+                    fieldRef:
+                      fieldPath: spec.nodeName
               image: ghcr.io/steadybit/extension-host:v0.0.0
               imagePullPolicy: IfNotPresent
               livenessProbe:
@@ -196,19 +223,24 @@ manifest should match snapshot with TLS:
               securityContext:
                 capabilities:
                   add:
+                    - NET_BIND_SERVICE
+                    - KILL
                     - SYS_ADMIN
                     - SYS_CHROOT
-                    - SYS_RESOURCE
-                    - SYS_BOOT
-                    - NET_RAW
-                    - SYS_TIME
                     - SYS_PTRACE
-                    - KILL
                     - NET_ADMIN
                     - DAC_OVERRIDE
                     - SETUID
                     - SETGID
                     - AUDIT_WRITE
+                    - SYS_BOOT
+                    - NET_RAW
+                    - SYS_TIME
+                    - SETPCAP
+                    - MKNOD
+                    - SYS_RESOURCE
+                  drop:
+                    - ALL
                 readOnlyRootFilesystem: true
                 seccompProfile:
                   type: Unconfined
@@ -217,8 +249,147 @@ manifest should match snapshot with TLS:
                   name: tmp-dir
                 - mountPath: /sys/fs/cgroup
                   name: cgroup-root
-                - mountPath: /run/steadybit/runc
-                  name: runc-root
+                - mountPath: /run/steadybit/oci
+                  name: ociruntime-root
+          dnsPolicy: ClusterFirstWithHostNet
+          hostNetwork: true
+          hostPID: true
+          securityContext:
+            runAsNonRoot: true
+            seccompProfile:
+              type: Unconfined
+          serviceAccountName: steadybit-extension-host
+          volumes:
+            - emptyDir: {}
+              name: tmp-dir
+            - hostPath:
+                path: /sys/fs/cgroup
+                type: Directory
+              name: cgroup-root
+            - emptyDir: {}
+              name: ociruntime-root
+      updateStrategy:
+        rollingUpdate:
+          maxUnavailable: 1
+        type: RollingUpdate
+manifest should match snapshot with TLS:
+  1: |
+    apiVersion: apps/v1
+    kind: DaemonSet
+    metadata:
+      labels:
+        steadybit.com/discovery-disabled: "true"
+        steadybit.com/extension: "true"
+      name: RELEASE-NAME-steadybit-extension-host
+      namespace: NAMESPACE
+    spec:
+      selector:
+        matchLabels:
+          app: steadybit-extension-host
+          app.kubernetes.io/name: steadybit-extension-host
+      template:
+        metadata:
+          annotations:
+            container.apparmor.security.beta.kubernetes.io/steadybit-extension-host: unconfined
+            oneagent.dynatrace.com/injection: "false"
+            steadybit.com/extension-auto-discovery: |
+              {"extensions":[{"port":8085,"protocol":"https","types":["ACTION","DISCOVERY"]}]}
+            steadybit.com/extension-auto-registration: |
+              {"extensions":[{"port":8085,"protocol":"https"}]}
+          labels:
+            app: steadybit-extension-host
+            app.kubernetes.io/name: steadybit-extension-host
+            steadybit.com/discovery-disabled: "true"
+            steadybit.com/extension: "true"
+        spec:
+          containers:
+            - env:
+                - name: STEADYBIT_EXTENSION_PORT
+                  value: "8085"
+                - name: STEADYBIT_EXTENSION_HEALTH_PORT
+                  value: "8081"
+                - name: STEADYBIT_LOG_LEVEL
+                  value: INFO
+                - name: STEADYBIT_LOG_FORMAT
+                  value: text
+                - name: STEADYBIT_EXTENSION_TLS_SERVER_CERT
+                  value: /etc/extension/certificates/server-cert/tls.crt
+                - name: STEADYBIT_EXTENSION_TLS_SERVER_KEY
+                  value: /etc/extension/certificates/server-cert/tls.key
+                - name: STEADYBIT_EXTENSION_OCIRUNTIME_DEBUG
+                  value: "false"
+                - name: STEADYBIT_EXTENSION_OCIRUNTIME_ROOT
+                  value: /run/steadybit/oci
+                - name: STEADYBIT_EXTENSION_OCIRUNTIME_PATH
+                  value: runc
+                - name: STEADYBIT_EXTENSION_HOSTNAME
+                  valueFrom:
+                    fieldRef:
+                      fieldPath: spec.nodeName
+              image: ghcr.io/steadybit/extension-host:v0.0.0
+              imagePullPolicy: IfNotPresent
+              livenessProbe:
+                failureThreshold: 5
+                httpGet:
+                  path: /health/liveness
+                  port: 8081
+                initialDelaySeconds: 10
+                periodSeconds: 10
+                successThreshold: 1
+                timeoutSeconds: 5
+              name: steadybit-extension-host
+              ports:
+                - containerPort: 8085
+                  name: http
+                - containerPort: 8081
+                  name: health
+              readinessProbe:
+                failureThreshold: 3
+                httpGet:
+                  path: /health/readiness
+                  port: 8081
+                initialDelaySeconds: 10
+                periodSeconds: 10
+                successThreshold: 1
+                timeoutSeconds: 1
+              resources:
+                limits:
+                  cpu: 200m
+                  memory: 96Mi
+                requests:
+                  cpu: 50m
+                  memory: 16Mi
+              securityContext:
+                capabilities:
+                  add:
+                    - NET_BIND_SERVICE
+                    - KILL
+                    - SYS_ADMIN
+                    - SYS_CHROOT
+                    - SYS_PTRACE
+                    - NET_ADMIN
+                    - DAC_OVERRIDE
+                    - SETUID
+                    - SETGID
+                    - AUDIT_WRITE
+                    - SYS_BOOT
+                    - NET_RAW
+                    - SYS_TIME
+                    - SETPCAP
+                    - MKNOD
+                    - SYS_RESOURCE
+                  drop:
+                    - ALL
+                readOnlyRootFilesystem: true
+                seccompProfile:
+                  type: Unconfined
+              volumeMounts:
+                - mountPath: /tmp
+                  name: tmp-dir
+                - mountPath: /sys/fs/cgroup
+                  name: cgroup-root
+                - mountPath: /run/steadybit/oci
+                  name: ociruntime-root
                 - mountPath: /etc/extension/certificates/server-cert
                   name: certificate-server-cert
                   readOnly: true
@@ -238,7 +409,7 @@ manifest should match snapshot with TLS:
                 type: Directory
               name: cgroup-root
             - emptyDir: {}
-              name: runc-root
+              name: ociruntime-root
             - name: certificate-server-cert
               secret:
                 optional: false
@@ -268,6 +439,8 @@ manifest should match snapshot with appArmorProfile for k8s >= 1.30:
             oneagent.dynatrace.com/injection: "false"
             steadybit.com/extension-auto-discovery: |
               {"extensions":[{"port":8085,"protocol":"http","types":["ACTION","DISCOVERY"]}]}
+            steadybit.com/extension-auto-registration: |
+              {"extensions":[{"port":8085,"protocol":"http"}]}
           labels:
             app: steadybit-extension-host
             app.kubernetes.io/name: steadybit-extension-host
@@ -284,6 +457,16 @@ manifest should match snapshot with appArmorProfile for k8s >= 1.30:
                   value: INFO
                 - name: STEADYBIT_LOG_FORMAT
                   value: text
+                - name: STEADYBIT_EXTENSION_OCIRUNTIME_DEBUG
+                  value: "false"
+                - name: STEADYBIT_EXTENSION_OCIRUNTIME_ROOT
+                  value: /run/steadybit/oci
+                - name: STEADYBIT_EXTENSION_OCIRUNTIME_PATH
+                  value: runc
+                - name: STEADYBIT_EXTENSION_HOSTNAME
+                  valueFrom:
+                    fieldRef:
+                      fieldPath: spec.nodeName
               image: ghcr.io/steadybit/extension-host:v0.0.0
               imagePullPolicy: IfNotPresent
               livenessProbe:
@@ -322,19 +505,24 @@ manifest should match snapshot with appArmorProfile for k8s >= 1.30:
                   type: Unconfined
                 capabilities:
                   add:
+                    - NET_BIND_SERVICE
+                    - KILL
                     - SYS_ADMIN
                     - SYS_CHROOT
-                    - SYS_RESOURCE
-                    - SYS_BOOT
-                    - NET_RAW
-                    - SYS_TIME
                     - SYS_PTRACE
-                    - KILL
                     - NET_ADMIN
                     - DAC_OVERRIDE
                     - SETUID
                     - SETGID
                     - AUDIT_WRITE
+                    - SYS_BOOT
+                    - NET_RAW
+                    - SYS_TIME
+                    - SETPCAP
+                    - MKNOD
+                    - SYS_RESOURCE
+                  drop:
+                    - ALL
                 readOnlyRootFilesystem: true
                 seccompProfile:
                   type: Unconfined
@@ -343,8 +531,8 @@ manifest should match snapshot with appArmorProfile for k8s >= 1.30:
                   name: tmp-dir
                 - mountPath: /sys/fs/cgroup
                   name: cgroup-root
-                - mountPath: /run/steadybit/runc
-                  name: runc-root
+                - mountPath: /run/steadybit/oci
+                  name: ociruntime-root
           dnsPolicy: ClusterFirstWithHostNet
           hostNetwork: true
           hostPID: true
@@ -361,7 +549,7 @@ manifest should match snapshot with appArmorProfile for k8s >= 1.30:
                 type: Directory
               name: cgroup-root
             - emptyDir: {}
-              name: runc-root
+              name: ociruntime-root
       updateStrategy:
         rollingUpdate:
           maxUnavailable: 1
@@ -388,6 +576,8 @@ manifest should match snapshot with different containerPorts:
             oneagent.dynatrace.com/injection: "false"
             steadybit.com/extension-auto-discovery: |
               {"extensions":[{"port":9090,"protocol":"http","types":["ACTION","DISCOVERY"]}]}
+            steadybit.com/extension-auto-registration: |
+              {"extensions":[{"port":9090,"protocol":"http"}]}
           labels:
             app: steadybit-extension-host
             app.kubernetes.io/name: steadybit-extension-host
@@ -404,6 +594,16 @@ manifest should match snapshot with different containerPorts:
                   value: INFO
                 - name: STEADYBIT_LOG_FORMAT
                   value: text
+                - name: STEADYBIT_EXTENSION_OCIRUNTIME_DEBUG
+                  value: "false"
+                - name: STEADYBIT_EXTENSION_OCIRUNTIME_ROOT
+                  value: /run/steadybit/oci
+                - name: STEADYBIT_EXTENSION_OCIRUNTIME_PATH
+                  value: runc
+                - name: STEADYBIT_EXTENSION_HOSTNAME
+                  valueFrom:
+                    fieldRef:
+                      fieldPath: spec.nodeName
               image: ghcr.io/steadybit/extension-host:v0.0.0
               imagePullPolicy: IfNotPresent
               livenessProbe:
@@ -440,19 +640,24 @@ manifest should match snapshot with different containerPorts:
               securityContext:
                 capabilities:
                   add:
+                    - NET_BIND_SERVICE
+                    - KILL
                     - SYS_ADMIN
                     - SYS_CHROOT
-                    - SYS_RESOURCE
-                    - SYS_BOOT
-                    - NET_RAW
-                    - SYS_TIME
                     - SYS_PTRACE
-                    - KILL
                     - NET_ADMIN
                     - DAC_OVERRIDE
                     - SETUID
                     - SETGID
                     - AUDIT_WRITE
+                    - SYS_BOOT
+                    - NET_RAW
+                    - SYS_TIME
+                    - SETPCAP
+                    - MKNOD
+                    - SYS_RESOURCE
+                  drop:
+                    - ALL
                 readOnlyRootFilesystem: true
                 seccompProfile:
                   type: Unconfined
@@ -461,8 +666,8 @@ manifest should match snapshot with different containerPorts:
                   name: tmp-dir
                 - mountPath: /sys/fs/cgroup
                   name: cgroup-root
-                - mountPath: /run/steadybit/runc
-                  name: runc-root
+                - mountPath: /run/steadybit/oci
+                  name: ociruntime-root
           dnsPolicy: ClusterFirstWithHostNet
           hostNetwork: true
           hostPID: true
@@ -479,7 +684,7 @@ manifest should match snapshot with different containerPorts:
                 type: Directory
               name: cgroup-root
             - emptyDir: {}
-              name: runc-root
+              name: ociruntime-root
       updateStrategy:
         rollingUpdate:
           maxUnavailable: 1
@@ -506,6 +711,8 @@ manifest should match snapshot with extra env vars:
             oneagent.dynatrace.com/injection: "false"
             steadybit.com/extension-auto-discovery: |
               {"extensions":[{"port":8085,"protocol":"http","types":["ACTION","DISCOVERY"]}]}
+            steadybit.com/extension-auto-registration: |
+              {"extensions":[{"port":8085,"protocol":"http"}]}
           labels:
             app: steadybit-extension-host
             app.kubernetes.io/name: steadybit-extension-host
@@ -524,6 +731,16 @@ manifest should match snapshot with extra env vars:
                   value: text
                 - name: FOO
                   value: bar
+                - name: STEADYBIT_EXTENSION_OCIRUNTIME_DEBUG
+                  value: "false"
+                - name: STEADYBIT_EXTENSION_OCIRUNTIME_ROOT
+                  value: /run/steadybit/oci
+                - name: STEADYBIT_EXTENSION_OCIRUNTIME_PATH
+                  value: runc
+                - name: STEADYBIT_EXTENSION_HOSTNAME
+                  valueFrom:
+                    fieldRef:
+                      fieldPath: spec.nodeName
               envFrom:
                 - configMapRef: null
                   name: env-configmap
@@ -565,19 +782,24 @@ manifest should match snapshot with extra env vars:
               securityContext:
                 capabilities:
                   add:
+                    - NET_BIND_SERVICE
+                    - KILL
                     - SYS_ADMIN
                     - SYS_CHROOT
-                    - SYS_RESOURCE
-                    - SYS_BOOT
-                    - NET_RAW
-                    - SYS_TIME
                     - SYS_PTRACE
-                    - KILL
                     - NET_ADMIN
                     - DAC_OVERRIDE
                     - SETUID
                     - SETGID
                     - AUDIT_WRITE
+                    - SYS_BOOT
+                    - NET_RAW
+                    - SYS_TIME
+                    - SETPCAP
+                    - MKNOD
+                    - SYS_RESOURCE
+                  drop:
+                    - ALL
                 readOnlyRootFilesystem: true
                 seccompProfile:
                   type: Unconfined
@@ -586,8 +808,8 @@ manifest should match snapshot with extra env vars:
                   name: tmp-dir
                 - mountPath: /sys/fs/cgroup
                   name: cgroup-root
-                - mountPath: /run/steadybit/runc
-                  name: runc-root
+                - mountPath: /run/steadybit/oci
+                  name: ociruntime-root
           dnsPolicy: ClusterFirstWithHostNet
           hostNetwork: true
           hostPID: true
@@ -604,7 +826,7 @@ manifest should match snapshot with extra env vars:
                 type: Directory
               name: cgroup-root
             - emptyDir: {}
-              name: runc-root
+              name: ociruntime-root
       updateStrategy:
         rollingUpdate:
           maxUnavailable: 1
@@ -632,6 +854,8 @@ manifest should match snapshot with extra labels:
             oneagent.dynatrace.com/injection: "false"
             steadybit.com/extension-auto-discovery: |
               {"extensions":[{"port":8085,"protocol":"http","types":["ACTION","DISCOVERY"]}]}
+            steadybit.com/extension-auto-registration: |
+              {"extensions":[{"port":8085,"protocol":"http"}]}
           labels:
             app: steadybit-extension-host
             app.kubernetes.io/name: steadybit-extension-host
@@ -649,6 +873,16 @@ manifest should match snapshot with extra labels:
                   value: INFO
                 - name: STEADYBIT_LOG_FORMAT
                   value: text
+                - name: STEADYBIT_EXTENSION_OCIRUNTIME_DEBUG
+                  value: "false"
+                - name: STEADYBIT_EXTENSION_OCIRUNTIME_ROOT
+                  value: /run/steadybit/oci
+                - name: STEADYBIT_EXTENSION_OCIRUNTIME_PATH
+                  value: runc
+                - name: STEADYBIT_EXTENSION_HOSTNAME
+                  valueFrom:
+                    fieldRef:
+                      fieldPath: spec.nodeName
               image: ghcr.io/steadybit/extension-host:v0.0.0
               imagePullPolicy: IfNotPresent
               livenessProbe:
@@ -685,19 +919,24 @@ manifest should match snapshot with extra labels:
               securityContext:
                 capabilities:
                   add:
+                    - NET_BIND_SERVICE
+                    - KILL
                     - SYS_ADMIN
                     - SYS_CHROOT
-                    - SYS_RESOURCE
-                    - SYS_BOOT
-                    - NET_RAW
-                    - SYS_TIME
                     - SYS_PTRACE
-                    - KILL
                     - NET_ADMIN
                     - DAC_OVERRIDE
                     - SETUID
                     - SETGID
                     - AUDIT_WRITE
+                    - SYS_BOOT
+                    - NET_RAW
+                    - SYS_TIME
+                    - SETPCAP
+                    - MKNOD
+                    - SYS_RESOURCE
+                  drop:
+                    - ALL
                 readOnlyRootFilesystem: true
                 seccompProfile:
                   type: Unconfined
@@ -706,8 +945,8 @@ manifest should match snapshot with extra labels:
                   name: tmp-dir
                 - mountPath: /sys/fs/cgroup
                   name: cgroup-root
-                - mountPath: /run/steadybit/runc
-                  name: runc-root
+                - mountPath: /run/steadybit/oci
+                  name: ociruntime-root
           dnsPolicy: ClusterFirstWithHostNet
           hostNetwork: true
           hostPID: true
@@ -724,7 +963,142 @@ manifest should match snapshot with extra labels:
                 type: Directory
               name: cgroup-root
             - emptyDir: {}
-              name: runc-root
+              name: ociruntime-root
+      updateStrategy:
+        rollingUpdate:
+          maxUnavailable: 1
+        type: RollingUpdate
+manifest should match snapshot with hostnameFromKubernetes enabled:
+  1: |
+    apiVersion: apps/v1
+    kind: DaemonSet
+    metadata:
+      labels:
+        steadybit.com/discovery-disabled: "true"
+        steadybit.com/extension: "true"
+      name: RELEASE-NAME-steadybit-extension-host
+      namespace: NAMESPACE
+    spec:
+      selector:
+        matchLabels:
+          app: steadybit-extension-host
+          app.kubernetes.io/name: steadybit-extension-host
+      template:
+        metadata:
+          annotations:
+            container.apparmor.security.beta.kubernetes.io/steadybit-extension-host: unconfined
+            oneagent.dynatrace.com/injection: "false"
+            steadybit.com/extension-auto-discovery: |
+              {"extensions":[{"port":8085,"protocol":"http","types":["ACTION","DISCOVERY"]}]}
+            steadybit.com/extension-auto-registration: |
+              {"extensions":[{"port":8085,"protocol":"http"}]}
+          labels:
+            app: steadybit-extension-host
+            app.kubernetes.io/name: steadybit-extension-host
+            steadybit.com/discovery-disabled: "true"
+            steadybit.com/extension: "true"
+        spec:
+          containers:
+            - env:
+                - name: STEADYBIT_EXTENSION_PORT
+                  value: "8085"
+                - name: STEADYBIT_EXTENSION_HEALTH_PORT
+                  value: "8081"
+                - name: STEADYBIT_LOG_LEVEL
+                  value: INFO
+                - name: STEADYBIT_LOG_FORMAT
+                  value: text
+                - name: STEADYBIT_EXTENSION_OCIRUNTIME_DEBUG
+                  value: "false"
+                - name: STEADYBIT_EXTENSION_OCIRUNTIME_ROOT
+                  value: /run/steadybit/oci
+                - name: STEADYBIT_EXTENSION_OCIRUNTIME_PATH
+                  value: runc
+                - name: STEADYBIT_EXTENSION_HOSTNAME
+                  valueFrom:
+                    fieldRef:
+                      fieldPath: spec.nodeName
+              image: ghcr.io/steadybit/extension-host:v0.0.0
+              imagePullPolicy: IfNotPresent
+              livenessProbe:
+                failureThreshold: 5
+                httpGet:
+                  path: /health/liveness
+                  port: 8081
+                initialDelaySeconds: 10
+                periodSeconds: 10
+                successThreshold: 1
+                timeoutSeconds: 5
+              name: steadybit-extension-host
+              ports:
+                - containerPort: 8085
+                  name: http
+                - containerPort: 8081
+                  name: health
+              readinessProbe:
+                failureThreshold: 3
+                httpGet:
+                  path: /health/readiness
+                  port: 8081
+                initialDelaySeconds: 10
+                periodSeconds: 10
+                successThreshold: 1
+                timeoutSeconds: 1
+              resources:
+                limits:
+                  cpu: 200m
+                  memory: 96Mi
+                requests:
+                  cpu: 50m
+                  memory: 16Mi
+              securityContext:
+                capabilities:
+                  add:
+                    - NET_BIND_SERVICE
+                    - KILL
+                    - SYS_ADMIN
+                    - SYS_CHROOT
+                    - SYS_PTRACE
+                    - NET_ADMIN
+                    - DAC_OVERRIDE
+                    - SETUID
+                    - SETGID
+                    - AUDIT_WRITE
+                    - SYS_BOOT
+                    - NET_RAW
+                    - SYS_TIME
+                    - SETPCAP
+                    - MKNOD
+                    - SYS_RESOURCE
+                  drop:
+                    - ALL
+                readOnlyRootFilesystem: true
+                seccompProfile:
+                  type: Unconfined
+              volumeMounts:
+                - mountPath: /tmp
+                  name: tmp-dir
+                - mountPath: /sys/fs/cgroup
+                  name: cgroup-root
+                - mountPath: /run/steadybit/oci
+                  name: ociruntime-root
+          dnsPolicy: ClusterFirstWithHostNet
+          hostNetwork: true
+          hostPID: true
+          securityContext:
+            runAsNonRoot: true
+            seccompProfile:
+              type: Unconfined
+          serviceAccountName: steadybit-extension-host
+          volumes:
+            - emptyDir: {}
+              name: tmp-dir
+            - hostPath:
+                path: /sys/fs/cgroup
+                type: Directory
+              name: cgroup-root
+            - emptyDir: {}
+              name: ociruntime-root
       updateStrategy:
         rollingUpdate:
           maxUnavailable: 1
@@ -751,6 +1125,8 @@ manifest should match snapshot with mutual TLS:
             oneagent.dynatrace.com/injection: "false"
             steadybit.com/extension-auto-discovery: |
               {"extensions":[{"port":8085,"protocol":"https","types":["ACTION","DISCOVERY"]}]}
+            steadybit.com/extension-auto-registration: |
+              {"extensions":[{"port":8085,"protocol":"https"}]}
           labels:
             app: steadybit-extension-host
             app.kubernetes.io/name: steadybit-extension-host
@@ -773,6 +1149,16 @@ manifest should match snapshot with mutual TLS:
                   value: /etc/extension/certificates/server-cert/tls.key
                 - name: STEADYBIT_EXTENSION_TLS_CLIENT_CAS
                   value: /etc/extension/certificates/client-cert-a/tls.crt,/etc/extension/certificates/client-cert-a/tls.crt
+                - name: STEADYBIT_EXTENSION_OCIRUNTIME_DEBUG
+                  value: "false"
+                - name: STEADYBIT_EXTENSION_OCIRUNTIME_ROOT
+                  value: /run/steadybit/oci
+                - name: STEADYBIT_EXTENSION_OCIRUNTIME_PATH
+                  value: runc
+                - name: STEADYBIT_EXTENSION_HOSTNAME
+                  valueFrom:
+                    fieldRef:
+                      fieldPath: spec.nodeName
               image: ghcr.io/steadybit/extension-host:v0.0.0
               imagePullPolicy: IfNotPresent
               livenessProbe:
@@ -809,19 +1195,24 @@ manifest should match snapshot with mutual TLS:
               securityContext:
                 capabilities:
                   add:
+                    - NET_BIND_SERVICE
+                    - KILL
                     - SYS_ADMIN
                     - SYS_CHROOT
-                    - SYS_RESOURCE
-                    - SYS_BOOT
-                    - NET_RAW
-                    - SYS_TIME
                     - SYS_PTRACE
-                    - KILL
                     - NET_ADMIN
                     - DAC_OVERRIDE
                     - SETUID
                     - SETGID
                     - AUDIT_WRITE
+                    - SYS_BOOT
+                    - NET_RAW
+                    - SYS_TIME
+                    - SETPCAP
+                    - MKNOD
+                    - SYS_RESOURCE
+                  drop:
+                    - ALL
                 readOnlyRootFilesystem: true
                 seccompProfile:
                   type: Unconfined
@@ -830,8 +1221,8 @@ manifest should match snapshot with mutual TLS:
                   name: tmp-dir
                 - mountPath: /sys/fs/cgroup
                   name: cgroup-root
-                - mountPath: /run/steadybit/runc
-                  name: runc-root
+                - mountPath: /run/steadybit/oci
+                  name: ociruntime-root
                 - mountPath: /etc/extension/certificates/client-cert-a
                   name: certificate-client-cert-a
                   readOnly: true
@@ -854,7 +1245,7 @@ manifest should match snapshot with mutual TLS:
                 type: Directory
               name: cgroup-root
             - emptyDir: {}
-              name: runc-root
+              name: ociruntime-root
             - name: certificate-client-cert-a
               secret:
                 optional: false
@@ -889,6 +1280,8 @@ manifest should match snapshot with mutual TLS using containerPaths:
             oneagent.dynatrace.com/injection: "false"
             steadybit.com/extension-auto-discovery: |
               {"extensions":[{"port":8085,"protocol":"https","types":["ACTION","DISCOVERY"]}]}
+            steadybit.com/extension-auto-registration: |
+              {"extensions":[{"port":8085,"protocol":"https"}]}
           labels:
             app: steadybit-extension-host
             app.kubernetes.io/name: steadybit-extension-host
@@ -911,6 +1304,16 @@ manifest should match snapshot with mutual TLS using containerPaths:
                   value: /etc/tls/server.key
                 - name: STEADYBIT_EXTENSION_TLS_CLIENT_CAS
                   value: /etc/tls/ca.crt,/etc/tls/ca2.crt
+                - name: STEADYBIT_EXTENSION_OCIRUNTIME_DEBUG
+                  value: "false"
+                - name: STEADYBIT_EXTENSION_OCIRUNTIME_ROOT
+                  value: /run/steadybit/oci
+                - name: STEADYBIT_EXTENSION_OCIRUNTIME_PATH
+                  value: runc
+                - name: STEADYBIT_EXTENSION_HOSTNAME
+                  valueFrom:
+                    fieldRef:
+                      fieldPath: spec.nodeName
               image: ghcr.io/steadybit/extension-host:v0.0.0
               imagePullPolicy: IfNotPresent
               livenessProbe:
@@ -947,19 +1350,24 @@ manifest should match snapshot with mutual TLS using containerPaths:
               securityContext:
                 capabilities:
                   add:
+                    - NET_BIND_SERVICE
+                    - KILL
                     - SYS_ADMIN
                     - SYS_CHROOT
-                    - SYS_RESOURCE
-                    - SYS_BOOT
-                    - NET_RAW
-                    - SYS_TIME
                     - SYS_PTRACE
-                    - KILL
                     - NET_ADMIN
                     - DAC_OVERRIDE
                     - SETUID
                     - SETGID
                     - AUDIT_WRITE
+                    - SYS_BOOT
+                    - NET_RAW
+                    - SYS_TIME
+                    - SETPCAP
+                    - MKNOD
+                    - SYS_RESOURCE
+                  drop:
+                    - ALL
                 readOnlyRootFilesystem: true
                 seccompProfile:
                   type: Unconfined
@@ -968,8 +1376,8 @@ manifest should match snapshot with mutual TLS using containerPaths:
                   name: tmp-dir
                 - mountPath: /sys/fs/cgroup
                   name: cgroup-root
-                - mountPath: /run/steadybit/runc
-                  name: runc-root
+                - mountPath: /run/steadybit/oci
+                  name: ociruntime-root
           dnsPolicy: ClusterFirstWithHostNet
           hostNetwork: true
           hostPID: true
@@ -986,7 +1394,7 @@ manifest should match snapshot with mutual TLS using containerPaths:
                 type: Directory
               name: cgroup-root
             - emptyDir: {}
-              name: runc-root
+              name: ociruntime-root
       updateStrategy:
         rollingUpdate:
           maxUnavailable: 1
@@ -1013,6 +1421,8 @@ manifest should match snapshot with podSecurityContext:
             oneagent.dynatrace.com/injection: "false"
             steadybit.com/extension-auto-discovery: |
               {"extensions":[{"port":8085,"protocol":"http","types":["ACTION","DISCOVERY"]}]}
+            steadybit.com/extension-auto-registration: |
+              {"extensions":[{"port":8085,"protocol":"http"}]}
           labels:
             app: steadybit-extension-host
             app.kubernetes.io/name: steadybit-extension-host
@@ -1029,6 +1439,16 @@ manifest should match snapshot with podSecurityContext:
                   value: INFO
                 - name: STEADYBIT_LOG_FORMAT
                   value: text
+                - name: STEADYBIT_EXTENSION_OCIRUNTIME_DEBUG
+                  value: "false"
+                - name: STEADYBIT_EXTENSION_OCIRUNTIME_ROOT
+                  value: /run/steadybit/oci
+                - name: STEADYBIT_EXTENSION_OCIRUNTIME_PATH
+                  value: runc
+                - name: STEADYBIT_EXTENSION_HOSTNAME
+                  valueFrom:
+                    fieldRef:
+                      fieldPath: spec.nodeName
               image: ghcr.io/steadybit/extension-host:v0.0.0
               imagePullPolicy: IfNotPresent
               livenessProbe:
@@ -1065,19 +1485,24 @@ manifest should match snapshot with podSecurityContext:
               securityContext:
                 capabilities:
                   add:
+                    - NET_BIND_SERVICE
+                    - KILL
                     - SYS_ADMIN
                     - SYS_CHROOT
-                    - SYS_RESOURCE
-                    - SYS_BOOT
-                    - NET_RAW
-                    - SYS_TIME
                     - SYS_PTRACE
-                    - KILL
                     - NET_ADMIN
                     - DAC_OVERRIDE
                     - SETUID
                     - SETGID
                     - AUDIT_WRITE
+                    - SYS_BOOT
+                    - NET_RAW
+                    - SYS_TIME
+                    - SETPCAP
+                    - MKNOD
+                    - SYS_RESOURCE
+                  drop:
+                    - ALL
                 readOnlyRootFilesystem: true
                 seccompProfile:
                   type: Unconfined
@@ -1086,8 +1511,8 @@ manifest should match snapshot with podSecurityContext:
                   name: tmp-dir
                 - mountPath: /sys/fs/cgroup
                   name: cgroup-root
-                - mountPath: /run/steadybit/runc
-                  name: runc-root
+                - mountPath: /run/steadybit/oci
+                  name: ociruntime-root
           dnsPolicy: ClusterFirstWithHostNet
           hostNetwork: true
           hostPID: true
@@ -1105,7 +1530,7 @@ manifest should match snapshot with podSecurityContext:
                 type: Directory
               name: cgroup-root
             - emptyDir: {}
-              name: runc-root
+              name: ociruntime-root
       updateStrategy:
         rollingUpdate:
           maxUnavailable: 1
@@ -1132,6 +1557,8 @@ manifest should match snapshot with priority class:
             oneagent.dynatrace.com/injection: "false"
             steadybit.com/extension-auto-discovery: |
               {"extensions":[{"port":8085,"protocol":"http","types":["ACTION","DISCOVERY"]}]}
+            steadybit.com/extension-auto-registration: |
+              {"extensions":[{"port":8085,"protocol":"http"}]}
           labels:
             app: steadybit-extension-host
             app.kubernetes.io/name: steadybit-extension-host
@@ -1148,6 +1575,16 @@ manifest should match snapshot with priority class:
                   value: INFO
                 - name: STEADYBIT_LOG_FORMAT
                   value: text
+                - name: STEADYBIT_EXTENSION_OCIRUNTIME_DEBUG
+                  value: "false"
+                - name: STEADYBIT_EXTENSION_OCIRUNTIME_ROOT
+                  value: /run/steadybit/oci
+                - name: STEADYBIT_EXTENSION_OCIRUNTIME_PATH
+                  value: runc
+                - name: STEADYBIT_EXTENSION_HOSTNAME
+                  valueFrom:
+                    fieldRef:
+                      fieldPath: spec.nodeName
               image: ghcr.io/steadybit/extension-host:v0.0.0
               imagePullPolicy: IfNotPresent
               livenessProbe:
@@ -1184,19 +1621,24 @@ manifest should match snapshot with priority class:
               securityContext:
                 capabilities:
                   add:
+                    - NET_BIND_SERVICE
+                    - KILL
                     - SYS_ADMIN
                     - SYS_CHROOT
-                    - SYS_RESOURCE
-                    - SYS_BOOT
-                    - NET_RAW
-                    - SYS_TIME
                     - SYS_PTRACE
-                    - KILL
                     - NET_ADMIN
                     - DAC_OVERRIDE
                     - SETUID
                     - SETGID
                     - AUDIT_WRITE
+                    - SYS_BOOT
+                    - NET_RAW
+                    - SYS_TIME
+                    - SETPCAP
+                    - MKNOD
+                    - SYS_RESOURCE
+                  drop:
+                    - ALL
                 readOnlyRootFilesystem: true
                 seccompProfile:
                   type: Unconfined
@@ -1205,8 +1647,8 @@ manifest should match snapshot with priority class:
                   name: tmp-dir
                 - mountPath: /sys/fs/cgroup
                   name: cgroup-root
-                - mountPath: /run/steadybit/runc
-                  name: runc-root
+                - mountPath: /run/steadybit/oci
+                  name: ociruntime-root
           dnsPolicy: ClusterFirstWithHostNet
           hostNetwork: true
           hostPID: true
@@ -1224,7 +1666,7 @@ manifest should match snapshot with priority class:
                 type: Directory
               name: cgroup-root
             - emptyDir: {}
-              name: runc-root
+              name: ociruntime-root
       updateStrategy:
         rollingUpdate:
           maxUnavailable: 1
@@ -1251,6 +1693,8 @@ manifest should match snapshot with update strategy:
             oneagent.dynatrace.com/injection: "false"
             steadybit.com/extension-auto-discovery: |
               {"extensions":[{"port":8085,"protocol":"http","types":["ACTION","DISCOVERY"]}]}
+            steadybit.com/extension-auto-registration: |
+              {"extensions":[{"port":8085,"protocol":"http"}]}
           labels:
             app: steadybit-extension-host
             app.kubernetes.io/name: steadybit-extension-host
@@ -1267,6 +1711,16 @@ manifest should match snapshot with update strategy:
                   value: INFO
                 - name: STEADYBIT_LOG_FORMAT
                   value: text
+                - name: STEADYBIT_EXTENSION_OCIRUNTIME_DEBUG
+                  value: "false"
+                - name: STEADYBIT_EXTENSION_OCIRUNTIME_ROOT
+                  value: /run/steadybit/oci
+                - name: STEADYBIT_EXTENSION_OCIRUNTIME_PATH
+                  value: runc
+                - name: STEADYBIT_EXTENSION_HOSTNAME
+                  valueFrom:
+                    fieldRef:
+                      fieldPath: spec.nodeName
               image: ghcr.io/steadybit/extension-host:v0.0.0
               imagePullPolicy: IfNotPresent
               livenessProbe:
@@ -1303,19 +1757,24 @@ manifest should match snapshot with update strategy:
               securityContext:
                 capabilities:
                   add:
+                    - NET_BIND_SERVICE
+                    - KILL
                     - SYS_ADMIN
                     - SYS_CHROOT
-                    - SYS_RESOURCE
-                    - SYS_BOOT
-                    - NET_RAW
-                    - SYS_TIME
                     - SYS_PTRACE
-                    - KILL
                     - NET_ADMIN
                     - DAC_OVERRIDE
                     - SETUID
                     - SETGID
                     - AUDIT_WRITE
+                    - SYS_BOOT
+                    - NET_RAW
+                    - SYS_TIME
+                    - SETPCAP
+                    - MKNOD
+                    - SYS_RESOURCE
+                  drop:
+                    - ALL
                 readOnlyRootFilesystem: true
                 seccompProfile:
                   type: Unconfined
@@ -1324,8 +1783,8 @@ manifest should match snapshot with update strategy:
                   name: tmp-dir
                 - mountPath: /sys/fs/cgroup
                   name: cgroup-root
-                - mountPath: /run/steadybit/runc
-                  name: runc-root
+                - mountPath: /run/steadybit/oci
+                  name: ociruntime-root
           dnsPolicy: ClusterFirstWithHostNet
           hostNetwork: true
           hostPID: true
@@ -1342,7 +1801,7 @@ manifest should match snapshot with update strategy:
                 type: Directory
               name: cgroup-root
             - emptyDir: {}
-              name: runc-root
+              name: ociruntime-root
       updateStrategy:
         rollingUpdate:
           maxUnavailable: 5
@@ -1369,6 +1828,8 @@ manifest should match snapshot without TLS:
             oneagent.dynatrace.com/injection: "false"
             steadybit.com/extension-auto-discovery: |
               {"extensions":[{"port":8085,"protocol":"http","types":["ACTION","DISCOVERY"]}]}
+            steadybit.com/extension-auto-registration: |
+              {"extensions":[{"port":8085,"protocol":"http"}]}
           labels:
             app: steadybit-extension-host
             app.kubernetes.io/name: steadybit-extension-host
@@ -1385,6 +1846,16 @@ manifest should match snapshot without TLS:
                   value: INFO
                 - name: STEADYBIT_LOG_FORMAT
                   value: text
+                - name: STEADYBIT_EXTENSION_OCIRUNTIME_DEBUG
+                  value: "false"
+                - name: STEADYBIT_EXTENSION_OCIRUNTIME_ROOT
+                  value: /run/steadybit/oci
+                - name: STEADYBIT_EXTENSION_OCIRUNTIME_PATH
+                  value: runc
+                - name: STEADYBIT_EXTENSION_HOSTNAME
+                  valueFrom:
+                    fieldRef:
+                      fieldPath: spec.nodeName
               image: ghcr.io/steadybit/extension-host:v0.0.0
               imagePullPolicy: IfNotPresent
               livenessProbe:
@@ -1421,19 +1892,24 @@ manifest should match snapshot without TLS:
               securityContext:
                 capabilities:
                   add:
+                    - NET_BIND_SERVICE
+                    - KILL
                     - SYS_ADMIN
                     - SYS_CHROOT
-                    - SYS_RESOURCE
-                    - SYS_BOOT
-                    - NET_RAW
-                    - SYS_TIME
                     - SYS_PTRACE
-                    - KILL
                     - NET_ADMIN
                     - DAC_OVERRIDE
                     - SETUID
                     - SETGID
                     - AUDIT_WRITE
+                    - SYS_BOOT
+                    - NET_RAW
+                    - SYS_TIME
+                    - SETPCAP
+                    - MKNOD
+                    - SYS_RESOURCE
+                  drop:
+                    - ALL
                 readOnlyRootFilesystem: true
                 seccompProfile:
                   type: Unconfined
@@ -1442,8 +1918,8 @@ manifest should match snapshot without TLS:
                   name: tmp-dir
                 - mountPath: /sys/fs/cgroup
                   name: cgroup-root
-                - mountPath: /run/steadybit/runc
-                  name: runc-root
+                - mountPath: /run/steadybit/oci
+                  name: ociruntime-root
           dnsPolicy: ClusterFirstWithHostNet
           hostNetwork: true
           hostPID: true
@@ -1460,7 +1936,7 @@ manifest should match snapshot without TLS:
                 type: Directory
               name: cgroup-root
             - emptyDir: {}
-              name: runc-root
+              name: ociruntime-root
       updateStrategy:
         rollingUpdate:
           maxUnavailable: 1

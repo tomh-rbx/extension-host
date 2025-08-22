@@ -1,8 +1,6 @@
 # Default values for steadybit-extension-host.
 # This is a YAML-formatted file.
 # Declare variables to be passed into your templates.
-host:
-  runcDebug: false
 
 image:
   # image.name -- The container image to use for the Steadybit scaffold extension.
@@ -71,13 +69,6 @@ resources:
     # resources.limits.cpu -- The limit of cpu share to be used during its interval
     cpu: "200m"
 
-updateStrategy:
-  # updateStrategy.type -- Specifies the strategy used to replace old Pods by new ones.
-  type: RollingUpdate
-  rollingUpdate:
-    # updateStrategy.rollingUpdate.maxSurge -- The maximum number of DaemonSet pods that can be unavailable during the update.
-    maxUnavailable: 1
-
 serviceAccount:
   # serviceAccount.create -- Specifies whether a ServiceAccount should be created.
   create: true
@@ -88,6 +79,13 @@ securityContextConstraint:
   # securityContextConstraint.create -- Specifies whether a SecurityContextConstraint should be created. Defaults to true if the cluster is OpenShift.
   create: null
   name: steadybit-extension-host
+
+updateStrategy:
+  # updateStrategy.type -- Specifies the strategy used to replace old Pods by new ones.
+  type: RollingUpdate
+  rollingUpdate:
+    # updateStrategy.rollingUpdate.maxUnavailable -- The maximum number of DaemonSet pods that can be unavailable during the update.
+    maxUnavailable: 1
 
 # extra labels to apply to the Kubernetes resources
 extraLabels: {}
@@ -128,21 +126,27 @@ containerSecurityContext:
     type: Unconfined
   readOnlyRootFilesystem: true
   capabilities:
+    drop:
+      - ALL
     add:
+      - NET_BIND_SERVICE
+      - KILL
       - SYS_ADMIN
       - SYS_CHROOT
-      - SYS_RESOURCE
-      - SYS_BOOT
-      - NET_RAW
-      - SYS_TIME
       - SYS_PTRACE
-      - KILL
       - NET_ADMIN
       - DAC_OVERRIDE
       - SETUID
       - SETGID
       - AUDIT_WRITE
-
+      - SYS_BOOT
+      - NET_RAW
+      - SYS_TIME
+      # SETPCAP, MKNOD is needed to support the crun OCI runtime. Better performance / needed on openshift clusters >= 4.18
+      - SETPCAP
+      - MKNOD
+      # SYS_RESOURCE is optional. If you remove it is more likely that the stress cpu/io/memory, fill memory attack will more likely be oomkilled
+      - SYS_RESOURCE
 # extraEnv -- Array with extra environment variables to add to the container
 # e.g:
 # extraEnv:
@@ -159,7 +163,13 @@ extraEnv: []
 #    name: env-secrets
 extraEnvFrom: []
 
+ociRuntime:
+  path: runc
+  debug: false
+
 discovery:
+  # discovery.hostnameFromKubernetes -- If true, the extension will use the spec.nodeName (k8s downward api) as the hostname for the discovery, if set to false, the extension will use the hostname from os.hostname.
+  hostnameFromKubernetes: true
   attributes:
     excludes:
       # discovery.attributes.excludes.host -- List of attributes to exclude from VM discovery.

@@ -9,7 +9,7 @@ import (
 	"fmt"
 	"github.com/elastic/go-sysinfo"
 	"github.com/steadybit/action-kit/go/action_kit_api/v2"
-	"github.com/steadybit/action-kit/go/action_kit_commons/runc"
+	"github.com/steadybit/action-kit/go/action_kit_commons/ociruntime"
 	"github.com/steadybit/action-kit/go/action_kit_commons/stress"
 	"github.com/steadybit/action-kit/go/action_kit_sdk"
 	"github.com/steadybit/extension-kit/extbuild"
@@ -18,7 +18,7 @@ import (
 	"time"
 )
 
-func NewStressMemoryAction(r runc.Runc) action_kit_sdk.Action[StressActionState] {
+func NewStressMemoryAction(r ociruntime.OciRuntime) action_kit_sdk.Action[StressActionState] {
 	return newStressAction(r, getStressMemoryDescription, stressMemory)
 }
 
@@ -36,7 +36,7 @@ func getStressMemoryDescription() action_kit_api.ActionDescription {
 			// A template can be used to pre-fill a selection
 			SelectionTemplates: &targetSelectionTemplates,
 		}),
-		Technology: extutil.Ptr("Host"),
+		Technology: extutil.Ptr("Linux Host"),
 		// Category for the targets to appear in
 		Category: extutil.Ptr("Resource"),
 
@@ -59,8 +59,8 @@ func getStressMemoryDescription() action_kit_api.ActionDescription {
 				Name:         "percentage",
 				Label:        "Load on Host Memory",
 				Description:  extutil.Ptr("How much of the total memory should be allocated?"),
-				Type:         action_kit_api.Percentage,
-				DefaultValue: extutil.Ptr("100"),
+				Type:         action_kit_api.ActionParameterTypePercentage,
+				DefaultValue: extutil.Ptr("80"),
 				Required:     extutil.Ptr(true),
 				Order:        extutil.Ptr(1),
 				MinValue:     extutil.Ptr(1),
@@ -70,7 +70,7 @@ func getStressMemoryDescription() action_kit_api.ActionDescription {
 				Name:         "duration",
 				Label:        "Duration",
 				Description:  extutil.Ptr("How long should memory be wasted?"),
-				Type:         action_kit_api.Duration,
+				Type:         action_kit_api.ActionParameterTypeDuration,
 				DefaultValue: extutil.Ptr("30s"),
 				Required:     extutil.Ptr(true),
 				Order:        extutil.Ptr(2),
@@ -79,7 +79,7 @@ func getStressMemoryDescription() action_kit_api.ActionDescription {
 				Name:         "failOnOomKill",
 				Label:        "Fail on OOM Kill",
 				Description:  extutil.Ptr("Should an OOM kill be considered a failure?"),
-				Type:         action_kit_api.Boolean,
+				Type:         action_kit_api.ActionParameterTypeBoolean,
 				DefaultValue: extutil.Ptr("false"),
 				Required:     extutil.Ptr(true),
 				Order:        extutil.Ptr(3),

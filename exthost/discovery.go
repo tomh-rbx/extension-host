@@ -15,7 +15,6 @@ import (
 	"github.com/steadybit/extension-host/config"
 	"github.com/steadybit/extension-kit/extbuild"
 	"github.com/steadybit/extension-kit/extutil"
-	"os"
 	"time"
 )
 
@@ -51,7 +50,7 @@ func (d *hostDiscovery) DescribeTarget() discovery_kit_api.TargetDescription {
 		Icon:    extutil.Ptr(targetIcon),
 
 		// Labels used in the UI
-		Label: discovery_kit_api.PluralLabel{One: "Host", Other: "Hosts"},
+		Label: discovery_kit_api.PluralLabel{One: "Linux Host", Other: "Linux Hosts"},
 
 		// Category for the targets to appear in
 		Category: extutil.Ptr("basic"),
@@ -128,7 +127,7 @@ func (d *hostDiscovery) DescribeAttributes() []discovery_kit_api.AttributeDescri
 }
 
 func (d *hostDiscovery) DiscoverTargets(ctx context.Context) ([]discovery_kit_api.Target, error) {
-	hostname, _ := os.Hostname()
+	hostname, _ := osHostname()
 	target := discovery_kit_api.Target{
 		Id:         hostname,
 		TargetType: targetID,

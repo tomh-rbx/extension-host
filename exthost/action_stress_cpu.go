@@ -8,7 +8,7 @@ import (
 	"fmt"
 	"github.com/pkg/errors"
 	"github.com/steadybit/action-kit/go/action_kit_api/v2"
-	"github.com/steadybit/action-kit/go/action_kit_commons/runc"
+	"github.com/steadybit/action-kit/go/action_kit_commons/ociruntime"
 	"github.com/steadybit/action-kit/go/action_kit_commons/stress"
 	"github.com/steadybit/action-kit/go/action_kit_sdk"
 	"github.com/steadybit/extension-kit/extbuild"
@@ -16,7 +16,7 @@ import (
 	"time"
 )
 
-func NewStressCpuAction(r runc.Runc) action_kit_sdk.Action[StressActionState] {
+func NewStressCpuAction(r ociruntime.OciRuntime) action_kit_sdk.Action[StressActionState] {
 	return newStressAction(r, getStressCpuDescription, stressCpu)
 }
 
@@ -34,7 +34,7 @@ func getStressCpuDescription() action_kit_api.ActionDescription {
 			// A template can be used to pre-fill a selection
 			SelectionTemplates: &targetSelectionTemplates,
 		}),
-		Technology: extutil.Ptr("Host"),
+		Technology: extutil.Ptr("Linux Host"),
 		// Category for the targets to appear in
 		Category: extutil.Ptr("Resource"),
 
@@ -57,8 +57,8 @@ func getStressCpuDescription() action_kit_api.ActionDescription {
 				Name:         "cpuLoad",
 				Label:        "Host CPU Load",
 				Description:  extutil.Ptr("How much CPU should be consumed?"),
-				Type:         action_kit_api.Percentage,
-				DefaultValue: extutil.Ptr("100"),
+				Type:         action_kit_api.ActionParameterTypePercentage,
+				DefaultValue: extutil.Ptr("80"),
 				Required:     extutil.Ptr(true),
 				Order:        extutil.Ptr(1),
 				MinValue:     extutil.Ptr(0),
@@ -68,7 +68,7 @@ func getStressCpuDescription() action_kit_api.ActionDescription {
 				Name:         "workers",
 				Label:        "Host CPUs",
 				Description:  extutil.Ptr("How many workers should be used to stress the CPU?"),
-				Type:         action_kit_api.StressngWorkers,
+				Type:         action_kit_api.ActionParameterTypeStressngWorkers,
 				DefaultValue: extutil.Ptr("0"),
 				Required:     extutil.Ptr(true),
 				Order:        extutil.Ptr(2),
@@ -77,7 +77,7 @@ func getStressCpuDescription() action_kit_api.ActionDescription {
 				Name:         "duration",
 				Label:        "Duration",
 				Description:  extutil.Ptr("How long should CPU be stressed?"),
-				Type:         action_kit_api.Duration,
+				Type:         action_kit_api.ActionParameterTypeDuration,
 				DefaultValue: extutil.Ptr("30s"),
 				Required:     extutil.Ptr(true),
 				Order:        extutil.Ptr(3),

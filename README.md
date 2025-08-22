@@ -94,22 +94,46 @@ non-root user on a read-only root file-system and will, by default, if deployed 
 
 In order to execute certain actions the extension needs extended capabilities, see details below.
 
-### Resource and network attacks
+### Resource Attacks
 
-Resource attacks start `stress-ng` or other resource attacking processes, and network attacks start `ip` or `tc` processes,
-as runc container (sidecar) using the root user (`uid=0`, `gid=0`) and reusing the target container's linux namespace(s)
-and control group(s). These processes are short-lived and terminated after the attack is finished.
+The resource attacks are starting processes in the target containers cgroup/namespaces using [runc (APL2.0)](https://github.com/opencontainers/runc) for this the following capabilities are needed: `CAP_SYS_CHROOT`, `CAP_SYS_ADMIN`, `CAP_SYS_PTRACE`, `CAP_NET_BIND_SERVICE`, `CAP_DAC_OVERRIDE`, `CAP_SETUID`, `CAP_SETGID`, `CAP_AUDIT_WRITE`, `CAP_KILL`.
+These processes are executed with the root user, but are short-lived and terminated after the attack is finished.
 
-This requires the following capabilities:
-`CAP_SYS_ADMIN`, `CAP_SYS_CHROOT`, `CAP_SYS_RESOURCE`, `CAP_SYS_BOOT`, `CAP_NET_RAW`, `CAP_SYS_TIME`, `CAP_SYS_PTRACE`,
-`CAP_KILL`, `CAP_NET_ADMIN`, `CAP_DAC_OVERRIDE`, `CAP_SETUID`, `CAP_SETGID`, `CAP_AUDIT_WRITE`
+The resource attacks optionally need `CAP_SYS_RESOURCE`. We'd recommend it to be used, otherwise the resource attacks are more likely to be oom-killed by the kernel and fail to carry out the attack.
 
-## Troubleshooting
+Under the hood [stress-ng (GPL2.0)](https://github.com/ColinIanKing/stress-ng) is used to perform the stress attacks.
+For the fill disk `dd` or `fallocate`  and [nsmount (MIT)](https://github.com/steadybit/nsmount) is used.
+For the fill memory [memfill (MIT)](https://github.com/steadybit/memfill) is used.
 
-Using cgroups v2 on the host and `nsdelegate` to mount the cgroup filesystem will prevent
-the action from running processes in other cgroups (e.g. stress cpu/memory, disk fill).
-In that case you need to remount the cgroup filesystem without the `nsdelegate` option.
+All needed binaries are included in the extension container image.
 
-```sh
-sudo mount -o remount,rw,nosuid,nodev,noexec,relatime -t cgroup2 none /sys/fs/cgroup
+### Network Attacks
+
+The network attacks are starting processes in the target containers network namespaces using [runc (APL2.0)](https://github.com/opencontainers/runc) for this the following capabilities are needed: `CAP_NET_ADMIN`,  `CAP_SYS_CHROOT`, `CAP_SYS_ADMIN`, `CAP_SYS_PTRACE`, `CAP_NET_BIND_SERVICE`, `CAP_DAC_OVERRIDE`, `CAP_SETUID`, `CAP_SETGID`, `CAP_AUDIT_WRITE`, `CAP_KILL`.
+These processes are executed with the root user, but are short-lived and terminated after the attack is finished.
+
+Under the hood start `ip` or `tc` is used to reconfigure the network stack and `dig` is used in case the hostnames need to be resolved.
+
+All needed binaries are included in the extension container image.
+
+## Removing some of the capabilities in Kubernetes/Containers
+
+In case you want to reduce the default capabilities of this extension, remove them from the helm values and use a custom image which doesn't set the capability on the executable.
+A customer image can be built using the following Dockerfile:
+
+```dockerfile
+FROM ghcr.io/steadybit/extension-host:latest
+
+USER root
+RUN setcap 'cap_setuid,cap_sys_chroot,cap_setgid,cap_net_raw,cap_net_admin,cap_sys_admin,cap_dac_override,cap_sys_ptrace+eip' /extension
+USER 10000
+
+ENTRYPOINT ["/extension"]
 ```
+
+## Version and Revision
+
+The version and revision of the extension:
+- are printed during the startup of the extension
+- are added as a Docker label to the image
+- are available via the `version.txt`/`revision.txt` files in the root of the image

@@ -1,5 +1,4 @@
-// SPDX-License-Identifier: MIT
-// SPDX-FileCopyrightText: 2024 Steadybit GmbH
+// Copyright 2025 steadybit GmbH. All rights reserved.
 
 package exthost
 
@@ -9,11 +8,14 @@ import (
 	"errors"
 	"fmt"
 	"github.com/google/uuid"
+	"github.com/opencontainers/runtime-spec/specs-go"
 	"github.com/rs/zerolog/log"
 	"github.com/steadybit/action-kit/go/action_kit_api/v2"
-	"github.com/steadybit/action-kit/go/action_kit_commons/runc"
+	"github.com/steadybit/action-kit/go/action_kit_commons/ociruntime"
 	"github.com/steadybit/action-kit/go/action_kit_commons/stress"
+	"github.com/steadybit/action-kit/go/action_kit_commons/utils"
 	"github.com/steadybit/action-kit/go/action_kit_sdk"
+	"github.com/steadybit/extension-host/config"
 	"github.com/steadybit/extension-kit"
 	"github.com/steadybit/extension-kit/extutil"
 	"golang.org/x/sync/syncmap"
@@ -26,7 +28,7 @@ import (
 type stressOptsProvider func(request action_kit_api.PrepareActionRequestBody) (stress.Opts, error)
 
 type stressAction struct {
-	runc         runc.Runc
+	ociRuntime   ociruntime.OciRuntime
 	description  action_kit_api.ActionDescription
 	optsProvider stressOptsProvider
 	stresses     syncmap.Map
@@ -47,14 +49,14 @@ var (
 )
 
 func newStressAction(
-	runc runc.Runc,
+	runc ociruntime.OciRuntime,
 	description func() action_kit_api.ActionDescription,
 	optsProvider stressOptsProvider,
 ) action_kit_sdk.Action[StressActionState] {
 	return &stressAction{
 		description:  description(),
 		optsProvider: optsProvider,
-		runc:         runc,
+		ociRuntime:   runc,
 		stresses:     syncmap.Map{},
 	}
 }
@@ -92,15 +94,18 @@ func (a *stressAction) Prepare(ctx context.Context, state *StressActionState, re
 		return nil, err
 	}
 
-	initProcess, err := runc.ReadLinuxProcessInfo(ctx, 1)
+	initProcess, err := ociruntime.ReadLinuxProcessInfo(ctx, 1, specs.PIDNamespace, specs.CgroupNamespace)
 	if err != nil {
 		return nil, extension_kit.ToError("Failed to prepare stress settings.", err)
 	}
+
+	adaptCpuHosts(&opts)
 
 	state.StressOpts = opts
 	state.Sidecar = stress.SidecarOpts{
 		TargetProcess: initProcess,
 		IdSuffix:      "host",
+		ExecutionId:   request.ExecutionId,
 	}
 	state.ExecutionId = request.ExecutionId
 	if !extutil.ToBool(request.Config["failOnOomKill"]) {
@@ -109,8 +114,29 @@ func (a *stressAction) Prepare(ctx context.Context, state *StressActionState, re
 	return nil, nil
 }
 
+func adaptCpuHosts(s *stress.Opts) {
+	if s.CpuWorkers == nil || *s.CpuWorkers != 0 {
+		return
+	}
+
+	//stress-ng will use all configured processors, we deem this to be wrong and expect all online cpus to be used.
+	if c, err := utils.ReadCpusAllowedCount("/proc/1/status"); err == nil {
+		s.CpuWorkers = extutil.Ptr(c)
+	} else {
+		log.Debug().Err(err).Msg("failed to read cpus allowed for pid 1")
+	}
+}
+
+func (a *stressAction) stress(ctx context.Context, sidecar stress.SidecarOpts, opts stress.Opts) (stress.Stress, error) {
+	if config.Config.DisableRunc {
+		return stress.NewStressProcess(opts)
+	}
+
+	return stress.NewStressRunc(ctx, a.ociRuntime, sidecar, opts)
+}
+
 func (a *stressAction) Start(ctx context.Context, state *StressActionState) (*action_kit_api.StartResult, error) {
-	s, err := stress.New(ctx, a.runc, state.Sidecar, state.StressOpts)
+	s, err := a.stress(ctx, state.Sidecar, state.StressOpts)
 	if err != nil {
 		return nil, extension_kit.ToError("Failed to stress host", err)
 	}
@@ -203,7 +229,7 @@ func (a *stressAction) stressExited(executionId uuid.UUID) (bool, error) {
 	if !ok {
 		return true, nil
 	}
-	return s.(*stress.Stress).Exited()
+	return s.(stress.Stress).Exited()
 }
 
 func (a *stressAction) stopStressHost(executionId uuid.UUID) bool {
@@ -211,12 +237,13 @@ func (a *stressAction) stopStressHost(executionId uuid.UUID) bool {
 	if !ok {
 		return false
 	}
-	s.(*stress.Stress).Stop()
+	s.(stress.Stress).Stop()
 	return true
 }
 
 func isStressNgInstalled() bool {
-	cmd := exec.Command("stress-ng", "-V")
+	path := utils.LocateExecutable("stress-ng", "STEADYBIT_EXTENSION_STRESSNG_PATH")
+	cmd := exec.Command(path, "-V")
 	cmd.Dir = os.TempDir()
 	var outputBuffer bytes.Buffer
 	cmd.Stdout = &outputBuffer

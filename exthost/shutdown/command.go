@@ -1,88 +1,61 @@
+// SPDX-License-Identifier: MIT
+// SPDX-FileCopyrightText: 2025 Steadybit GmbH
+
 package shutdown
 
 import (
+	"context"
 	"github.com/rs/zerolog/log"
-	"github.com/steadybit/extension-host/exthost/common"
-	"os"
+	"github.com/steadybit/action-kit/go/action_kit_commons/utils"
 	"os/exec"
-	"runtime"
+	"time"
 )
 
-type Command interface {
-	IsShutdownCommandExecutable() bool
-	Shutdown() error
-	Reboot() error
+type commandShutdown struct {
+	run      func(ctx context.Context, name string, arg ...string) error
+	lookPath func(name string) (string, error)
 }
 
-type CommandImpl struct{}
-
-func NewCommand() Command {
-	return &CommandImpl{}
+func newCommandShutdown() Shutdown {
+	return &commandShutdown{run: func(ctx context.Context, name string, arg ...string) error {
+		return utils.RootCommandContext(ctx, name, arg...).Run()
+	}, lookPath: exec.LookPath}
 }
 
-func (c *CommandImpl) IsShutdownCommandExecutable() bool {
-	if runtime.GOOS == "windows" {
-		_, err := exec.LookPath("shutdown.exe")
-		if err != nil {
-			log.Debug().Msgf("Failed to find shutdown.exe %s", err)
-			return false
-		}
-		return true
-	} else {
-		path, err := exec.LookPath("shutdown")
-		if err != nil {
-			log.Debug().Msgf("Failed to find shutdown %s", err)
-			return false
-		}
-		info, err := os.Stat(path)
-		if err != nil {
-			log.Debug().Msgf("Failed to stat shutdown %s", err)
-			return false
-		}
-		if !c.isExecAny(info.Mode()) {
-			log.Debug().Msgf("Shutdown is not executable")
-			return false
-		}
-		return true
+func (c *commandShutdown) IsAvailable() bool {
+	if _, err := c.lookPath("shutdown"); err != nil {
+		log.Debug().Err(err).Msgf("failed to find shutdown")
+		return false
 	}
+	return true
 }
 
-func (c *CommandImpl) isExecAny(mode os.FileMode) bool {
-	return mode&0111 != 0
+func (c *commandShutdown) Shutdown() error {
+	return c.runShutdown("-h")
+
 }
 
-func (c *CommandImpl) getShutdownCommand() []string {
-
-	if runtime.GOOS == "windows" {
-		return []string{"shutdown.exe", "/s", "/t", "0"}
-	}
-	return []string{"shutdown", "-h", "now"}
+func (c *commandShutdown) Reboot() error {
+	return c.runShutdown("-r")
 }
 
-func (c *CommandImpl) getRebootCommand() []string {
-
-	if runtime.GOOS == "windows" {
-		return []string{"shutdown.exe", "/r", "/t", "0"}
-	}
-	return []string{"shutdown", "-r", "now"}
+func (c *commandShutdown) Name() string {
+	return "command"
 }
 
-func (c *CommandImpl) Shutdown() error {
-	cmd := c.getShutdownCommand()
-	err := common.RunAsRoot(cmd[0], cmd[1:]...)
-	if err != nil {
-		log.Err(err).Msg("Failed to shutdown")
+func (c *commandShutdown) runShutdown(mode string) error {
+	if err := c.run(context.Background(), "shutdown", "-k", "--no-wall", "now"); err != nil {
+		_ = c.run(context.Background(), "shutdown", "-c")
+		log.Err(err).Msg("failed 'shutdown -k --no-wall now'")
 		return err
 	}
-	return nil
-}
 
-func (c *CommandImpl) Reboot() error {
-	cmd := c.getRebootCommand()
-	err := common.RunAsRoot(cmd[0], cmd[1:]...)
-	if err != nil {
-		log.Err(err).Msg("Failed to reboot")
-		return err
-	}
+	go func() {
+		time.Sleep(3 * time.Second)
+		if err := c.run(context.Background(), "shutdown", mode, "now"); err != nil {
+			log.Err(err).Msgf("failed 'shutdown %s now'", mode)
+		}
+	}()
+
 	return nil
 }

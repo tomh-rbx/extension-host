@@ -2,7 +2,6 @@ project_name: steadybit-extension-host
 version: 2
 before:
   hooks:
-    - go mod download
     - make licenses-report
 
 release:
@@ -16,7 +15,7 @@ builds:
   - binary: extension-host
     env:
       - CGO_ENABLED=0
-      - MEMFILL_VERSION=v1.1.1
+      - MEMFILL_VERSION=v1.3.0
       - NSMOUNT_VERSION=v1.0.0
     goos:
       - linux
@@ -105,11 +104,11 @@ nfpms:
         dependencies:
           - /usr/bin/ps
           - /usr/bin/stress-ng
-          - /usr/sbin/tc
+          - iproute-tc
           - /usr/sbin/ip
           - /usr/bin/dig
           - runc
-          - /usr/sbin/capsh
+          - libcap
           - /usr/bin/cgexec
         recommends:
           - kernel-modules-extra

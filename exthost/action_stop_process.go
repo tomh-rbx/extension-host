@@ -7,15 +7,16 @@ package exthost
 import (
 	"context"
 	"fmt"
+	"sync"
+	"time"
+
 	"github.com/google/uuid"
 	"github.com/rs/zerolog/log"
 	"github.com/steadybit/action-kit/go/action_kit_api/v2"
 	"github.com/steadybit/action-kit/go/action_kit_sdk"
-	"github.com/steadybit/extension-host/exthost/process"
+	stopprocess "github.com/steadybit/extension-host/exthost/process"
 	"github.com/steadybit/extension-kit/extbuild"
 	"github.com/steadybit/extension-kit/extutil"
-	"sync"
-	"time"
 )
 
 type stopProcessAction struct {
@@ -60,7 +61,7 @@ func (a *stopProcessAction) Describe() action_kit_api.ActionDescription {
 			// A template can be used to pre-fill a selection
 			SelectionTemplates: extutil.Ptr(targetSelectionTemplates),
 		}),
-		Technology: extutil.Ptr("Host"),
+		Technology: extutil.Ptr("Linux Host"),
 		// Category for the targets to appear in
 		Category: extutil.Ptr("State"),
 
@@ -83,7 +84,7 @@ func (a *stopProcessAction) Describe() action_kit_api.ActionDescription {
 				Name:        "process",
 				Label:       "Process",
 				Description: extutil.Ptr("PID or string to match the process name or command."),
-				Type:        action_kit_api.String,
+				Type:        action_kit_api.ActionParameterTypeString,
 				Required:    extutil.Ptr(true),
 				Order:       extutil.Ptr(1),
 			},
@@ -91,7 +92,7 @@ func (a *stopProcessAction) Describe() action_kit_api.ActionDescription {
 				Name:         "graceful",
 				Label:        "Graceful",
 				Description:  extutil.Ptr("If true a TERM signal is sent before the KILL signal."),
-				Type:         action_kit_api.Boolean,
+				Type:         action_kit_api.ActionParameterTypeBoolean,
 				DefaultValue: extutil.Ptr("true"),
 				Required:     extutil.Ptr(true),
 				Order:        extutil.Ptr(2),
@@ -100,7 +101,7 @@ func (a *stopProcessAction) Describe() action_kit_api.ActionDescription {
 				Name:         "duration",
 				Label:        "Duration",
 				Description:  extutil.Ptr("Over this period the matching processes are killed."),
-				Type:         action_kit_api.Duration,
+				Type:         action_kit_api.ActionParameterTypeDuration,
 				DefaultValue: extutil.Ptr("30s"),
 				Required:     extutil.Ptr(true),
 				Order:        extutil.Ptr(3),
@@ -108,7 +109,7 @@ func (a *stopProcessAction) Describe() action_kit_api.ActionDescription {
 				Name:         "delay",
 				Label:        "Delay",
 				Description:  extutil.Ptr("The delay before the kill signal is sent."),
-				Type:         action_kit_api.Duration,
+				Type:         action_kit_api.ActionParameterTypeDuration,
 				DefaultValue: extutil.Ptr("5s"),
 				Required:     extutil.Ptr(true),
 				Advanced:     extutil.Ptr(true),

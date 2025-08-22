@@ -9,15 +9,15 @@ import (
 	"fmt"
 	"github.com/steadybit/action-kit/go/action_kit_api/v2"
 	"github.com/steadybit/action-kit/go/action_kit_commons/network"
-	"github.com/steadybit/action-kit/go/action_kit_commons/runc"
+	"github.com/steadybit/action-kit/go/action_kit_commons/ociruntime"
 	"github.com/steadybit/action-kit/go/action_kit_sdk"
 	"github.com/steadybit/extension-kit/extbuild"
 	"github.com/steadybit/extension-kit/extutil"
 )
 
-func NewNetworkPackageLossContainerAction(r runc.Runc) action_kit_sdk.Action[NetworkActionState] {
+func NewNetworkPackageLossContainerAction(r ociruntime.OciRuntime) action_kit_sdk.Action[NetworkActionState] {
 	return &networkAction{
-		runc:         r,
+		ociRuntime:   r,
 		optsProvider: packageLoss(r),
 		optsDecoder:  packageLossDecode,
 		description:  getNetworkPackageLossDescription(),
@@ -35,7 +35,7 @@ func getNetworkPackageLossDescription() action_kit_api.ActionDescription {
 			TargetType:         targetID,
 			SelectionTemplates: &targetSelectionTemplates,
 		},
-		Technology:  extutil.Ptr("Host"),
+		Technology:  extutil.Ptr("Linux Host"),
 		Category:    extutil.Ptr("Network"),
 		Kind:        action_kit_api.Attack,
 		TimeControl: action_kit_api.TimeControlExternal,
@@ -45,7 +45,7 @@ func getNetworkPackageLossDescription() action_kit_api.ActionDescription {
 				Name:         "percentage",
 				Label:        "Network Loss",
 				Description:  extutil.Ptr("How much of the traffic should be lost?"),
-				Type:         action_kit_api.Percentage,
+				Type:         action_kit_api.ActionParameterTypePercentage,
 				DefaultValue: extutil.Ptr("70"),
 				Required:     extutil.Ptr(true),
 				Order:        extutil.Ptr(1),
@@ -54,7 +54,7 @@ func getNetworkPackageLossDescription() action_kit_api.ActionDescription {
 				Name:        "networkInterface",
 				Label:       "Network Interface",
 				Description: extutil.Ptr("Target Network Interface which should be affected. All if none specified."),
-				Type:        action_kit_api.StringArray,
+				Type:        action_kit_api.ActionParameterTypeStringArray,
 				Required:    extutil.Ptr(false),
 				Order:       extutil.Ptr(104),
 			},
@@ -62,7 +62,7 @@ func getNetworkPackageLossDescription() action_kit_api.ActionDescription {
 	}
 }
 
-func packageLoss(r runc.Runc) networkOptsProvider {
+func packageLoss(r ociruntime.OciRuntime) networkOptsProvider {
 	return func(ctx context.Context, sidecar network.SidecarOpts, request action_kit_api.PrepareActionRequestBody) (network.Opts, action_kit_api.Messages, error) {
 		_, err := CheckTargetHostname(request.Target.Attributes)
 		if err != nil {
@@ -77,7 +77,7 @@ func packageLoss(r runc.Runc) networkOptsProvider {
 
 		interfaces := extutil.ToStringArray(request.Config["networkInterface"])
 		if len(interfaces) == 0 {
-			interfaces, err = network.ListNonLoopbackInterfaceNames(ctx, r, sidecar)
+			interfaces, err = network.ListNonLoopbackInterfaceNames(ctx, runner(r, sidecar))
 			if err != nil {
 				return nil, nil, err
 			}

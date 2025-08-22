@@ -8,17 +8,18 @@ import (
 	"context"
 	"github.com/rs/zerolog/log"
 	"github.com/steadybit/action-kit/go/action_kit_api/v2"
-	"github.com/steadybit/action-kit/go/action_kit_commons/runc"
+	"github.com/steadybit/action-kit/go/action_kit_commons/network"
+	"github.com/steadybit/action-kit/go/action_kit_commons/ociruntime"
 	"github.com/steadybit/action-kit/go/action_kit_sdk"
+	"github.com/steadybit/extension-host/config"
 	"github.com/steadybit/extension-host/exthost/timetravel"
 	"github.com/steadybit/extension-kit/extbuild"
 	"github.com/steadybit/extension-kit/extutil"
-	"runtime"
 	"time"
 )
 
 type timeTravelAction struct {
-	runc runc.Runc
+	runc ociruntime.OciRuntime
 }
 
 type TimeTravelActionState struct {
@@ -33,7 +34,7 @@ var (
 	_ action_kit_sdk.ActionWithStop[TimeTravelActionState] = (*timeTravelAction)(nil) // Optional, needed when the action needs a stop method
 )
 
-func NewTimetravelAction(r runc.Runc) action_kit_sdk.Action[TimeTravelActionState] {
+func NewTimetravelAction(r ociruntime.OciRuntime) action_kit_sdk.Action[TimeTravelActionState] {
 	return &timeTravelAction{runc: r}
 }
 
@@ -56,7 +57,7 @@ func (a *timeTravelAction) Describe() action_kit_api.ActionDescription {
 			// A template can be used to pre-fill a selection
 			SelectionTemplates: &targetSelectionTemplates,
 		}),
-		Technology: extutil.Ptr("Host"),
+		Technology: extutil.Ptr("Linux Host"),
 		// Category for the targets to appear in
 		Category: extutil.Ptr("State"),
 
@@ -76,19 +77,20 @@ func (a *timeTravelAction) Describe() action_kit_api.ActionDescription {
 		// The parameters for the action
 		Parameters: []action_kit_api.ActionParameter{
 			{
-				Name:         "offset",
-				Label:        "Offset",
-				Description:  extutil.Ptr("The offset to the current time."),
-				Type:         action_kit_api.Duration,
-				DefaultValue: extutil.Ptr("60m"),
-				Required:     extutil.Ptr(true),
-				Order:        extutil.Ptr(1),
+				Name:          "offset",
+				Label:         "Offset",
+				Description:   extutil.Ptr("The offset to the current time."),
+				Type:          action_kit_api.ActionParameterTypeDuration,
+				DurationUnits: extutil.Ptr([]action_kit_api.DurationUnit{action_kit_api.DurationUnitMilliseconds, action_kit_api.DurationUnitSeconds, action_kit_api.DurationUnitMinutes, action_kit_api.DurationUnitHours, action_kit_api.DurationUnitDays}),
+				DefaultValue:  extutil.Ptr("60m"),
+				Required:      extutil.Ptr(true),
+				Order:         extutil.Ptr(1),
 			},
 			{
 				Name:         "duration",
 				Label:        "Duration",
-				Description:  extutil.Ptr("How long should CPU be stressed?"),
-				Type:         action_kit_api.Duration,
+				Description:  extutil.Ptr("How long should time travel take?"),
+				Type:         action_kit_api.ActionParameterTypeDuration,
 				DefaultValue: extutil.Ptr("30s"),
 				Required:     extutil.Ptr(true),
 				Order:        extutil.Ptr(2),
@@ -96,7 +98,7 @@ func (a *timeTravelAction) Describe() action_kit_api.ActionDescription {
 				Name:         "disableNtp",
 				Label:        "Disable NTP",
 				Description:  extutil.Ptr("Prevent NTP from correcting time during attack."),
-				Type:         action_kit_api.Boolean,
+				Type:         action_kit_api.ActionParameterTypeBoolean,
 				DefaultValue: extutil.Ptr("true"),
 				Required:     extutil.Ptr(false),
 				Advanced:     extutil.Ptr(true),
@@ -130,20 +132,7 @@ func (a *timeTravelAction) Prepare(_ context.Context, state *TimeTravelActionSta
 	}
 	state.DisableNtp = extutil.ToBool(request.Config["disableNtp"])
 
-	if !isUnixLike() {
-		return &action_kit_api.PrepareResult{
-			Error: extutil.Ptr(action_kit_api.ActionKitError{
-				Title:  "Cannot run on non-unix-like systems",
-				Status: extutil.Ptr(action_kit_api.Errored),
-			}),
-		}, nil
-	}
-
 	return nil, nil
-}
-
-func isUnixLike() bool {
-	return runtime.GOOS != "windows"
 }
 
 // Start is called to start the action
@@ -152,7 +141,13 @@ func isUnixLike() bool {
 func (a *timeTravelAction) Start(ctx context.Context, state *TimeTravelActionState) (*action_kit_api.StartResult, error) {
 	if state.DisableNtp {
 		log.Info().Msg("Blocking NTP traffic")
-		if err := timetravel.AdjustNtpTrafficRules(ctx, a.runc, false); err != nil {
+		runner, err := a.runner(ctx)
+		if err != nil {
+			log.Error().Err(err).Msg("Failed to create runner for blocking NTP traffic")
+			return nil, err
+		}
+
+		if err := timetravel.AdjustNtpTrafficRules(ctx, runner, false); err != nil {
 			log.Error().Err(err).Msg("Failed to block ntp traffic")
 			return nil, err
 		}
@@ -181,7 +176,13 @@ func (a *timeTravelAction) Stop(ctx context.Context, state *TimeTravelActionStat
 	log.Info().Msg("Adjusting time back")
 	if state.DisableNtp {
 		log.Info().Msg("Unblocking NTP traffic")
-		if err := timetravel.AdjustNtpTrafficRules(ctx, a.runc, true); err != nil {
+		runner, err := a.runner(ctx)
+		if err != nil {
+			log.Error().Err(err).Msg("Failed to create runner for unblocking NTP traffic")
+			return nil, err
+		}
+
+		if err := timetravel.AdjustNtpTrafficRules(ctx, runner, true); err != nil {
 			log.Error().Err(err).Msg("Failed to unblock NTP traffic")
 			return nil, err
 		}
@@ -193,4 +194,22 @@ func (a *timeTravelAction) Stop(ctx context.Context, state *TimeTravelActionStat
 	}
 	state.OffsetApplied = false
 	return nil, nil
+}
+
+func (a *timeTravelAction) runner(ctx context.Context) (network.CommandRunner, error) {
+	if config.Config.DisableRunc {
+		return network.NewProcessRunner(), nil
+	}
+
+	initProcess, err := ociruntime.ReadLinuxProcessInfo(ctx, 1)
+	if err != nil {
+		return nil, err
+	}
+
+	sidecar := network.SidecarOpts{
+		TargetProcess: initProcess,
+		IdSuffix:      "host",
+	}
+
+	return network.NewRuncRunner(a.runc, sidecar), nil
 }

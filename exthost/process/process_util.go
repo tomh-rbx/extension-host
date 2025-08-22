@@ -1,13 +1,16 @@
+// SPDX-License-Identifier: MIT
+// SPDX-FileCopyrightText: 2025 Steadybit GmbH
+
 package stopprocess
 
 import (
+	"context"
+	"errors"
 	"fmt"
 	"github.com/mitchellh/go-ps"
 	"github.com/rs/zerolog/log"
-	"github.com/steadybit/extension-host/exthost/common"
+	"github.com/steadybit/action-kit/go/action_kit_commons/utils"
 	"github.com/steadybit/extension-kit/extutil"
-	"os/exec"
-	"runtime"
 	"strings"
 	"syscall"
 )
@@ -17,7 +20,7 @@ func StopProcesses(pid []int, force bool) error {
 		return nil
 	}
 
-	errors := make([]string, 0)
+	var errs error
 	for _, p := range pid {
 		if process, err := ps.FindProcess(p); err == nil {
 			log.Info().Int("pid", p).Str("name", process.Executable()).Msg("Stopping process")
@@ -25,35 +28,15 @@ func StopProcesses(pid []int, force bool) error {
 			continue
 		}
 
-		var err error
-		if runtime.GOOS == "windows" {
-			err = stopProcessWindows(p, force)
-		} else {
-			err = stopProcessUnix(p, force)
-		}
-		if err != nil {
-			errors = append(errors, err.Error())
+		if err := stopProcessUnix(p, force); err != nil {
+			errs = errors.Join(errs, err)
 		}
 	}
-	if len(errors) > 0 {
-		return fmt.Errorf("fail to stop processes : %s", strings.Join(errors, ", "))
+
+	if errs != nil {
+		return fmt.Errorf("fail to stop processes : %w", errs)
 	}
 	return nil
-}
-
-func stopProcessWindows(pid int, force bool) error {
-	if force {
-		err := exec.Command("taskkill", "/f", "/pid", fmt.Sprintf("%d", pid)).Run()
-		if err != nil {
-			return fmt.Errorf("failed to force kill process via exec: %w", err)
-		}
-	}
-
-	err := exec.Command("taskkill", "/pid", fmt.Sprintf("%d", pid)).Run()
-	if err != nil {
-		return fmt.Errorf("failed to kill process via exec: %w", err)
-	}
-	return err
 }
 
 func stopProcessUnix(pid int, force bool) error {
@@ -61,7 +44,7 @@ func stopProcessUnix(pid int, force bool) error {
 		err := syscall.Kill(pid, syscall.SIGKILL)
 		if err != nil {
 			log.Debug().Err(err).Int("pid", pid).Msg("Failed to send SIGKILL via syscall")
-			err = common.RunAsRoot("kill", "-9", fmt.Sprintf("%d", pid))
+			err = utils.RootCommandContext(context.Background(), "kill", "-9", fmt.Sprintf("%d", pid)).Run()
 		}
 		if err != nil {
 			return fmt.Errorf("failed to send SIGKILL process via exec: %w", err)
@@ -72,7 +55,7 @@ func stopProcessUnix(pid int, force bool) error {
 	err := syscall.Kill(pid, syscall.SIGTERM)
 	if err != nil {
 		log.Error().Err(err).Int("pid", pid).Msg("failed to send SIGTERM via syscall")
-		err = common.RunAsRoot("kill", fmt.Sprintf("%d", pid))
+		err = utils.RootCommandContext(context.Background(), "kill", fmt.Sprintf("%d", pid)).Run()
 	}
 	if err != nil {
 		return fmt.Errorf("failed to send SIGTERM via exec: %w", err)

@@ -8,15 +8,15 @@ import (
 	"fmt"
 	"github.com/steadybit/action-kit/go/action_kit_api/v2"
 	"github.com/steadybit/action-kit/go/action_kit_commons/network"
-	"github.com/steadybit/action-kit/go/action_kit_commons/runc"
+	"github.com/steadybit/action-kit/go/action_kit_commons/ociruntime"
 	"github.com/steadybit/action-kit/go/action_kit_sdk"
 	"github.com/steadybit/extension-kit/extbuild"
 	"github.com/steadybit/extension-kit/extutil"
 )
 
-func NewNetworkBlockDnsContainerAction(r runc.Runc) action_kit_sdk.Action[NetworkActionState] {
+func NewNetworkBlockDnsContainerAction(r ociruntime.OciRuntime) action_kit_sdk.Action[NetworkActionState] {
 	return &networkAction{
-		runc:         r,
+		ociRuntime:   r,
 		optsProvider: blockDns(),
 		optsDecoder:  blackholeDecode,
 		description:  getNetworkBlockDnsDescription(),
@@ -34,7 +34,7 @@ func getNetworkBlockDnsDescription() action_kit_api.ActionDescription {
 			TargetType:         targetID,
 			SelectionTemplates: &targetSelectionTemplates,
 		},
-		Technology:  extutil.Ptr("Host"),
+		Technology:  extutil.Ptr("Linux Host"),
 		Category:    extutil.Ptr("Network"),
 		Kind:        action_kit_api.Attack,
 		TimeControl: action_kit_api.TimeControlExternal,
@@ -43,7 +43,7 @@ func getNetworkBlockDnsDescription() action_kit_api.ActionDescription {
 				Name:         "duration",
 				Label:        "Duration",
 				Description:  extutil.Ptr("How long should the network be affected?"),
-				Type:         action_kit_api.Duration,
+				Type:         action_kit_api.ActionParameterTypeDuration,
 				DefaultValue: extutil.Ptr("30s"),
 				Required:     extutil.Ptr(true),
 				Order:        extutil.Ptr(0),
@@ -52,7 +52,7 @@ func getNetworkBlockDnsDescription() action_kit_api.ActionDescription {
 				Name:         "dnsPort",
 				Label:        "DNS Port",
 				Description:  extutil.Ptr("Port number used for DNS queries (typically 53)"),
-				Type:         action_kit_api.Integer,
+				Type:         action_kit_api.ActionParameterTypeInteger,
 				DefaultValue: extutil.Ptr("53"),
 				Required:     extutil.Ptr(true),
 				Order:        extutil.Ptr(1),

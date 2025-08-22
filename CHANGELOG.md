@@ -1,5 +1,82 @@
 # Changelog
 
+# v1.4.1
+
+ - Add STEADYBIT_EXTENSTION_DIG_TIMEOUT
+ - Treat dns answers case insensitive
+
+## v1.4.0
+
+ - run steadybit sidecar containers using crun
+ - use stressng --iomix (instead of --io) to stress io
+
+## v1.3.2
+
+- If stress/diskfill/memfill exits unexpetedly report this as error and not as failure
+
+## v1.3.1
+
+- fix: ignore cgroups for memfill
+
+## v1.3.0
+
+- feat: add option to disable runc for running attacks
+
+## v1.2.37
+
+- fix: propagate environment to started runc processes
+
+## v1.2.36
+
+- fix: experiment execution when using the host.hostname of the k8s downward API
+
+## v1.2.35
+
+- possibility to set the host.hostname attribute in the discovery by the k8s downward api
+
+
+## v1.2.34
+
+- rename "Host" to "Linux Host" in discovery
+
+## v1.2.33
+
+- safe defaults for stress-attacks
+- update depdendencies
+
+## v1.2.32
+
+- fix shutdown/reboot always failing on plain EC2 instances
+- Rename "Shutdown Host" to "Trigger Shutdown Host"
+
+## v1.2.31
+
+- remove dependency to lsns
+- update dependencies
+- require iproute-tc and libcap instead of /usr/sbin/tc and /usr/sbin/capsh
+
+## v1.2.30
+
+- Updated dependencies
+- fix: fill disk/stress io fails when file permissions disallow write
+
+## v1.2.29
+
+- fix: stress cpu attack uses all configured CPUs and not all available CPUs
+
+## v1.2.28
+
+- chore: update dependecies (CVE-2024-11187 & CVE-2024-12705)
+
+## v1.2.27
+
+- Rename some network actions to explicitly contain the term "outgoing"
+- Use runc binary from the opencontainers/runc project
+
+## v1.2.26
+
+- fix: improve container id to be unique by adding the execution id
+
 ## v1.2.25
 
 - Use uid instead of name for user statement in Dockerfile

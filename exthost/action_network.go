@@ -1,5 +1,4 @@
-// SPDX-License-Identifier: MIT
-// SPDX-FileCopyrightText: 2024 Steadybit GmbH
+// Copyright 2025 steadybit GmbH. All rights reserved.
 
 package exthost
 
@@ -8,16 +7,19 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"net"
+	"slices"
+	"strings"
+
 	"github.com/google/uuid"
+	"github.com/opencontainers/runtime-spec/specs-go"
 	"github.com/steadybit/action-kit/go/action_kit_api/v2"
 	"github.com/steadybit/action-kit/go/action_kit_commons/network"
-	"github.com/steadybit/action-kit/go/action_kit_commons/runc"
+	"github.com/steadybit/action-kit/go/action_kit_commons/ociruntime"
 	"github.com/steadybit/action-kit/go/action_kit_sdk"
 	"github.com/steadybit/extension-host/config"
 	"github.com/steadybit/extension-kit"
 	"github.com/steadybit/extension-kit/extutil"
-	"net"
-	"strings"
 )
 
 type networkOptsProvider func(ctx context.Context, sidecar network.SidecarOpts, request action_kit_api.PrepareActionRequestBody) (network.Opts, action_kit_api.Messages, error)
@@ -25,7 +27,7 @@ type networkOptsProvider func(ctx context.Context, sidecar network.SidecarOpts, 
 type networkOptsDecoder func(data json.RawMessage) (network.Opts, error)
 
 type networkAction struct {
-	runc         runc.Runc
+	ociRuntime   ociruntime.OciRuntime
 	description  action_kit_api.ActionDescription
 	optsProvider networkOptsProvider
 	optsDecoder  networkOptsDecoder
@@ -46,7 +48,7 @@ var commonNetworkParameters = []action_kit_api.ActionParameter{
 		Name:         "duration",
 		Label:        "Duration",
 		Description:  extutil.Ptr("How long should the network be affected?"),
-		Type:         action_kit_api.Duration,
+		Type:         action_kit_api.ActionParameterTypeDuration,
 		DefaultValue: extutil.Ptr("30s"),
 		Required:     extutil.Ptr(true),
 		Order:        extutil.Ptr(0),
@@ -55,7 +57,7 @@ var commonNetworkParameters = []action_kit_api.ActionParameter{
 		Name:         "hostname",
 		Label:        "Hostname",
 		Description:  extutil.Ptr("Restrict to/from which hosts the traffic is affected."),
-		Type:         action_kit_api.StringArray,
+		Type:         action_kit_api.ActionParameterTypeStringArray,
 		DefaultValue: extutil.Ptr(""),
 		Advanced:     extutil.Ptr(true),
 		Order:        extutil.Ptr(101),
@@ -64,7 +66,7 @@ var commonNetworkParameters = []action_kit_api.ActionParameter{
 		Name:         "ip",
 		Label:        "IP Address/CIDR",
 		Description:  extutil.Ptr("Restrict to/from which IP addresses or blocks the traffic is affected."),
-		Type:         action_kit_api.StringArray,
+		Type:         action_kit_api.ActionParameterTypeStringArray,
 		DefaultValue: extutil.Ptr(""),
 		Advanced:     extutil.Ptr(true),
 		Order:        extutil.Ptr(102),
@@ -73,7 +75,7 @@ var commonNetworkParameters = []action_kit_api.ActionParameter{
 		Name:         "port",
 		Label:        "Ports",
 		Description:  extutil.Ptr("Restrict to/from which ports the traffic is affected."),
-		Type:         action_kit_api.StringArray,
+		Type:         action_kit_api.ActionParameterTypeStringArray,
 		DefaultValue: extutil.Ptr(""),
 		Advanced:     extutil.Ptr(true),
 		Order:        extutil.Ptr(103),
@@ -94,7 +96,7 @@ func (a *networkAction) Prepare(ctx context.Context, state *NetworkActionState, 
 		return nil, err
 	}
 
-	initProcess, err := runc.ReadLinuxProcessInfo(ctx, 1)
+	initProcess, err := ociruntime.ReadLinuxProcessInfo(ctx, 1, specs.NetworkNamespace)
 	if err != nil {
 		return nil, extension_kit.ToError("Failed to read root process infos.", err)
 	}
@@ -102,6 +104,7 @@ func (a *networkAction) Prepare(ctx context.Context, state *NetworkActionState, 
 	state.Sidecar = network.SidecarOpts{
 		TargetProcess: initProcess,
 		IdSuffix:      "host",
+		ExecutionId:   request.ExecutionId,
 	}
 
 	opts, messages, err := a.optsProvider(ctx, state.Sidecar, request)
@@ -132,7 +135,7 @@ func (a *networkAction) Start(ctx context.Context, state *NetworkActionState) (*
 		},
 	}}
 
-	err = network.Apply(ctx, a.runc, state.Sidecar, opts)
+	err = network.Apply(ctx, runner(a.ociRuntime, state.Sidecar), opts)
 	if err != nil {
 		var toomany *network.ErrTooManyTcCommands
 		if errors.As(err, &toomany) {
@@ -154,11 +157,18 @@ func (a *networkAction) Stop(ctx context.Context, state *NetworkActionState) (*a
 		return nil, extension_kit.ToError("Failed to deserialize network settings.", err)
 	}
 
-	if err := network.Revert(ctx, a.runc, state.Sidecar, opts); err != nil {
+	if err := network.Revert(ctx, runner(a.ociRuntime, state.Sidecar), opts); err != nil {
 		return nil, extension_kit.ToError("Failed to revert network settings.", err)
 	}
 
 	return nil, nil
+}
+
+func runner(r ociruntime.OciRuntime, sidecar network.SidecarOpts) network.CommandRunner {
+	if config.Config.DisableRunc {
+		return network.NewProcessRunner()
+	}
+	return network.NewRuncRunner(r, sidecar)
 }
 
 func parsePortRanges(raw []string) ([]network.PortRange, error) {
@@ -182,14 +192,20 @@ func parsePortRanges(raw []string) ([]network.PortRange, error) {
 	return ranges, nil
 }
 
-func mapToNetworkFilter(ctx context.Context, r runc.Runc, sidecar network.SidecarOpts, actionConfig map[string]interface{}, restrictedEndpoints []action_kit_api.RestrictedEndpoint) (network.Filter, action_kit_api.Messages, error) {
+func hostnameResolver(r ociruntime.OciRuntime, sidecar network.SidecarOpts) *network.HostnameResolver {
+	if config.Config.DisableRunc {
+		return &network.HostnameResolver{Dig: &network.CommandDigRunner{}}
+	}
+	return &network.HostnameResolver{Dig: &network.RuncDigRunner{Runc: r, Sidecar: sidecar}}
+}
+
+func mapToNetworkFilter(ctx context.Context, r ociruntime.OciRuntime, sidecar network.SidecarOpts, actionConfig map[string]interface{}, restrictedEndpoints []action_kit_api.RestrictedEndpoint) (network.Filter, action_kit_api.Messages, error) {
 	includeCidrs, unresolved := network.ParseCIDRs(append(
 		extutil.ToStringArray(actionConfig["ip"]),
 		extutil.ToStringArray(actionConfig["hostname"])...,
 	))
 
-	dig := network.HostnameResolver{Dig: &network.RuncDigRunner{Runc: r, Sidecar: sidecar}}
-	resolved, err := dig.Resolve(ctx, unresolved...)
+	resolved, err := hostnameResolver(r, sidecar).Resolve(ctx, unresolved...)
 	if err != nil {
 		return network.Filter{}, nil, err
 	}
@@ -214,12 +230,16 @@ func mapToNetworkFilter(ctx context.Context, r runc.Runc, sidecar network.Sideca
 		i.Comment = "parameters"
 	}
 
+	slices.SortFunc(includes, network.NetWithPortRange.Compare)
+
 	excludes, err := toExcludes(restrictedEndpoints)
 	if err != nil {
 		return network.Filter{}, nil, err
 	}
 
 	excludes = append(excludes, network.ComputeExcludesForOwnIpAndPorts(config.Config.Port, config.Config.HealthPort)...)
+
+	slices.SortFunc(excludes, network.NetWithPortRange.Compare)
 
 	var messages []action_kit_api.Message
 	excludes, condensed := condenseExcludes(excludes)

@@ -1,5 +1,4 @@
-// SPDX-License-Identifier: MIT
-// SPDX-FileCopyrightText: 2024 Steadybit GmbH
+// Copyright 2025 steadybit GmbH. All rights reserved.
 
 package exthost
 
@@ -8,11 +7,13 @@ import (
 	"errors"
 	"fmt"
 	"github.com/google/uuid"
+	"github.com/opencontainers/runtime-spec/specs-go"
 	"github.com/steadybit/action-kit/go/action_kit_api/v2"
 	"github.com/steadybit/action-kit/go/action_kit_commons/diskfill"
-	"github.com/steadybit/action-kit/go/action_kit_commons/runc"
+	"github.com/steadybit/action-kit/go/action_kit_commons/ociruntime"
 	"github.com/steadybit/action-kit/go/action_kit_sdk"
-	"github.com/steadybit/extension-kit"
+	"github.com/steadybit/extension-host/config"
+	extension_kit "github.com/steadybit/extension-kit"
 	"github.com/steadybit/extension-kit/extbuild"
 	"github.com/steadybit/extension-kit/extutil"
 	"golang.org/x/sync/syncmap"
@@ -21,8 +22,8 @@ import (
 var ID = fmt.Sprintf("%s.fill_disk", BaseActionID)
 
 type fillDiskAction struct {
-	runc      runc.Runc
-	diskfills syncmap.Map
+	ociRuntime ociruntime.OciRuntime
+	diskfills  syncmap.Map
 }
 
 type FillDiskActionState struct {
@@ -34,10 +35,11 @@ type FillDiskActionState struct {
 // Make sure fillDiskAction implements all required interfaces
 var _ action_kit_sdk.Action[FillDiskActionState] = (*fillDiskAction)(nil)
 var _ action_kit_sdk.ActionWithStop[FillDiskActionState] = (*fillDiskAction)(nil)
+var _ action_kit_sdk.ActionWithStatus[FillDiskActionState] = (*fillDiskAction)(nil)
 
-func NewFillDiskHostAction(r runc.Runc) action_kit_sdk.Action[FillDiskActionState] {
+func NewFillDiskHostAction(r ociruntime.OciRuntime) action_kit_sdk.Action[FillDiskActionState] {
 	return &fillDiskAction{
-		runc: r,
+		ociRuntime: r,
 	}
 }
 
@@ -56,7 +58,7 @@ func (a *fillDiskAction) Describe() action_kit_api.ActionDescription {
 			TargetType:         targetID,
 			SelectionTemplates: &targetSelectionTemplates,
 		},
-		Technology:  extutil.Ptr("Host"),
+		Technology:  extutil.Ptr("Linux Host"),
 		Category:    extutil.Ptr("Resource"),
 		Kind:        action_kit_api.Attack,
 		TimeControl: action_kit_api.TimeControlExternal,
@@ -65,7 +67,7 @@ func (a *fillDiskAction) Describe() action_kit_api.ActionDescription {
 				Name:         "duration",
 				Label:        "Duration",
 				Description:  extutil.Ptr("How long should the disk be filled?"),
-				Type:         action_kit_api.Duration,
+				Type:         action_kit_api.ActionParameterTypeDuration,
 				DefaultValue: extutil.Ptr("30s"),
 				Required:     extutil.Ptr(true),
 				Order:        extutil.Ptr(1),
@@ -73,11 +75,11 @@ func (a *fillDiskAction) Describe() action_kit_api.ActionDescription {
 			{
 				Name:         "mode",
 				Label:        "Mode",
-				Description:  extutil.Ptr("How would you like to specify the amount of data to be filled?"),
+				Description:  extutil.Ptr("Decide how to specify the amount to fill the disk:\n\noverall percentage of filled disk space in percent,\n\nMegabytes to write,\n\nMegabytes to leave free on disk"),
 				Required:     extutil.Ptr(true),
 				Order:        extutil.Ptr(2),
 				DefaultValue: extutil.Ptr("PERCENTAGE"),
-				Type:         action_kit_api.String,
+				Type:         action_kit_api.ActionParameterTypeString,
 				Options: extutil.Ptr([]action_kit_api.ParameterOption{
 					action_kit_api.ExplicitParameterOption{
 						Label: "Overall percentage of filled disk space in percent",
@@ -97,7 +99,7 @@ func (a *fillDiskAction) Describe() action_kit_api.ActionDescription {
 				Name:         "size",
 				Label:        "Fill Value (depending on Mode)",
 				Description:  extutil.Ptr("Depending on the mode, specify the percentage of filled disk space or the number of Megabytes to be written or left free."),
-				Type:         action_kit_api.Integer,
+				Type:         action_kit_api.ActionParameterTypeInteger,
 				DefaultValue: extutil.Ptr("80"),
 				Required:     extutil.Ptr(true),
 				Order:        extutil.Ptr(3),
@@ -106,7 +108,7 @@ func (a *fillDiskAction) Describe() action_kit_api.ActionDescription {
 				Name:         "path",
 				Label:        "File Destination",
 				Description:  extutil.Ptr("Where to temporarily write the file for filling the disk. It will be cleaned up afterwards."),
-				Type:         action_kit_api.String,
+				Type:         action_kit_api.ActionParameterTypeString,
 				DefaultValue: extutil.Ptr("/tmp"),
 				Required:     extutil.Ptr(true),
 				Order:        extutil.Ptr(4),
@@ -118,7 +120,7 @@ func (a *fillDiskAction) Describe() action_kit_api.ActionDescription {
 				Required:     extutil.Ptr(true),
 				Order:        extutil.Ptr(5),
 				DefaultValue: extutil.Ptr("AT_ONCE"),
-				Type:         action_kit_api.String,
+				Type:         action_kit_api.ActionParameterTypeString,
 				Advanced:     extutil.Ptr(true),
 				Options: extutil.Ptr([]action_kit_api.ParameterOption{
 					action_kit_api.ExplicitParameterOption{
@@ -133,9 +135,9 @@ func (a *fillDiskAction) Describe() action_kit_api.ActionDescription {
 			},
 			{
 				Name:         "blocksize",
-				Label:        "Block Size (in MBytes) of the File to Write for method `At Once`",
+				Label:        "Block Size (in MBytes) of the File to Write for method `Over Time`",
 				Description:  extutil.Ptr("Define the block size for writing the file with the dd command. If the block size is larger than the fill value, the fill value will be used as block size."),
-				Type:         action_kit_api.Integer,
+				Type:         action_kit_api.ActionParameterTypeInteger,
 				DefaultValue: extutil.Ptr("5"),
 				Required:     extutil.Ptr(true),
 				Order:        extutil.Ptr(6),
@@ -187,7 +189,7 @@ func (a *fillDiskAction) Prepare(ctx context.Context, state *FillDiskActionState
 		return nil, err
 	}
 
-	initProcess, err := runc.ReadLinuxProcessInfo(ctx, 1)
+	initProcess, err := ociruntime.ReadLinuxProcessInfo(ctx, 1, specs.PIDNamespace)
 	if err != nil {
 		return nil, extension_kit.ToError("Failed to prepare fill disk settings.", err)
 	}
@@ -195,15 +197,23 @@ func (a *fillDiskAction) Prepare(ctx context.Context, state *FillDiskActionState
 	state.Sidecar = diskfill.SidecarOpts{
 		TargetProcess: initProcess,
 		IdSuffix:      "host",
+		ExecutionId:   request.ExecutionId,
 	}
 	state.FillDiskOpts = opts
 	state.ExecutionId = request.ExecutionId
 	return nil, nil
 }
 
+func (a *fillDiskAction) diskfill(ctx context.Context, sidecar diskfill.SidecarOpts, opts diskfill.Opts) (diskfill.Diskfill, error) {
+	if config.Config.DisableRunc {
+		return diskfill.NewDiskfillProcess(ctx, opts)
+	}
+
+	return diskfill.NewDiskfillRunc(ctx, a.ociRuntime, sidecar, opts)
+}
+
 func (a *fillDiskAction) Start(ctx context.Context, state *FillDiskActionState) (*action_kit_api.StartResult, error) {
-	copiedOpts := state.FillDiskOpts
-	diskFill, err := diskfill.New(ctx, a.runc, state.Sidecar, copiedOpts)
+	diskFill, err := a.diskfill(ctx, state.Sidecar, state.FillDiskOpts)
 	if err != nil {
 		return nil, extension_kit.ToError("Failed to prepare fill disk on host", err)
 	}
@@ -221,7 +231,7 @@ func (a *fillDiskAction) Start(ctx context.Context, state *FillDiskActionState) 
 		},
 	}
 
-	if diskFill.Noop {
+	if diskFill.Noop() {
 		messages = append(messages, action_kit_api.Message{
 			Level:   extutil.Ptr(action_kit_api.Info),
 			Message: "Noop mode is enabled. No disk will be filled, because the disk is already filled enough.",
@@ -233,39 +243,48 @@ func (a *fillDiskAction) Start(ctx context.Context, state *FillDiskActionState) 
 	}, nil
 }
 
-func (a *fillDiskAction) Stop(_ context.Context, state *FillDiskActionState) (*action_kit_api.StopResult, error) {
-	messages := make([]action_kit_api.Message, 0)
-
-	stopped, err := a.stopFillDiskHost(state.ExecutionId)
-	if stopped {
-		messages = append(messages, action_kit_api.Message{
-			Level:   extutil.Ptr(action_kit_api.Info),
-			Message: "Canceled fill disk on host",
-		})
+func (a *fillDiskAction) Status(_ context.Context, state *FillDiskActionState) (*action_kit_api.StatusResult, error) {
+	if _, err := a.fillDiskHostExited(state.ExecutionId); err == nil {
+		return &action_kit_api.StatusResult{Completed: false}, nil
+	} else {
+		return &action_kit_api.StatusResult{
+			Completed: true,
+			Error: &action_kit_api.ActionKitError{
+				Status: extutil.Ptr(action_kit_api.Failed),
+				Title:  fmt.Sprintf("Failed to fill disk on host: %s", err.Error()),
+			},
+		}, nil
 	}
+}
 
-	if err != nil {
+func (a *fillDiskAction) Stop(_ context.Context, state *FillDiskActionState) (*action_kit_api.StopResult, error) {
+	if err := a.stopFillDiskHost(state.ExecutionId); err != nil {
 		return nil, extension_kit.ToError("Failed to stop fill disk on host", err)
 	}
 
 	return &action_kit_api.StopResult{
-		Messages: &messages,
+		Messages: &[]action_kit_api.Message{
+			{
+				Level:   extutil.Ptr(action_kit_api.Info),
+				Message: "Canceled fill disk on host",
+			},
+		},
 	}, nil
 }
 
-func (a *fillDiskAction) fillDiskExited(executionId uuid.UUID) (bool, error) {
+func (a *fillDiskAction) stopFillDiskHost(executionId uuid.UUID) error {
+	s, ok := a.diskfills.LoadAndDelete(executionId)
+	if !ok {
+		return errors.New("no diskfill host found")
+	}
+
+	return s.(diskfill.Diskfill).Stop()
+}
+
+func (a *fillDiskAction) fillDiskHostExited(executionId uuid.UUID) (bool, error) {
 	s, ok := a.diskfills.Load(executionId)
 	if !ok {
 		return true, nil
 	}
-	return s.(*diskfill.DiskFill).Exited()
-}
-
-func (a *fillDiskAction) stopFillDiskHost(executionId uuid.UUID) (bool, error) {
-	s, ok := a.diskfills.LoadAndDelete(executionId)
-	if !ok {
-		return false, errors.New("no diskfill host found")
-	}
-	err := s.(*diskfill.DiskFill).Stop()
-	return err == nil, err
+	return s.(diskfill.Diskfill).Exited()
 }

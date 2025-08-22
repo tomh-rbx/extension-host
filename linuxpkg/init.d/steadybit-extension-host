@@ -15,11 +15,11 @@
 
 SCRIPT=/opt/steadybit/extension-host/extension-host
 RUNAS=steadybit
+CAPS="CAP_MKNOD,CAP_SETPCAP,CAP_SYS_ADMIN,CAP_SYS_CHROOT,CAP_SYS_RESOURCE,CAP_SYS_BOOT,CAP_NET_RAW,CAP_SYS_TIME,CAP_SYS_PTRACE,CAP_KILL,CAP_NET_ADMIN,CAP_DAC_OVERRIDE,CAP_SETUID,CAP_SETGID,CAP_AUDIT_WRITE"
 
 PIDFILE=/var/run/steadybit-extension-host.pid
 LOGFILE=/var/log/steadybit-extension-host.log
 ENVFILE=/etc/steadybit/extension-host
-CAPS="CAP_SYS_ADMIN,CAP_SYS_CHROOT,CAP_SYS_RESOURCE,CAP_SYS_BOOT,CAP_NET_RAW,CAP_SYS_TIME,CAP_SYS_PTRACE,CAP_KILL,CAP_NET_ADMIN,CAP_DAC_OVERRIDE,CAP_SETUID,CAP_SETGID,CAP_AUDIT_WRITE"
 
 start() {
   if [ -f "$PIDFILE" ] && kill -0 "$(cat "$PIDFILE")"; then
@@ -39,7 +39,7 @@ start() {
     export $(grep -v "^#" "$ENVFILE" | xargs)
   fi
 
-  su -s capsh "--addamb=$CAPS" "--user=$RUNAS" -- -c "$SCRIPT > \"$LOGFILE\" 2>&1 & echo \$!" >"$PIDFILE"
+  su -s capsh -- "--addamb=$CAPS" "--user=$RUNAS" -c "$SCRIPT > \"$LOGFILE\" 2>&1 & echo \$!" >"$PIDFILE"
   PID=$(cat "$PIDFILE")
   sleep 1
 

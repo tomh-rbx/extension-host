@@ -1,6 +1,4 @@
-/*
- * Copyright 2023 steadybit GmbH. All rights reserved.
- */
+// Copyright 2025 steadybit GmbH. All rights reserved.
 
 package exthost
 
@@ -8,7 +6,7 @@ import (
 	"errors"
 	"fmt"
 	"github.com/steadybit/action-kit/go/action_kit_api/v2"
-	"github.com/steadybit/action-kit/go/action_kit_commons/runc"
+	"github.com/steadybit/action-kit/go/action_kit_commons/ociruntime"
 	"github.com/steadybit/action-kit/go/action_kit_commons/stress"
 	"github.com/steadybit/action-kit/go/action_kit_sdk"
 	"github.com/steadybit/extension-kit/extbuild"
@@ -24,7 +22,7 @@ const (
 	ModeFlush             Mode = "flush"
 )
 
-func NewStressIoAction(r runc.Runc) action_kit_sdk.Action[StressActionState] {
+func NewStressIoAction(r ociruntime.OciRuntime) action_kit_sdk.Action[StressActionState] {
 	return newStressAction(r, getStressIoDescription, stressIo)
 }
 
@@ -43,7 +41,7 @@ func getStressIoDescription() action_kit_api.ActionDescription {
 			// A template can be used to pre-fill a selection
 			SelectionTemplates: &targetSelectionTemplates,
 		}),
-		Technology: extutil.Ptr("Host"),
+		Technology: extutil.Ptr("Linux Host"),
 		// Category for the targets to appear in
 		Category: extutil.Ptr("Resource"),
 
@@ -66,7 +64,7 @@ func getStressIoDescription() action_kit_api.ActionDescription {
 				Name:         "mode",
 				Label:        "Mode",
 				Description:  extutil.Ptr("How should the IO be stressed?"),
-				Type:         action_kit_api.String,
+				Type:         action_kit_api.ActionParameterTypeString,
 				DefaultValue: extutil.Ptr(string(ModeReadWriteAndFlush)),
 				Required:     extutil.Ptr(true),
 				Order:        extutil.Ptr(0),
@@ -91,7 +89,7 @@ func getStressIoDescription() action_kit_api.ActionDescription {
 				Name:         "workers",
 				Label:        "Workers",
 				Description:  extutil.Ptr("How many workers should continually write, read and remove temporary files?"),
-				Type:         action_kit_api.StressngWorkers,
+				Type:         action_kit_api.ActionParameterTypeStressngWorkers,
 				DefaultValue: extutil.Ptr("0"),
 				Required:     extutil.Ptr(true),
 				Order:        extutil.Ptr(01),
@@ -100,7 +98,7 @@ func getStressIoDescription() action_kit_api.ActionDescription {
 				Name:         "duration",
 				Label:        "Duration",
 				Description:  extutil.Ptr("How long should IO be stressed?"),
-				Type:         action_kit_api.Duration,
+				Type:         action_kit_api.ActionParameterTypeDuration,
 				DefaultValue: extutil.Ptr("30s"),
 				Required:     extutil.Ptr(true),
 				Order:        extutil.Ptr(2),
@@ -109,7 +107,7 @@ func getStressIoDescription() action_kit_api.ActionDescription {
 				Name:         "path",
 				Label:        "Path",
 				Description:  extutil.Ptr("Path where the IO should be inflicted"),
-				Type:         action_kit_api.String,
+				Type:         action_kit_api.ActionParameterTypeString,
 				DefaultValue: extutil.Ptr("/"),
 				Required:     extutil.Ptr(true),
 				Order:        extutil.Ptr(3),
@@ -118,7 +116,7 @@ func getStressIoDescription() action_kit_api.ActionDescription {
 				Name:         "mbytes_per_worker",
 				Label:        "MBytes to write",
 				Description:  extutil.Ptr("How many megabytes should be written per stress operation?"),
-				Type:         action_kit_api.Integer,
+				Type:         action_kit_api.ActionParameterTypeInteger,
 				DefaultValue: extutil.Ptr("1024"),
 				Required:     extutil.Ptr(true),
 				Order:        extutil.Ptr(3),
@@ -152,7 +150,7 @@ func stressIo(request action_kit_api.PrepareActionRequestBody) (stress.Opts, err
 	}
 
 	if mode == string(ModeReadWriteAndFlush) || mode == string(ModeFlush) {
-		opts.IoWorkers = &workers
+		opts.IomixWorkers = &workers
 	}
 
 	return opts, nil
