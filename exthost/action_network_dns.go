@@ -51,7 +51,7 @@ func getNetworkBlockDnsDescription() action_kit_api.ActionDescription {
 			{
 				Name:         "dnsPort",
 				Label:        "DNS Port",
-				Description:  extutil.Ptr("dnsPort"),
+				Description:  extutil.Ptr("Port number used for DNS queries (typically 53)"),
 				Type:         action_kit_api.Integer,
 				DefaultValue: extutil.Ptr("53"),
 				Required:     extutil.Ptr(true),
