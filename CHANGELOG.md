@@ -1,5 +1,9 @@
 # Changelog
 
+# v1.4.2
+
+ - Update dependencies
+
 # v1.4.1
 
  - Add STEADYBIT_EXTENSTION_DIG_TIMEOUT
