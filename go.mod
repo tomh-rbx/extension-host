@@ -14,7 +14,7 @@ require (
 	github.com/pkg/errors v0.9.1
 	github.com/rs/zerolog v1.34.0
 	github.com/steadybit/action-kit/go/action_kit_api/v2 v2.10.0
-	github.com/steadybit/action-kit/go/action_kit_commons v1.5.6
+	github.com/steadybit/action-kit/go/action_kit_commons v1.5.7
 	github.com/steadybit/action-kit/go/action_kit_sdk v1.2.0
 	github.com/steadybit/action-kit/go/action_kit_test v1.4.2
 	github.com/steadybit/discovery-kit/go/discovery_kit_api v1.7.0
@@ -72,7 +72,7 @@ require (
 	github.com/zmwangx/debounce v1.0.0 // indirect
 	golang.org/x/net v0.43.0 // indirect
 	golang.org/x/oauth2 v0.30.0 // indirect
-	golang.org/x/sys v0.35.0 // indirect
+	golang.org/x/sys v0.36.0 // indirect
 	golang.org/x/term v0.34.0 // indirect
 	golang.org/x/text v0.28.0 // indirect
 	golang.org/x/time v0.11.0 // indirect
