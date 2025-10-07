@@ -13,27 +13,24 @@ import (
 )
 
 const (
-	cpufreqBasePath = "/sys/devices/system/cpu"
-	minFreqFile     = "cpuinfo_min_freq"
-	maxFreqFile     = "cpuinfo_max_freq"
-	curFreqFile     = "scaling_cur_freq"
-	scalingMinFile  = "scaling_min_freq"
-	scalingMaxFile  = "scaling_max_freq"
-	khzToMhz        = 1000 // Convert kHz to MHz
+	cpuGlob        = "cpu[0-9]*"
+	minFreqFile    = "cpuinfo_min_freq"
+	maxFreqFile    = "cpuinfo_max_freq"
+	curFreqFile    = "scaling_cur_freq"
+	scalingMinFile = "scaling_min_freq"
+	scalingMaxFile = "scaling_max_freq"
+	khzToMhz       = 1000 // Convert kHz to MHz
 )
+
+var cpuBasePath = "/sys/devices/system/cpu"
 
 // GetCPUFrequencyInfo returns the minimum and maximum CPU frequencies in MHz
 func GetCPUFrequencyInfo() (min, max uint64, err error) {
-	cpus, err := filepath.Glob(filepath.Join(cpufreqBasePath, "cpu[0-9]*"))
+	cpus, err := listCpuDirs()
 	if err != nil {
-		return 0, 0, fmt.Errorf("failed to list CPU directories: %w", err)
+		return 0, 0, err
 	}
 
-	if len(cpus) == 0 {
-		return 0, 0, fmt.Errorf("no CPUs found")
-	}
-
-	// Get frequency info from first CPU as they should all be the same
 	cpuPath := filepath.Join(cpus[0], "cpufreq")
 
 	minFreq, err := readFrequencyFile(filepath.Join(cpuPath, minFreqFile))
@@ -50,12 +47,27 @@ func GetCPUFrequencyInfo() (min, max uint64, err error) {
 	return minFreq / khzToMhz, maxFreq / khzToMhz, nil
 }
 
+// GetCurrentFrequency returns the current CPU frequency in MHz
+func GetCurrentFrequency() (uint64, error) {
+	cpus, err := listCpuDirs()
+	if err != nil {
+		return 0, err
+	}
+
+	freqKhz, err := readFrequencyFile(filepath.Join(cpus[0], "cpufreq", curFreqFile))
+	if err != nil {
+		return 0, err
+	}
+
+	// Convert kHz to MHz
+	return freqKhz / khzToMhz, nil
+}
+
 // SetCPUFrequencyLimits sets the minimum and maximum CPU frequency for all cores
 // Frequencies are specified in MHz but written to sysfs in kHz
 func SetCPUFrequencyLimits(min, max uint64) error {
-	cpus, err := filepath.Glob(filepath.Join(cpufreqBasePath, "cpu[0-9]*"))
-	if err != nil {
-		return fmt.Errorf("failed to list CPU directories: %w", err)
+	if min > max {
+		return fmt.Errorf("minimum frequency %d MHz cannot be greater than maximum frequency %d MHz", min, max)
 	}
 
 	// Get current min/max to validate requested values
@@ -70,13 +82,15 @@ func SetCPUFrequencyLimits(min, max uint64) error {
 	if max > curMax {
 		return fmt.Errorf("requested maximum frequency %d MHz is above hardware maximum %d MHz", max, curMax)
 	}
-	if min > max {
-		return fmt.Errorf("minimum frequency %d MHz cannot be greater than maximum frequency %d MHz", min, max)
-	}
 
 	// Convert MHz to kHz for sysfs
 	minKhz := min * khzToMhz
 	maxKhz := max * khzToMhz
+
+	cpus, err := listCpuDirs()
+	if err != nil {
+		return err
+	}
 
 	for _, cpu := range cpus {
 		cpuPath := filepath.Join(cpu, "cpufreq")
@@ -102,31 +116,17 @@ func SetCPUFrequencyLimits(min, max uint64) error {
 	return nil
 }
 
-// GetCurrentFrequency returns the current CPU frequency in MHz
-func GetCurrentFrequency() (uint64, error) {
-	cpus, err := filepath.Glob(filepath.Join(cpufreqBasePath, "cpu[0-9]*"))
+func listCpuDirs() ([]string, error) {
+	cpus, err := filepath.Glob(filepath.Join(cpuBasePath, cpuGlob))
 	if err != nil {
-		return 0, fmt.Errorf("failed to list CPU directories: %w", err)
+		return nil, fmt.Errorf("failed to list CPU directories: %w", err)
 	}
 
 	if len(cpus) == 0 {
-		return 0, fmt.Errorf("no CPUs found")
+		return nil, fmt.Errorf("no CPUs found")
 	}
 
-	// Read current frequency from first CPU (they should all be the same in our case)
-	freqPath := filepath.Join(cpus[0], "cpufreq", curFreqFile)
-	freqBytes, err := os.ReadFile(freqPath)
-	if err != nil {
-		return 0, fmt.Errorf("failed to read current frequency: %w", err)
-	}
-
-	freqKhz, err := strconv.ParseUint(strings.TrimSpace(string(freqBytes)), 10, 64)
-	if err != nil {
-		return 0, fmt.Errorf("failed to parse current frequency: %w", err)
-	}
-
-	// Convert kHz to MHz
-	return freqKhz / khzToMhz, nil
+	return cpus, nil
 }
 
 // readFrequencyFile reads a frequency value in kHz from a sysfs file
