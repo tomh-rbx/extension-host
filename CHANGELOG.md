@@ -1,5 +1,10 @@
 # Changelog
 
+# v1.4.3
+
+- Add new CPU Frequency attack
+- Update dependencies
+
 # v1.4.2
 
  - Update dependencies
