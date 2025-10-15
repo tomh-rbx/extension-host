@@ -78,9 +78,15 @@ chart-bump-version:
 # BUILD
 # ==================================================================================== #
 
+## build-ebpf: build the eBPF object
+.PHONY: build-ebpf
+build-ebpf:
+	@echo "Building eBPF object..."
+	cd ../action-kit/go/action_kit_commons/network/ebpf && make build-docker
+
 ## build: build the extension
 .PHONY: build
-build:
+build: build-ebpf
 	goreleaser build --clean --snapshot --single-target -o extension
 
 ## run: run the extension
@@ -93,7 +99,7 @@ run: tidy build
 container:
 	docker buildx build --build-arg BUILD_WITH_COVERAGE="true" --build-arg SKIP_LICENSES_REPORT="true" -t extension-host:latest --output=type=docker .
 
-## linuxpkg: build the linux packages
+## linuxpkg: build the linux packages (ensures eBPF object is built first)
 .PHONY: linuxpkg
-linuxpkg:
+linuxpkg: build-ebpf
 	goreleaser release --clean --snapshot --skip=sign
