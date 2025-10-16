@@ -37,9 +37,17 @@ func getNetworkDNSErrorInjectionDescription() action_kit_api.ActionDescription {
 		Category:    extutil.Ptr("Network"),
 		Kind:        action_kit_api.Attack,
 		TimeControl: action_kit_api.TimeControlExternal,
-		Parameters: append(
-			commonNetworkParameters,
-			action_kit_api.ActionParameter{
+		Parameters: []action_kit_api.ActionParameter{
+			{
+				Name:         "duration",
+				Label:        "Duration",
+				Description:  extutil.Ptr("How long should the DNS errors be injected?"),
+				Type:         action_kit_api.ActionParameterTypeDuration,
+				DefaultValue: extutil.Ptr("30s"),
+				Required:     extutil.Ptr(true),
+				Order:        extutil.Ptr(0),
+			},
+			{
 				Name:         "dnsErrorTypes",
 				Label:        "DNS Error Types",
 				Description:  extutil.Ptr("Which DNS errors to inject?"),
@@ -48,6 +56,10 @@ func getNetworkDNSErrorInjectionDescription() action_kit_api.ActionDescription {
 				Required:     extutil.Ptr(true),
 				Options: extutil.Ptr([]action_kit_api.ParameterOption{
 					action_kit_api.ExplicitParameterOption{
+						Label: "Both (Random)",
+						Value: "BOTH",
+					},
+					action_kit_api.ExplicitParameterOption{
 						Label: "NXDOMAIN",
 						Value: "NXDOMAIN",
 					},
@@ -55,22 +67,10 @@ func getNetworkDNSErrorInjectionDescription() action_kit_api.ActionDescription {
 						Label: "SERVFAIL",
 						Value: "SERVFAIL",
 					},
-					action_kit_api.ExplicitParameterOption{
-						Label: "Both (Random)",
-						Value: "BOTH",
-					},
 				}),
 				Order: extutil.Ptr(1),
 			},
-			action_kit_api.ActionParameter{
-				Name:        "networkInterface",
-				Label:       "Network Interface",
-				Description: extutil.Ptr("Target Network Interface which should be affected. All if none specified."),
-				Type:        action_kit_api.ActionParameterTypeStringArray,
-				Required:    extutil.Ptr(false),
-				Order:       extutil.Ptr(104),
-			},
-		),
+		},
 	}
 }
 
@@ -124,9 +124,11 @@ func dnsErrorInjection(r ociruntime.OciRuntime) networkOptsProvider {
 		}
 
 		opts := &network.DNSErrorInjectionOpts{
-			Filter:     filter,
-			Interfaces: interfaces,
-			ErrorTypes: errorTypes,
+			Filter:      filter,
+			Interfaces:  interfaces,
+			ErrorTypes:  errorTypes,
+			ExecutionID: request.ExecutionId.String(),
+			IsContainer: false, // This is a host-level attack
 		}
 
 		// Validate that we have specific targets for safety
