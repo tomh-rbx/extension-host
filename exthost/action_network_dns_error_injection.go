@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"fmt"
 
+	"github.com/rs/zerolog/log"
 	"github.com/steadybit/action-kit/go/action_kit_api/v2"
 	"github.com/steadybit/action-kit/go/action_kit_commons/network"
 	"github.com/steadybit/action-kit/go/action_kit_commons/ociruntime"
@@ -13,13 +14,45 @@ import (
 	"github.com/steadybit/extension-kit/extutil"
 )
 
+// Ensure dnsErrorInjectionAction implements the required interfaces
+var _ action_kit_sdk.Action[NetworkActionState] = (*dnsErrorInjectionAction)(nil)
+var _ action_kit_sdk.ActionWithStatus[NetworkActionState] = (*dnsErrorInjectionAction)(nil)
+
+type dnsErrorInjectionAction struct {
+	*networkAction
+}
+
 func NewNetworkDNSErrorInjectionAction(r ociruntime.OciRuntime) action_kit_sdk.Action[NetworkActionState] {
-	return &networkAction{
-		ociRuntime:   r,
-		optsProvider: dnsErrorInjection(r),
-		optsDecoder:  dnsErrorInjectionDecode,
-		description:  getNetworkDNSErrorInjectionDescription(),
+	// Clean up any orphaned eBPF filters from previous crashes
+	// This is done here rather than in main() to keep cleanup localized to the DNS error injection feature
+	if err := network.CleanupOrphanedEBPFFilters(); err != nil {
+		log.Warn().Err(err).Msg("Failed to cleanup orphaned eBPF filters, continuing anyway")
 	}
+
+	return &dnsErrorInjectionAction{
+		networkAction: &networkAction{
+			ociRuntime:   r,
+			optsProvider: dnsErrorInjection(r),
+			optsDecoder:  dnsErrorInjectionDecode,
+			description:  getNetworkDNSErrorInjectionDescription(),
+		},
+	}
+}
+
+func (a *dnsErrorInjectionAction) Status(ctx context.Context, state *NetworkActionState) (*action_kit_api.StatusResult, error) {
+	// Get messages from the eBPF loader
+	messages, err := network.GetDNSErrorInjectionMessages(state.ExecutionId.String())
+	if err != nil {
+		log.Warn().Err(err).Msg("Failed to get DNS error injection messages")
+		return &action_kit_api.StatusResult{
+			Completed: false,
+		}, nil
+	}
+
+	return &action_kit_api.StatusResult{
+		Completed: false,
+		Messages:  messages,
+	}, nil
 }
 
 func getNetworkDNSErrorInjectionDescription() action_kit_api.ActionDescription {
@@ -37,6 +70,17 @@ func getNetworkDNSErrorInjectionDescription() action_kit_api.ActionDescription {
 		Category:    extutil.Ptr("Network"),
 		Kind:        action_kit_api.Attack,
 		TimeControl: action_kit_api.TimeControlExternal,
+		Status: extutil.Ptr(action_kit_api.MutatingEndpointReferenceWithCallInterval{
+			CallInterval: extutil.Ptr("1s"),
+		}),
+		Widgets: extutil.Ptr([]action_kit_api.Widget{
+			action_kit_api.MarkdownWidget{
+				Type:        action_kit_api.ComSteadybitWidgetMarkdown,
+				Title:       "DNS Error Injection Statistics",
+				MessageType: "dns_stats_markdown",
+				Append:      false,
+			},
+		}),
 		Parameters: []action_kit_api.ActionParameter{
 			{
 				Name:         "duration",
@@ -56,7 +100,7 @@ func getNetworkDNSErrorInjectionDescription() action_kit_api.ActionDescription {
 				Required:     extutil.Ptr(true),
 				Options: extutil.Ptr([]action_kit_api.ParameterOption{
 					action_kit_api.ExplicitParameterOption{
-						Label: "Random (NXDOMAIN, SERVFAIL, or TIMEOUT)",
+						Label: "Random",
 						Value: "RANDOM",
 					},
 					action_kit_api.ExplicitParameterOption{
