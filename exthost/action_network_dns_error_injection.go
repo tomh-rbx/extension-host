@@ -48,16 +48,16 @@ func getNetworkDNSErrorInjectionDescription() action_kit_api.ActionDescription {
 				Order:        extutil.Ptr(0),
 			},
 			{
-				Name:         "dnsErrorTypes",
-				Label:        "DNS Error Types",
-				Description:  extutil.Ptr("Which DNS errors to inject?"),
-				Type:         action_kit_api.ActionParameterTypeStringArray,
-				DefaultValue: extutil.Ptr("[\"NXDOMAIN\"]"),
+				Name:         "dnsErrorType",
+				Label:        "DNS Error Type",
+				Description:  extutil.Ptr("Which DNS error to inject?"),
+				Type:         action_kit_api.ActionParameterTypeString,
+				DefaultValue: extutil.Ptr("NXDOMAIN"),
 				Required:     extutil.Ptr(true),
 				Options: extutil.Ptr([]action_kit_api.ParameterOption{
 					action_kit_api.ExplicitParameterOption{
-						Label: "Both (Random)",
-						Value: "BOTH",
+						Label: "Random (NXDOMAIN, SERVFAIL, or TIMEOUT)",
+						Value: "RANDOM",
 					},
 					action_kit_api.ExplicitParameterOption{
 						Label: "NXDOMAIN",
@@ -66,6 +66,10 @@ func getNetworkDNSErrorInjectionDescription() action_kit_api.ActionDescription {
 					action_kit_api.ExplicitParameterOption{
 						Label: "SERVFAIL",
 						Value: "SERVFAIL",
+					},
+					action_kit_api.ExplicitParameterOption{
+						Label: "TIMEOUT",
+						Value: "TIMEOUT",
 					},
 				}),
 				Order: extutil.Ptr(1),
@@ -81,29 +85,34 @@ func dnsErrorInjection(r ociruntime.OciRuntime) networkOptsProvider {
 			return nil, nil, err
 		}
 
-		errorTypes := extutil.ToStringArray(request.Config["dnsErrorTypes"])
+		errorType := extutil.ToString(request.Config["dnsErrorType"])
 
-		if len(errorTypes) == 0 {
-			return nil, []action_kit_api.Message{{
-				Level:   extutil.Ptr(action_kit_api.Error),
-				Message: "Please select at least one DNS error type to inject.",
-			}}, fmt.Errorf("no DNS error types configured")
+		if errorType == "" {
+			errorType = "NXDOMAIN" // default
 		}
 
-		// Validate error types
+		// Validate error type
 		validTypes := map[string]bool{
 			"NXDOMAIN": true,
 			"SERVFAIL": true,
-			"BOTH":     true,
+			"TIMEOUT":  true,
+			"RANDOM":   true,
 		}
 
-		for _, errorType := range errorTypes {
-			if !validTypes[errorType] {
-				return nil, []action_kit_api.Message{{
-					Level:   extutil.Ptr(action_kit_api.Error),
-					Message: fmt.Sprintf("Invalid DNS error type: %s. Valid types are: NXDOMAIN, SERVFAIL, BOTH", errorType),
-				}}, fmt.Errorf("invalid DNS error type: %s", errorType)
-			}
+		if !validTypes[errorType] {
+			return nil, []action_kit_api.Message{{
+				Level:   extutil.Ptr(action_kit_api.Error),
+				Message: fmt.Sprintf("Invalid DNS error type: %s. Valid types are: NXDOMAIN, SERVFAIL, TIMEOUT, RANDOM", errorType),
+			}}, fmt.Errorf("invalid DNS error type: %s", errorType)
+		}
+
+		// Convert single error type to array for backwards compatibility with network.Opts
+		var errorTypes []string
+		if errorType == "RANDOM" {
+			// Random should include all three error types, plus BOTH flag for random selection
+			errorTypes = []string{"BOTH", "TIMEOUT"}
+		} else {
+			errorTypes = []string{errorType}
 		}
 
 		filter, messages, err := mapToNetworkFilter(ctx, r, sidecar, request.Config, getRestrictedEndpoints(request))
