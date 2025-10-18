@@ -43,11 +43,16 @@ func (a *dnsErrorInjectionAction) Status(ctx context.Context, state *NetworkActi
 	// Get messages from the eBPF loader
 	messages, err := network.GetDNSErrorInjectionMessages(state.ExecutionId.String())
 	if err != nil {
-		log.Warn().Err(err).Msg("Failed to get DNS error injection messages")
+		log.Warn().Err(err).Str("execution_id", state.ExecutionId.String()).Msg("Failed to get DNS error injection messages")
 		return &action_kit_api.StatusResult{
 			Completed: false,
 		}, nil
 	}
+
+	log.Debug().
+		Str("execution_id", state.ExecutionId.String()).
+		Int("message_count", len(*messages)).
+		Msg("returning DNS error injection messages from Status")
 
 	return &action_kit_api.StatusResult{
 		Completed: false,
@@ -71,7 +76,7 @@ func getNetworkDNSErrorInjectionDescription() action_kit_api.ActionDescription {
 		Kind:        action_kit_api.Attack,
 		TimeControl: action_kit_api.TimeControlExternal,
 		Status: extutil.Ptr(action_kit_api.MutatingEndpointReferenceWithCallInterval{
-			CallInterval: extutil.Ptr("1s"),
+			CallInterval: extutil.Ptr("2s"),
 		}),
 		Widgets: extutil.Ptr([]action_kit_api.Widget{
 			action_kit_api.MarkdownWidget{
